@@ -1,0 +1,44 @@
+---
+ Doc/using/configure.rst |    3 ---
+ Misc/NEWS               |    2 +-
+ 2 files changed, 1 insertion(+), 4 deletions(-)
+
+Index: Python-3.11.15/Doc/using/configure.rst
+===================================================================
+--- Python-3.11.15.orig/Doc/using/configure.rst	2026-03-06 16:06:43.304945441 +0100
++++ Python-3.11.15/Doc/using/configure.rst	2026-03-06 16:06:55.576758292 +0100
+@@ -43,7 +43,6 @@
+ 
+    See :data:`sys.int_info.bits_per_digit <sys.int_info>`.
+ 
+-.. option:: --with-cxx-main
+ .. option:: --with-cxx-main=COMPILER
+ 
+    Compile the Python ``main()`` function and link Python executable with C++
+@@ -529,13 +528,11 @@
+ 
+ See ``Mac/README.rst``.
+ 
+-.. option:: --enable-universalsdk
+ .. option:: --enable-universalsdk=SDKDIR
+ 
+    Create a universal binary build. *SDKDIR* specifies which macOS SDK should
+    be used to perform the build (default is no).
+ 
+-.. option:: --enable-framework
+ .. option:: --enable-framework=INSTALLDIR
+ 
+    Create a Python.framework rather than a traditional Unix install. Optional
+Index: Python-3.11.15/Misc/NEWS
+===================================================================
+--- Python-3.11.15.orig/Misc/NEWS	2026-03-06 16:06:43.304945441 +0100
++++ Python-3.11.15/Misc/NEWS	2026-03-06 16:06:55.580059032 +0100
+@@ -10081,7 +10081,7 @@
+ - bpo-40939: Removed documentation for the removed ``PyParser_*`` C API.
+ 
+ - bpo-43795: The list in :ref:`limited-api-list` now shows the public name
+-  :c:struct:`PyFrameObject` rather than ``_frame``. The non-existing entry
++  :c:type:`PyFrameObject` rather than ``_frame``. The non-existing entry
+   ``_node`` no longer appears in the list.
+ 
+ - bpo-44378: :c:func:`Py_IS_TYPE` no longer uses :c:func:`Py_TYPE` to avoid
