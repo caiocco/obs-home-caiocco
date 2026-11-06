@@ -1,0 +1,7 @@
+-------------------------------------------------------------------
+Fri Nov  6 14:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of System G 3.0.3+git20260330.84e8059
+  * JX Application Framework (ae78335) and ACE 8.0.6 are bundled
+    and linked statically
+  * Use standard freedesktop categories in the .desktop files
