@@ -1,0 +1,7 @@
+-------------------------------------------------------------------
+Fri Nov  6 22:40:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Q4Wine 1.4.2 (Qt 6)
+  * Built with icoutils, fuseiso and D-Bus notification support
+  * SingleApplication 3.5.2 is bundled, as upstream does
+  * Install the private libq4wine-core into %{_libdir} without RPATH
