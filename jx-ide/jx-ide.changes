@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Fri Nov  6 15:15:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of JX IDE 7.1.5+git20260824.22f6718
+  * Subpackages code-crusader, code-medic and code-mill
+  * JX Application Framework (ae78335), ACE 8.0.6 and RE/flex 6.3.0
+    are bundled and linked statically
+  * Code Medic uses the system lldb (lldb-devel)
