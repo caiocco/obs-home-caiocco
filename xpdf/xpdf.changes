@@ -1,0 +1,11 @@
+-------------------------------------------------------------------
+Fri Nov  6 20:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Xpdf 4.06
+  * Qt6 viewer with printing support (CUPS), A4 paper by default and
+    XDG config/state paths
+  * Build the internal goo/fofi/splash libraries statically
+  * Command line tools split into xpdf-tools, which conflicts with
+    poppler-tools (same command names)
+  * System-wide /etc/xpdfrc and xpdfrc(5) in xpdf-common
+  * Add a desktop file and the upstream SVG icon
