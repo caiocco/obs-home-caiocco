@@ -1,0 +1,11 @@
+-------------------------------------------------------------------
+Fri Nov  6 19:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of NEdit Classic 5.7+git20260411.dd40844
+  (alx210/nedit-classic fork, with Xft and MWM/EMWM workspace support)
+  * Build with Xft (anti-aliased fonts), %optflags and the
+    distribution linker flags
+  * Rename the client program nc to ncl to avoid the conflict with
+    netcat, as recommended by upstream
+  * Generate the nedit(1) and ncl(1) man pages from the POD sources
+  * Add a desktop file (nedit.desktop)
