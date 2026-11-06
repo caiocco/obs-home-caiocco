@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=XSession
+Name=EMWM
+Comment=Enhanced Motif Window Manager
+Exec=emwm
+TryExec=emwm
+DesktopNames=EMWM

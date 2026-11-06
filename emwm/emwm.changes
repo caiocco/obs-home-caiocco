@@ -1,0 +1,7 @@
+-------------------------------------------------------------------
+Fri Nov  6 18:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of EMWM 2.1
+  * Build with %optflags and the distribution linker flags
+  * Install the app-defaults file into /usr/share/X11/app-defaults
+  * Add an X session file (emwm.desktop)
