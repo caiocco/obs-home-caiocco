@@ -1,0 +1,7 @@
+-------------------------------------------------------------------
+Fri Nov  6 16:40:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Leibnitz 3.0.4+git20260331.4aade11
+  * JX Application Framework (ae78335), ACE 8.0.6 and RE/flex 6.3.0
+    are bundled and linked statically
+  * Use standard freedesktop categories in the .desktop file
