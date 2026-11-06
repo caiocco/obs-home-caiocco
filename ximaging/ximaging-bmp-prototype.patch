@@ -1,0 +1,11 @@
+--- a/src/msbitmap.c	2026-11-06 15:53:47.649608416 -0300
++++ b/src/msbitmap.c	2026-11-06 15:53:47.652608620 -0300
+@@ -157,7 +157,7 @@
+ }
+ 
+ 
+-int img_open_bmp(char *file_name, struct img_file *img)
++int img_open_bmp(const char *file_name, struct img_file *img, int flags)
+ {
+ 	FILE *file;
+ 	struct stat st;

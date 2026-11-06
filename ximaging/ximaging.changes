@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Fri Nov  6 21:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of ximaging 1.9.3+git20261018.45d292f
+  * Build with %optflags and the distribution linker flags,
+    keeping the OpenMP optimizations enabled
+  * JPEG, PNG and TIFF support through the system libraries
+  * Add ximaging-bmp-prototype.patch: fix the img_open_bmp()
+    signature, which did not match its prototype
+  * Install without forcing root ownership
+  * Install the app-defaults file into /usr/share/X11/app-defaults
+  * Add a desktop entry and install the application icons
