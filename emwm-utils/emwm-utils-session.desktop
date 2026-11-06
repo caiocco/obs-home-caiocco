@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=XSession
+Name=EMWM Session
+Comment=EMWM with the xmsm session manager and the xmtoolbox launcher
+Exec=xmsession
+TryExec=xmsession
+DesktopNames=EMWM

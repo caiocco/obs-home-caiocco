@@ -1,0 +1,42 @@
+emwm-utils on openSUSE
+======================
+
+xmsm is installed without the setuid bit.
+
+Shutdown, reboot and suspend are done with "systemctl poweroff|reboot|
+suspend", which logind/polkit allows for the user of the active local
+session.
+
+Screen locking is handed over to an external locker through the
+lockCommand resource (added by this package). The default, set in
+/usr/share/X11/app-defaults/XmSm, is:
+
+    XmSm*lockCommand: /usr/bin/xlock -mode blank
+
+xmsm runs it for the Lock command of xmtoolbox, after lockTimeout
+seconds of inactivity, and on SIGUSR1. Any xlock mode works, e.g.
+"-mode random". The executable must be given with its full path.
+
+Using xscreensaver instead
+--------------------------
+Install xscreensaver, start its daemon from ~/.sessionetc:
+
+    xscreensaver --no-splash &
+
+and put this in ~/.Xresources:
+
+    XmSm*lockCommand: /usr/bin/xscreensaver-command -lock
+    XmSm*lockTimeout: 0
+    XmSm*blankTimeout: 0
+
+(xscreensaver then does its own blanking and timed locking.)
+
+Built-in locker
+---------------
+Setting lockCommand to an empty string brings back upstream's built-in
+locker. It reads /etc/shadow, so it only works if xmsm is setuid root:
+
+    chmod u+s /usr/bin/xmsm
+
+The package marks the file with %verify(not mode), so "rpm -V" won't
+report the change, but every package update resets the mode.

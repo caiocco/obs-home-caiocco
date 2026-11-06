@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Fri Nov  6 18:40:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of emwm-utils 2.0 (xmsm, xmsession, xmtoolbox)
+  * Build with %optflags and the distribution linker flags
+  * Install xmsm without the setuid bit; shut down, reboot and
+    suspend through systemctl instead (see README.SUSE)
+  * Add emwm-utils-lock-command.patch: new lockCommand resource
+    that hands screen locking over to an external locker; default
+    to xlock from xlockmore (PAM based, needs no setuid)
+  * Install the app-defaults files into /usr/share/X11/app-defaults
+  * Add an X session file for xmsession

@@ -1,0 +1,85 @@
+--- emwm-utils-2.0.orig/src/smmain.c	2026-04-10 08:40:59.000000000 -0300
++++ emwm-utils-2.0/src/smmain.c	2026-11-06 15:34:02.976814391 -0300
+@@ -114,6 +114,7 @@
+ 	Pixel lock_bg_pixel;
+ 	char *window_manager;
+ 	char *launcher;
++	char *lock_command;
+ 	unsigned int lock_timeout;
+ 	unsigned int unlock_scr_timeout;
+ 	unsigned int blank_timeout;
+@@ -158,6 +159,10 @@
+ 	{ "launcher","Launcher",XmRString,sizeof(String),
+ 		RES_FIELD(launcher),XmRImmediate,(XtPointer)PREFIX"/bin/xmtoolbox"
+ 	},
++	{
++		"lockCommand","LockCommand",XmRString,sizeof(String),
++		RES_FIELD(lock_command),XmRImmediate,(XtPointer)NULL
++	},
+ 	{ "blankTimeout","BlankTimeout",XmRInt,sizeof(unsigned int),
+ 		RES_FIELD(blank_timeout),XmRImmediate,(XtPointer)400
+ 	},
+@@ -271,6 +276,16 @@
+ 
+ 	XtGetApplicationResources(wshell,&app_res,xrdb_resources,
+ 		XtNumber(xrdb_resources),NULL,0);
++
++	if(app_res.lock_command && !app_res.lock_command[0])
++		app_res.lock_command = NULL;
++
++	/* The built-in locker needs root privileges to read the shadow
++	 * password, so turn it off quietly if xmsm isn't setuid root */
++	if(app_res.enable_locking && !app_res.lock_command &&
++		!set_privileges(True)) app_res.enable_locking = False;
++	else
++		set_privileges(False);
+ 	
+ 	xa_mgr = XInternAtom(XtDisplay(wshell),XMSM_ATOM_NAME,False);
+ 	xa_pid = XInternAtom(XtDisplay(wshell),XMSM_PID_ATOM_NAME,False);
+@@ -420,6 +435,17 @@
+ 	struct passwd *passwd;
+ 	
+ 	if(scr_locked) return;
++
++	/* hand locking over to an external screen locker */
++	if(app_res.lock_command) {
++		int rv = launch_process(app_res.lock_command);
++		if(rv) {
++			if(!app_res.silent) XBell(XtDisplay(wshell), 100);
++			log_msg("Cannot exec %s: %s\n",
++				app_res.lock_command, strerror(rv));
++		}
++		return;
++	}
+ 	
+ 	/* make sure we can authenticate before locking */
+ 	login = get_login();
+--- emwm-utils-2.0.orig/src/xmsm.1	2026-04-10 08:40:59.000000000 -0300
++++ emwm-utils-2.0/src/xmsm.1	2026-11-06 15:34:24.396273381 -0300
+@@ -78,6 +78,15 @@
+ Full path to the Launcher executable name.
+ Default is (installation prefix)/xmtoolbox
+ .TP
++\fBlockCommand\fP \fIString\fP
++Command line of an external screen locker, e.g.
++\fI/usr/bin/xlock \-mode blank\fP or
++\fI/usr/bin/xscreensaver\-command \-lock\fP\.
++The executable must be given with its full path\.
++If set, it is run instead of the built\-in locker whenever the screen is
++locked, and xmsm needs no root privileges for locking\.
++Default is unset (built\-in locker)\.
++.TP
+ \fBlockBackgroundColor\fP \fIColor\fP
+ Background color of the screen lock.
+ .TP
+@@ -133,8 +142,8 @@
+ xmsm responds to SIGUSR1 by engaging screen lock.
+ xmsm responds to SIGUSR2 by displaying logout/shutdown options.
+ .SH CAVEATS
+-The xmsm binary must be setuid root for screen locking and shutdown/reboot
+-functionality, it discards root privileges at startup and restores them only
++Unless \fBlockCommand\fP is set, the xmsm binary must be setuid root for
++screen locking and shutdown/reboot functionality, it discards root privileges at startup and restores them only
+ during password check and when executing system commands.
+ .PP
+ XmSm does not implement the ICCCM session save/restore protocol.
