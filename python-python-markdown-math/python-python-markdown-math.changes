@@ -1,0 +1,5 @@
+-------------------------------------------------------------------
+Fri Nov  6 22:50:27 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of python-markdown-math 0.9 (dependency of
+  python-Markups / ReText, not available for Leap 16.0)
