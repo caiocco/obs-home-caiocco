@@ -1,0 +1,10 @@
+-------------------------------------------------------------------
+Fri Nov  6 21:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of CopyQ 17.0.0
+  * Built with Qt 6 and KDE Frameworks 6 (native notifications,
+    tray icon and Wayland clipboard through KGuiAddons)
+  * Tab encryption (QCA) and keyring integration (QtKeychain)
+    enabled
+  * Audio playback disabled: miniaudio is not packaged for Leap 16.0
+  * GNOME Shell clipboard extension in a separate subpackage
