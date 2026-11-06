@@ -1,0 +1,9 @@
+Fix misplaced quote in the Trailblazer launcher (sh syntax error).
+
+--- a/fvwm/Applications/20~Games/Arcade_Games/~trailblazer~trailblazer
++++ b/fvwm/Applications/20~Games/Arcade_Games/~trailblazer~trailblazer
+@@ -1,3 +1,3 @@
+ #!/bin/sh
+ 
+-exec FvwmCommand 'A trailblazer $@' 2>/dev/null'
++exec FvwmCommand 'A trailblazer $@ 2>/dev/null'

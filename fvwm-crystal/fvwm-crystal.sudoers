@@ -1,0 +1,21 @@
+# FVWM-Crystal: allow members of the fvwm-crystal group to use the
+# reboot / shut down / suspend entries of the Exit menu.
+#
+# This replaces upstream's makesudoers.sh, which grants password-less
+# access to mount, umount, systemctl and loginctl with any arguments
+# (equivalent to full root access).  Only the commands actually issued
+# by the menus are allowed here.
+#
+# Add a user to the group with:  usermod -a -G fvwm-crystal <user>
+Cmnd_Alias FVWM_CRYSTAL_POWER = \
+	/usr/sbin/shutdown -r now, \
+	/usr/sbin/shutdown -h now, \
+	/usr/bin/systemctl suspend, \
+	/usr/bin/systemctl hibernate, \
+	/usr/bin/systemctl hybrid-sleep, \
+	/usr/bin/systemctl hybrid-sleep -i, \
+	/usr/bin/loginctl suspend, \
+	/usr/bin/loginctl hibernate, \
+	/usr/bin/loginctl hybrid-sleep, \
+	/usr/bin/loginctl hybrid-sleep -i
+%fvwm-crystal ALL=(root) NOPASSWD: FVWM_CRYSTAL_POWER

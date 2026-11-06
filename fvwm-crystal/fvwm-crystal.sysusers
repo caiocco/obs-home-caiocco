@@ -1,0 +1,3 @@
+# Members of this group may reboot, shut down and suspend the machine
+# from the FVWM-Crystal Exit menu (see /etc/sudoers.d/fvwm-crystal).
+g fvwm-crystal -
