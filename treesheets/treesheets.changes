@@ -1,0 +1,10 @@
+-------------------------------------------------------------------
+Fri Nov  6 19:50:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of TreeSheets 2.23.4
+  * wxWidgets 3.3.4 is bundled and linked statically (openSUSE only
+    ships 3.2), using the system zlib, expat, pcre2, libjpeg, libpng,
+    libtiff and libwebp
+  * Lobster 2026.8, wxPdfDocument 1.4.0, Monocypher 4.0.3 and
+    libunibreak 8.0 are bundled, as upstream does at configure time
+  * Add a lower-case treesheets command
