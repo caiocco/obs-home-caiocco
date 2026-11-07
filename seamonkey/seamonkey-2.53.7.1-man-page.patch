@@ -1,0 +1,25 @@
+diff -ru seamonkey-2.53.23.old/build/moz.configure/old.configure seamonkey-2.53.23/build/moz.configure/old.configure
+--- seamonkey-2.53.23.old/build/moz.configure/old.configure	2025-11-15 14:08:07.000000000 -0600
++++ seamonkey-2.53.23/build/moz.configure/old.configure	2026-01-01 13:43:09.425634029 -0600
+@@ -112,6 +112,7 @@
+     '--enable-zipwriter',
+     '--includedir',
+     '--libdir',
++    '--mandir',
+     '--prefix',
+     '--with-branding',
+     '--with-debug-label',
+diff -ru seamonkey-2.53.23.old/comm/suite/installer/Makefile.in seamonkey-2.53.23/comm/suite/installer/Makefile.in
+--- seamonkey-2.53.23.old/comm/suite/installer/Makefile.in	2025-11-24 14:30:06.000000000 -0600
++++ seamonkey-2.53.23/comm/suite/installer/Makefile.in	2026-01-01 13:42:29.091360087 -0600
+@@ -141,6 +141,10 @@
+ 
+ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+ 
++install::
++	$(NSINSTALL) -D $(DESTDIR)$(mandir)/man1
++	$(SYSINSTALL) $(IFLAGS1) $(DIST)/man/man1/$(MOZ_APP_NAME).1 $(DESTDIR)$(mandir)/man1
++
+ ifeq (Darwin, $(OS_ARCH))
+ BINPATH = $(_BINPATH)
+ DEFINES += -DAPPNAME='$(_APPNAME)'
