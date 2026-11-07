@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Qutiny
+GenericName=File Manager
+Comment=Orbitiny Desktop file manager
+Exec=qutiny %U
+Icon=system-file-manager
+Terminal=false
+Type=Application
+Categories=System;FileTools;FileManager;Qt;
+MimeType=inode/directory;

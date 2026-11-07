@@ -1,0 +1,13 @@
+# The panel plugins are dlopen()ed from a private directory
+addFilter("shlib-policy-missing-lib")
+addFilter("shared-library-without-dependency-information")
+addFilter("devel-file-in-non-devel-package .*/orbitiny/plugins/")
+# Orbitiny expects its programs in <install dir>/usr/bin
+addFilter("non-standard-dir-in-usr")
+# Empty templates (history files, bookmarks) and theme marker files
+# copied to ~/.config/orbitiny on first run
+addFilter("zero-length /usr/share/orbitiny/")
+addFilter("hidden-file-or-dir /usr/share/orbitiny/shared/themes/.*/\.override_background")
+# plugins.d is copied as a symlink to ~/.config/orbitiny, so it must
+# stay absolute
+addFilter("symlink-should-be-relative .*/plugins.d ")

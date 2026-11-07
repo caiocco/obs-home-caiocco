@@ -1,0 +1,69 @@
+-------------------------------------------------------------------
+Sat Nov  7 18:11:05 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Load the panel plugins straight from /usr/lib64/orbitiny/plugins:
+  the plugins.d symlink copied into ~/.config was made relative by
+  brp-symlink and dangled there
+- Fix the first run: desktop and panel create ~/.config/orbitiny
+  concurrently, and an already existing directory made the panel
+  give up ("Unable to create .../orbitiny-panel.d")
+
+-------------------------------------------------------------------
+Sat Nov  7 16:50:34 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Link the panel plugins with -z lazy: they reference symbols that
+  are never defined (upstream relies on lazy binding), so with the
+  distribution's -z now every plugin failed to load and the panel
+  came up empty
+
+-------------------------------------------------------------------
+Sat Nov  7 15:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Rework the installation layout:
+  * programs in /usr/libexec/orbitiny (the install directory must be
+    called "orbitiny" and hold the programs in usr/bin)
+  * default data in /usr/share/orbitiny, symlinked into the install
+    directory
+  * panel plugins in /usr/lib64/orbitiny/plugins; the default
+    plugins.d is a symlink to it, so the copy made in ~/.config on
+    first run keeps loading the installed (updated) plugins
+  * release_notes.txt as documentation
+
+-------------------------------------------------------------------
+Sat Nov  7 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Update to 1.0 Pilot X (Release 5E), git commit 4d5ba1d; upstream
+  has now published the source code of the Release 5 series
+  * R5: Qutiny text editor word wrap, looping find next/previous;
+    fixed desktop icons wrongly moved as being off-screen
+  * R5B: Qutiny image preview turned into an image viewer (zoom,
+    rotate, fit to window, save, alpha transparency)
+  * R5C: "Add Rectangle" annotation in Qutiny image preview; fixed
+    CSD resizing of maximized windows and a dual-pane move crash
+  * R5D: fixed Qutiny file selection sometimes not detected
+  * R5E: fixed changing desktop directories and loading desktop files
+- Export ORBITINY_XINPUT (now required by the pointer settings) and
+  the other ORBITINY_* helper paths in the launch scripts, as the
+  binary release does, pointing to the system tools
+- The data tarball (orbitiny-data-pilotx5e) now matches the code
+
+-------------------------------------------------------------------
+Fri Nov  6 22:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Orbitiny Desktop 1.0 Pilot X (Release 3B),
+  git commit b053290; the Release 5B source code is not in the
+  upstream git repository yet (only the binary release is)
+  * Build every program, the control center applets and the 19 panel
+    plugins with Qt 6 (qmake6), using the system libraries instead of
+    the bundled ones
+  * Install in /usr/lib/orbitiny, the layout the programs expect;
+    settings are copied to ~/.config/orbitiny on first run
+  * Ship the default settings, themes, wallpapers and templates from
+    the upstream binary release (orbitiny-data-pilotx5e.tar.xz, all
+    binaries removed), since they are not in the git repository
+  * Use the Debian multiarch paths from %{_libdir}; drop the unused
+    libexplain include
+  * Add an "Orbitiny" X session (orbitiny-session picks the first
+    window manager found), PATH launchers and a Qutiny desktop file
+  * Drop the executable bit from the theme CSS files; keep it only
+    on the files that start with a shebang

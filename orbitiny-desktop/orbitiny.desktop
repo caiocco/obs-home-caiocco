@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Orbitiny
+Comment=Orbitiny Desktop Environment
+Exec=/usr/bin/orbitiny-session
+TryExec=/usr/bin/orbitiny-session
+Type=Application
+DesktopNames=Orbitiny

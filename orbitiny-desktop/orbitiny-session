@@ -1,0 +1,30 @@
+#!/bin/bash
+# Start an Orbitiny Desktop session on top of a window manager.
+# Set ORBITINY_WM to choose the window manager; otherwise the first one
+# found from Orbitiny's window manager list is used.
+
+APPDIR=@APPDIR@
+
+if [ -z "$ORBITINY_WM" ]; then
+   list="$HOME/.config/orbitiny/shared/window_managers.dat"
+   [ -r "$list" ] || list="$APPDIR/shared/window_managers.dat"
+   for wm in $(cat "$list"); do
+      if command -v "$wm" >/dev/null 2>&1; then
+         ORBITINY_WM=$(command -v "$wm")
+         break
+      fi
+   done
+fi
+
+if [ -z "$ORBITINY_WM" ]; then
+   echo "orbitiny-session: no supported window manager found" >&2
+   exit 1
+fi
+
+export ORBITINY_WM
+export INDEPENDENT_MODE=1
+export XDG_CURRENT_DESKTOP=${XDG_CURRENT_DESKTOP:-Orbitiny}
+
+"$APPDIR/start-orbitiny" &
+
+exec "$ORBITINY_WM"
