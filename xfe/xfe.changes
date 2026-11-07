@@ -1,0 +1,11 @@
+-------------------------------------------------------------------
+Sat Nov  7 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of xfe 2.1.13 for openSUSE Leap 16.0
+  * Build against fox16 1.6.57 from openSUSE:Backports:SLE-16.0
+  * Enable startup notification, XRandR and the udisks2/libnotify
+    based automounter (xfe-automount)
+  * Use --enable-minimalflags so that %optflags are respected
+  * Move the Norwegian translation to the nb locale directory
+  * Fix the main category of the Xfp desktop entry
+  * Do not install the redundant (and partly empty) XPM icons
