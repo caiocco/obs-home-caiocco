@@ -1,0 +1,13 @@
+-------------------------------------------------------------------
+Sat Nov  7 13:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of LazPaint 7.3 for openSUSE Leap 16.0
+  * Bundle BGRABitmap 11.6.6 and BGRAControls at the commits pinned
+    by the v7.3 tag
+  * Build against Lazarus 3.6 from openSUSE:Backports:SLE-16.0
+    (lazarus-ide is needed by lazbuild for the IdeConfig package)
+  * Ship two mutually exclusive packages, lazpaint-gtk (GTK 2)
+    and lazpaint-qt (Qt 5, the Qt flavor supported upstream)
+  * Load libwebp.so.7 instead of libwebp.so.6
+  * Install the .desktop file non-executable; drop the duplicate
+    pixmaps icon
