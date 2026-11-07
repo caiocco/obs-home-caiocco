@@ -1,0 +1,61 @@
+diff --git i/ddd/Makefile.am w/ddd/Makefile.am
+index de1efc4e..c8a082f4 100644
+--- i/ddd/Makefile.am
++++ w/ddd/Makefile.am
+@@ -49,12 +49,10 @@ SUFFIXES = .C .c .Y .L .txt .xbm .xbmxx .xpm .xpmxx \
+ 	   .fig .jpg .png .gif .pdf $(IMGEXT)
+ 
+ # Shared data installation
+-dddrootdir    = $(pkgdatadir)-@VERSION@
+-dddappdir     = $(pkgdatadir)-@VERSION@/@ddd@
++dddrootdir    = $(pkgdatadir)
++dddappdir     = $(pkgdatadir)/@ddd@
+ desktopdir    = @DDD_XDG_DATADIR@/applications
+ iconsdir      = @DDD_XDG_DATADIR@/pixmaps
+-ddddocdir     = $(dddrootdir)/doc
+-infodir       = $(dddrootdir)/info
+ 
+ 
+ # -----------------------------------------------------------------------------
+@@ -1191,7 +1189,7 @@ man_MANS = ddd.1
+ ddd.1:	ddd.man 
+ 	cp ddd.man ddd.1
+ 
+-xmldir = $(datarootdir)/ddd-@VERSION@
++xmldir = $(dddappdir)
+ xml_DATA = $(top_builddir)/ddd/default.xml
+ 
+ # -----------------------------------------------------------------------------
+@@ -1487,5 +1485,4 @@ desktop_DATA = $(srcdir)/ddd.desktop
+ 
+ icons_DATA = $(srcdir)/../icons/ddd.png
+ 
+-ddddoc_DATA = $(srcdir)/../doc/NEWS $(srcdir)/../doc/COPYING \
+-	      $(srcdir)/../doc/CREDITS $(builddocdir)/ddd.info.txt
++doc_DATA = $(builddocdir)/ddd.info.txt
+diff --git i/themes/Makefile.am w/themes/Makefile.am
+index 3a32dc2b..8a6f269d 100644
+--- i/themes/Makefile.am
++++ w/themes/Makefile.am
+@@ -31,7 +31,7 @@
+ 
+ 
+ # Shared data installation
+-dddrootdir   = $(pkgdatadir)-@VERSION@
++dddrootdir   = $(pkgdatadir)
+ 
+ # -----------------------------------------------------------------------------
+ # DDD themes.
+diff --git i/vsllib/Makefile.am w/vsllib/Makefile.am
+index 563a5a70..0ae93db2 100644
+--- i/vsllib/Makefile.am
++++ w/vsllib/Makefile.am
+@@ -30,7 +30,7 @@
+ # or send a mail to the DDD developers <ddd@gnu.org>.
+ 
+ # Shared data installation
+-dddrootdir   = $(pkgdatadir)-@VERSION@
++dddrootdir   = $(pkgdatadir)
+ 
+ # -----------------------------------------------------------------------------
+ # VSL files.

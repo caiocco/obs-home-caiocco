@@ -1,0 +1,9 @@
+-------------------------------------------------------------------
+Sat Nov  7 14:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of ddd 3.4.1+git20261102.12f6459 for openSUSE
+  Leap 16.0, based on home:bberberov:develop:Multi/ddd
+  * Snapshot of the maintained fork at github.com/eickeler/DDD
+  * Install shared data in /usr/share/ddd (ddd-paths.patch)
+  * Move the HTML, PDF and PostScript manuals to ddd-doc
+  * Deduplicate files with fdupes
