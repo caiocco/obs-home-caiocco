@@ -1,0 +1,53 @@
+Index: eaglemode-0.96.4/make.pl
+===================================================================
+--- eaglemode-0.96.4.orig/make.pl
++++ eaglemode-0.96.4/make.pl
+@@ -627,30 +627,30 @@ sub Build
+ 				);
+ 				for (my $again=1; $again eq 1;) {
+ 					STDOUT->flush();
+-					my $ln=readline(*STDIN);
+-					$.=0; # for that a call to die will not print an input line number.
+-					if ($ln =~ /^\s*[nN]/) {
+-						exit(1);
+-					}
+-					elsif ($ln =~ /^\s*[yY]/) {
+-						$again=0;
+-					}
+-					elsif ($ln =~ /^\s*[aA]/) {
++#					my $ln=readline(*STDIN);
++#					$.=0; # for that a call to die will not print an input line number.
++#					if ($ln =~ /^\s*[nN]/) {
++#						exit(1);
++#					}
++#					elsif ($ln =~ /^\s*[yY]/) {
++#						$again=0;
++#					}
++#					elsif ($ln =~ /^\s*[aA]/) {
+ 						$options{"continue"}="yes";
+ 						$again=0;
+-					}
+-					elsif ($ln =~ /^\s*[rR]/) {
++#					}
++#					elsif ($ln =~ /^\s*[rR]/) {
+ 						# *** secret option: "retry" ***
+ 						# I'm not satisfied with this, because:
+ 						#  - The maker scripts are not reloaded (no effect if edited).
+ 						#  - It's only for non-essential projects...
+-						pop(@failedNonEssentialMakers);
+-						$i--;
+-						$again=0;
+-					}
+-					else {
+-						print("Say yes, no or always: ");
+-					}
++#						pop(@failedNonEssentialMakers);
++#						$i--;
++#						$again=0;
++#					}
++#					else {
++#						print("Say yes, no or always: ");
++#					}
+ 				}
+ 			}
+ 		}
