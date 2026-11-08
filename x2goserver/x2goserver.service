@@ -1,0 +1,12 @@
+[Unit]
+Description=X2Go Server Daemon
+Documentation=man:x2goserver.conf(5)
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/x2gocleansessions
+PIDFile=/run/x2goserver.pid
+
+[Install]
+WantedBy=multi-user.target
+
