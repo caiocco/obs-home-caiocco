@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Zyn-Fusion (JACK)
+GenericName=Software Synthesizer
+Comment=ZynAddSubFX synthesizer with the Zyn-Fusion interface
+Comment[pt_BR]=Sintetizador ZynAddSubFX com a interface Zyn-Fusion
+Keywords=audio;sound;jack;midi;synth;synthesizer;
+Exec=zyn-fusion -I jack -O jack
+Icon=zyn-fusion
+Terminal=false
+Categories=AudioVideo;Audio;Midi;

@@ -1,0 +1,16 @@
+-------------------------------------------------------------------
+Sun Nov  8 16:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Zyn-Fusion 3.0.6
+  * ZynAddSubFX 3.0.6 core built with the zest GUI, plus the
+    zyn-fusion-ui-src 3.0.6 interface (bundled mruby, nanovg, pugl)
+  * Installs side by side with the classic zynaddsubfx package:
+    the core is /usr/bin/zyn-fusion, the UI lives in
+    /usr/lib64/zyn-fusion instead of /opt/zyn-fusion, and banks come
+    from zynaddsubfx-common
+  * Never loads libzest.so or the UI from the current directory
+  * LV2 and VST plugins in zyn-fusion-lv2 and zyn-fusion-vst; they
+    conflict with zynaddsubfx-lv2/-vst (same URIs)
+  * Build fixes from openSUSE:Factory zynaddsubfx:
+    zynaddsubfx-buildflags.patch, fix-missing-include.patch,
+    0001-Bump-C-version-to-C-20.patch

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Zyn-Fusion (ALSA)
+GenericName=Software Synthesizer
+Comment=ZynAddSubFX synthesizer with the Zyn-Fusion interface
+Comment[pt_BR]=Sintetizador ZynAddSubFX com a interface Zyn-Fusion
+Keywords=audio;sound;alsa;midi;synth;synthesizer;
+Exec=zyn-fusion -I alsa -O alsa
+Icon=zyn-fusion
+Terminal=false
+Categories=AudioVideo;Audio;Midi;
