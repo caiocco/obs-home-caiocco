@@ -1,0 +1,54 @@
+Redmond97 SE on openSUSE (home:caiocco)
+=======================================
+
+Upstream: https://codeberg.org/Sliver_X/Redmond97-SE
+
+Packages
+--------
+ - redmond97-se-gtk-theme: the 42 themes "Redmond97 SE <scheme>"
+   (GTK 2/3/4, Xfwm4, wine/*.reg) and the xfce4-panel-profiles layouts
+ - redmond97-se-gtk-theme-hidpi: the "-HiDPI" variants (2x assets)
+ - obsidian-pure-icon-theme: Obsidian Pure icons in 11 folder colors
+ - redmond97-se: metapackage for the theme + icons
+
+Differences from upstream's prebuilt themes
+-------------------------------------------
+The themes are generated at build time from builder/presets/*.conf with
+upstream's gen_theme.sh. Two settings are changed for every preset:
+ - the Whisker Menu side-bar text is drawn in DejaVu Sans Bold instead
+   of Lucida Sans (not free);
+ - the PNGs are not recompressed with advpng (advancecomp is not in
+   openSUSE); fdupes links identical files instead.
+The output is otherwise the same file set as upstream's themes tarball.
+
+Not packaged: the gtk2-scale script (it only works with presets built
+in hidpi_gtk2_mode=3; the shipped presets use mode 2) and the XPM
+scaler. extras/r97se-fixes.sh is in the docs.
+
+Setting it up in Xfce
+---------------------
+ - Settings > Appearance: Style "Redmond97 SE <scheme>"; Icons e.g.
+   "Obsidian-Pure-Sand" (each preset's index.theme names its icons)
+ - Settings > Window Manager: Theme "Redmond97 SE <scheme>"
+ - Panels need a border of at least 1px and fixed icon sizes (16px
+   icons on a 32px panel); or restore one of the Redmond97-SE_* layouts
+   with xfce4-panel-profiles
+ - CSD button order and GTK icon sizes (xfsettingsd overrides them):
+     sh /usr/share/doc/packages/redmond97-se-gtk-theme/r97se-fixes.sh
+   e.g. as a session autostart entry
+ - Wine: in a prefix, run regedit and import
+     "/usr/share/themes/Redmond97 SE <scheme>/wine/Redmond97 SE <scheme>.reg"
+   then in winecfg > Desktop Integration set Theme to "(No Theme)"
+ - Qt: QT_QPA_PLATFORMTHEME=gtk3, or qt5ct/qt6ct with the gtk2 style
+
+HiDPI: pick the "-HiDPI" style, cursor size 32 and 2x window scaling
+in Appearance > Settings.
+
+Licenses
+--------
+Themes: GPL-3.0 (builder/src/LICENSE), from Redmond97 by matthewmx86.
+Obsidian Pure: GPL-3.0, fork of madmaxms' Obsidian / Faenza by
+Matthieu James. Like most icon themes it has brand icons for
+applications (including Microsoft ones such as Teams, Office Online).
+The Microsoft-named presets (Windows 95, Plus! schemes) are only color
+values; no Microsoft artwork is included.

@@ -1,0 +1,18 @@
+-------------------------------------------------------------------
+Sun Nov  8 22:45:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Drop stray zero-length *.png.tmp* files from the icon tarball and
+  the unversioned hicolor-icon-theme Requires
+
+-------------------------------------------------------------------
+Sun Nov  8 22:15:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Drop the icon cache %post/%ghost (a no-op macro on Leap 16; file
+  triggers update the cache) and the empty .gitkeep files
+
+-------------------------------------------------------------------
+Sun Nov  8 21:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Redmond97 SE 2.13: themes generated from the
+  presets at build time; subpackages gtk-theme, gtk-theme-hidpi and
+  obsidian-pure-icon-theme (Obsidian Pure 2.08)
