@@ -1,0 +1,12 @@
+diff --git a/sampleconf/recoll.conf b/sampleconf/recoll.conf
+index d39e317..78ae1e8 100644
+--- a/sampleconf/recoll.conf
++++ b/sampleconf/recoll.conf
+@@ -818,6 +818,7 @@ checkneedretryindexscript = rclcheckneedretry.sh
+ # inside result lists or previews. The default value is 150 bytes which
+ # may be too low if you have custom fields.</descr></var> 
+ #idxmetastoredlen = 150
++idxmetastoredlen = 1500
+ 
+ # <var name="idxtexttruncatelen" type="int">
+ #

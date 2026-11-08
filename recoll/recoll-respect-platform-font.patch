@@ -1,0 +1,42 @@
+diff -ruN recoll-orig/qtgui/guiutils.cpp recoll-1.44.2/qtgui/guiutils.cpp
+--- recoll-orig/qtgui/guiutils.cpp	2026-04-26 09:51:00.000000000 -0300
++++ recoll-1.44.2/qtgui/guiutils.cpp	2026-11-08 20:01:51.773665335 -0300
+@@ -541,6 +541,23 @@
+     auto fn = path_cat(theconfig->getDatadir(), {"examples", "recoll-common.qss"});
+     std::string qss = cacheget(fn);
+ 
++    // Replace the fixed font size from recoll-common.qss with the platform font size (e.g. as set
++    // by qt5ct/qt6ct or the desktop), so that the user's Qt font is respected. The result is then
++    // scaled as usual by scaleFonts(). QApplication::font() is not affected by style sheets.
++    {
++        QFont pfont = QApplication::font();
++        std::string unit("pt");
++        int sz = pfont.pointSize();
++        if (sz <= 0) {
++            sz = pfont.pixelSize();
++            unit = "px";
++        }
++        if (sz > 0) {
++            static const std::regex cfs_regex(R"((font-size\s*:\s*)[0-9]+p[tx](\s*;))");
++            qss = std::regex_replace(qss, cfs_regex, "$01" + std::to_string(sz) + unit + "$02");
++        }
++    }
++
+ #if defined(__APPLE__) && (QT_VERSION >= QT_VERSION_CHECK(6, 5, 0))
+     prefs.colorscheme = PrefsPack::CS_SYSTEM;
+ #endif
+diff -ruN recoll-orig/sampleconf/recoll-common.qss recoll-1.44.2/sampleconf/recoll-common.qss
+--- recoll-orig/sampleconf/recoll-common.qss	2025-12-21 05:36:11.000000000 -0300
++++ recoll-1.44.2/sampleconf/recoll-common.qss	2026-11-08 20:01:51.777665609 -0300
+@@ -2,9 +2,8 @@
+  * This is always applied to the recoll GUI, and can be extended or overridden by the style sheet
+  * set in the preferences. The font size is edited before applying when recoll is scaled.
+  *
+- * NOTE: this will override the platform font size preference set by e.g. qt5ct. There is
+- * currently no easy way to change this, you will have to edit the installed recoll-common.qss file
+- * to comment out or delete the font-size line.
++ * NOTE (openSUSE home:caiocco): the font size below is replaced at run time by the platform
++ * font size (e.g. as set by qt5ct/qt6ct), so the system Qt font is respected.
+  */
+ 
+ * {

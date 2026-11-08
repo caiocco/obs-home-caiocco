@@ -1,0 +1,1137 @@
+-------------------------------------------------------------------
+Sun Nov  8 23:02:21 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add recoll-respect-platform-font.patch: recoll-common.qss forced
+  "* { font-size: 12pt; }" on the whole GUI, overriding the Qt font
+  size set by qt5ct/qt6ct or the desktop. Use the platform font size
+  instead (still scaled by the "whole UI scale" preference)
+
+-------------------------------------------------------------------
+Sun Nov  8 08:57:57 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Update to 1.44.2
+  https://www.recoll.org/pages/release-1.44.html
+  * Fix indexer crash on an unchecked NULL from magic_file()
+  * Linux: use soffice for very big .xlsx spreadsheets, as for .ods
+
+-------------------------------------------------------------------
+Sat Aug  1 09:09:27 UTC 2026 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.44.1
+  https://www.recoll.org/pages/release-1.44.html
+- Drop obsolete Leap 15 conditions
+
+-------------------------------------------------------------------
+Thu May 21 19:49:11 UTC 2026 - Michael Pujos <pujos.michael@gmail.com>
+
+- Update to 1.43.17
+  * Add disablelibmagic configuration parameter to force mime id command
+    use even when libmagic is compiled in.
+- Update to 1.43.16
+  * When using soffice to extract text, use a separate UserInstallation
+    directory to avoid interfering with interactive sessions.
+  * GUI: the result list date format preference was not saved.
+  * GUI: add file size filter tool, and option to not show it.
+  * GUI: fix simple search mode start preference (was not actually saved).
+  * GUI: add option to open the query fragments tool when starting.
+  * GUI: add help menu entry to show the query language cheatsheet.
+  * Fix the OpenAI whisper interface module.
+  * Add configuration parameter with list of MIME wildcard exprs for MIME
+    types which should use the stored text for previewing instead of
+    re-extracting the text. 
+- Update to 1.43.14
+  * Python: queries would lose one Db object when iternext hit the end of
+    results. Long running processes like the WEBUI would end up getting random
+    open errors when the process ran out of descriptors.
+  * rcldoc.py ms-word handler: retry misidentified wordperfect documents.
+  * Image OCR: tesseract: add gif to supported formats.
+
+-------------------------------------------------------------------
+Mon Feb 23 15:23:18 UTC 2026 - Michael Pujos <pujos.michael@gmail.com>
+
+- compiled with semantic search support on Leap 16 and Tumbleweed
+- Update to 1.43.13
+  * GUI: interface languages: add English so that it can be forced in
+    non-english locales.
+  * GUI: result table: add progress indicator when saving big result lists
+    to CSV.
+  * GUI: semantic query interface code is enabled by default, menu entries
+    appear at run time depending on local configuration.
+  * Indexer: optimize getting entries attributes while walking a directory.
+    Marginal performance improvement.
+  * Mbox: also build the mbox cache during preview. Helps with external
+    indexes, for which the local cache does not exist.
+  * Tar handler: use filename and modification date from the tar entries.
+  * Windows: use %USERPROFILE% as initial value of topdirs list. Less
+    confusing than ~
+  * Windows: use the Perl rclimg.exe instead of rclimg.py: much faster. The
+    Python version is only used for image OCR, which is rarely needed.
+  * Windows: add help menu entry to check the up to date version on the
+    Recoll Web site (by starting a browser on the page).
+
+-------------------------------------------------------------------
+Wed Feb  4 17:28:06 UTC 2026 - Michael Pujos <pujos.michael@gmail.com>
+
+- Compiled against Qt 6
+- Added krunner_recoll to multibuild
+- Reworked spec files
+  * compiled with aspell support
+  * compiled with recollq, the command-line query tool
+  * added keyring file for source verification
+  * updated build, runtime and recommends dependencies
+  * new description
+- Update to 1.43.12
+  * Python API: qresultstore: use surrogateescape for decoding urls.
+  * rclaudio: avoid duplicating values when adding data to fields.
+  * GUI: configuration switching: use a more standard dialog.
+  * A version 1.43.11 briefly existed, with an rclpdf.py bug.
+- Update to 1.43.10
+  * GUI: fix crash occuring on certain platforms (linux/qt6) when clicking one of the "Next" links inside the result list.
+  * GUI: fixed bug which sometimes prevented using a phrase as search input to the external viewer.
+  * Query language: accept empty query with "all documents" meaning. Avoids the "mime:*" hack when used from the python module or recollq.
+  * rclrunsoffice.py: don’t generate exception when soffice is not found, just exit in error. Avoids system popups.
+  * Indexer: avoid a hard dependency on the Perl JSON module, it’s only necessary for image OCR which is not enabled by default (rclimgp.py)
+  * Merged the interface to the LLM embedding test scripts as inactive code. use meson -Dsemantic=true to activate. See this page for more details.
+- Update to 1.43.9
+  * An 1.43.8 existed very briefly, and was replaced because of a spurious debugging log message at error level.
+  * Indexer: fix thread safety issue leading to rare crashes.
+  * opendoc-flat files: fix image hex strings being indexed by excluding <office:binary-data>.
+  * Indexer: .ods: very big spreadsheets could cause huge memory usage in the XML parser, possibly leading to crashes. The configuration has been changed so that libreoffice spreadsheets bigger than 3000 KB (adjustable) are now processed by the soffice command, if present, else, not indexed.
+  * Configuration: new "sofficecmd" parameter to point to the program if it is not found in the PATH.
+  * Configuration: tesseract: allow adding default parameters to the command string.
+  * Configuration: the parameter names are now case-insensitive. Only sections defined by paths remain case-sensitive on unix-like systems.
+  * Configuration: Accept wildcards in indexedmimetypes and excludedmimetypes lists.
+  * Windows: enable using OCR on image (non-PDF) files.
+  * GUI: Linux: improve the real time indexing autostart management tool to work on non-default configuration directories.
+- Update to 1.43.7
+  * GUI: updated SingleApplication to 3.5.4 for license change necessitated for Debian inclusion.
+  * GUI: menu entry "query→ext dialog" was showing the wrong tab.
+  * GUI: preview: work around webengine setHtml() 2Mb limit.
+  * openxml indexing: properly process whitespace in Word docs with revisions/tracks.
+- Update to 1.43.6
+  * Improve the code using xslt to process xml-based formats to process multiple body or meta members: allows processing pptx, vsdx and accessing numbers in multiple xlsx sheets.
+  * recollindex --stop and --help options.
+  * Fix crash caused by write beyond buffer when listing extended attributes on xxBSD
+  * GUI: view actions editor: memorize the window and column sizes.
+  * KDE krunner: remove spurious stderr messages.
+- Update to 1.43.5
+  * GUI: Improve speed of building directory side filter contents.
+  * Use locked global libmagic instance. Better performance and fixes crash on Mac OS ARM.
+  * New configuration variable to add timestamps to log lines
+  * GUI preview: use the common highlight color.
+  * GUI webengine: improve blocking of chromium engine possible external requests.
+- Update to 1.43.4
+  * GUI: HTML preview in dark mode: do not use a dark background by default, there is no way that this can work with many documents CSS, and often results in dark text on dark background. Add option to restore the previous behaviour.
+  * MS-Word handler: when antiword fails on a small .doc, fall back to soffice, then only to wvWare, which is obsolete. Very few files trigger this anyway. Another possibility would have been to use abiword itself, which might be faster.
+  * Added code to process Mac OS webarchive format on other platforms.hanks to Mansour Alghamdi. Needs the plistlib and bs4 Python3 packages.
+  * Add .jp2 to the image formats considered for OCR (when enabled).
+  * Fixed/improved the computation of the directory side filter entries.
+  * PDF: added option to force OCR on files which are not pure images.
+  * Handle unencoded utf8 email headers.
+- Update to 1.43.3
+  * GUI: viewer execution: add %S to substitute with phrase if the query was a simple single phrase. Else substitutes as %s
+  * GUI: preferences fix duplication of language list in interface language choice.
+  * GUI: add alt+S shortcut to open the advanced search dialog (use ^W to close)
+  * GUI: change the "Open parent" operation to desktop default instead of Dolphin. Using Dolphin when available allows highlighting the doc entry, but it was of course an issue on non KDE desktops.
+  * Zip handler: detect encoding of metadata element when possible. Uses chardet.
+  * GUI: result table save to CSV: improve performance for very big lists.
+  * Repurpose the currently unused rclimg.py to perform OCR on image files. If rclimg.py is specified for image files in mimeconf (instead of the Perl+exiftool default rclimg), and if the imgocr recoll.conf parameter is true for the current location, OCR will be performed and the output used as document main text.
+
+-------------------------------------------------------------------
+Sun Jun 22 15:53:01 UTC 2025 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.43.2
+  * Fix static initialisation order bug causing an immediate
+    crash with some gcc 15 builds.
+  * Change PDF attachment indexing to using pdfdetach from
+    poppler-utils. No more need for the java-based pdftk.
+    PDF attachment indexing is now enabled by default.
+  * Windows: automatically install VC_redist if needed.
+  * Apple pages handler: tweak options to allow running headless.
+  * Fix broken "remember sort state" feature.
+  * Add default configuration for processing LISP files (as text).
+  * Fix preview text mode bad formatting after the first chunk.
+
+-------------------------------------------------------------------
+Thu Apr 17 09:22:29 UTC 2025 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.43.0
+  Check https://www.recoll.org/#_news for the list of changes
+- Drop patches (kio-recoll.spec):
+  * 0001-Disable-aspell-support-for-building-the-kioslave-plu.patch
+  * fix-kioslave-build.patch
+
+-------------------------------------------------------------------
+Thu Apr 18 08:40:04 UTC 2024 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.37.5
+  * Fix a weird issue where the GUI refuses to exit
+
+-------------------------------------------------------------------
+Fri Mar 22 17:22:23 UTC 2024 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.37.4
+  * Display previews using the main HTML engine (webkit or
+    webengine) instead of a QTextBrowser
+  * New integration with the Jieba chinese text segmenter
+  * New handler for the .zip.html files produced by the
+    SingleFileZ browser extension
+  * Powerpoint: also index the slide notes
+  * GUI: Add a preference for setting the format of the dates
+    displayed in the side filter
+  * Add configuration option to not store term positions,
+    yielding a much smaller index, but forbidding phrase/proximity
+    searches.
+
+-------------------------------------------------------------------
+Sat Dec 16 22:32:52 UTC 2023 - Fabian Vogt <fabian@ritter-vogt.de>
+
+- Add patch to fix the kio_recoll build (boo#1218132):
+  * fix-kioslave-build.patch
+
+-------------------------------------------------------------------
+Fri Dec 15 22:10:16 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.36.2:
+  * https://www.lesbonscomptes.com/recoll/pages/release-1.36.html
+
+-------------------------------------------------------------------
+Fri Dec 15 22:08:30 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Require extra-cmake-modules at build time
+
+-------------------------------------------------------------------
+Tue Oct 24 08:31:01 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.35
+  https://www.lesbonscomptes.com/recoll/pages/release-1.35.html
+  * fixes a bug which would prevent the handler memory size
+    limitation from working
+  * multiple small fixes and improvements
+
+-------------------------------------------------------------------
+Fri May  5 07:08:15 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Add a _multibuild file to replace the linked package
+
+-------------------------------------------------------------------
+Fri Mar 10 16:44:31 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.34.6
+  * recollq: repair -A option, broken in 1.34.0
+  * GUI: add -W command line flag to start with a system tray
+    icon only (no window open).
+  * Data extraction: add flag allowing a handler to return the
+    data as a file path pointer instead of in the stream.
+  * Fix issue in the code for executing external command
+
+-------------------------------------------------------------------
+Wed Feb 15 21:57:20 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.34.3
+  * miscellaneous improvements and fixes
+
+-------------------------------------------------------------------
+Mon Jan  2 09:04:46 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Update to 1.34.0
+  * Add option to complement queries having rare words with more
+    common spelling approximations.
+  * Make index configuration parameters insensitive to character
+    case.
+  * rclaudio: improve performance with NFS-mounted volumes in some
+    cases. Support ID3 tags in WAV and AIFF files. Add dsf and
+    dff support.
+  * recollq: when displaying snippets for a group search, filter
+    out non-matching snippets.
+  * TeX: make a better attempt at guessing charset.
+- Add patch for kio_recoll:
+  * 0001-Disable-aspell-support-for-building-the-kioslave-plu.patch
+
+-------------------------------------------------------------------
+Mon Oct  3 14:04:02 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.33.1:
+  https://www.lesbonscomptes.com/recoll/pages/release-1.33.html
+  * Query processing: simplify queries a bit more before sending to
+    Xapian, allows using OP_FILTER for path filtering. → Medium
+    version bump.
+  * GUI: allow specifying a fixed geometry for the results list
+    viewport by setting RECOLL_RESULTS_GEOMETRY=widthxheight.
+    For people with fixed-width result formats CSS.
+  * recollq: add option to extract a result document into a file.
+  * Replace application/x-flac with audio/flac for FLAC audio files.
+  * Fix web queue processing for non-default configuration directories.
+  * Fix encoding issue in pdf attachment extraction.
+  * GUI: result list: fix issue with webengine builds not displaying
+    Icons. Paging still not working right with webengine (QTBUG-105842).
+    Main builds revert/remain to webkit.
+  * Misc. small adjustments.
+
+-------------------------------------------------------------------
+Sat Sep 17 13:39:26 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.32.7
+  * KIO fixes for recent versions
+
+-------------------------------------------------------------------
+Sat Jul 23 07:24:07 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.32.5. Changes since 1.32.4:
+  * GUI: improve font size consistency when the interface is scaled.
+  * Allow displaying line numbers in recollq and snuppets.
+  * PDF handler: fix opening attachments (the path needs decoding)
+  Visit https://www.lesbonscomptes.com/recoll/pages/release-1.32.html
+  for older changes.
+- Drop 0001-Fix-include-with-recent-KDE-Frameworks.patch. No
+  longer needed.
+
+-------------------------------------------------------------------
+Tue Mar 29 09:39:53 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Add patch to fix kio_recoll build with recent frameworks:
+  * 0001-Fix-include-with-recent-KDE-Frameworks.patch
+
+-------------------------------------------------------------------
+Tue Mar 29 08:16:02 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.32.0
+  * GUI: added a collapsible side pane for quick filtering on
+    dates or directories.
+  * Windows: real time indexing.
+  * Showing duplicates now uses a spreadsheet like the result
+    table for easy access to the duplicate files.
+  * Fixed the temporary copy open dialog (again!).
+  * The default mimeview and mimeconf configuration files were
+    separated into generic and system-specific parts to avoid
+    update errors (no consequences for users).
+  * Renamed all Python input handler with a .py extension. This
+    is relied on on Windows rather than listing an explicit
+    python interpreter.
+  * Added %l specification to viewer definitions for opening at
+    a specific line.
+  * Misc small bug fixes.
+
+-------------------------------------------------------------------
+Thu Jan  6 14:32:03 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.31.6
+  * Fix a nasty bug causing possible crashes or index corruption
+    when indexing was interrupted.
+  * Fix temporary files cleanup when using tesseract OCR on
+    PDF files.
+
+-------------------------------------------------------------------
+Wed Jun 30 06:41:58 UTC 2021 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.31.0
+  * GUI: modified shortcuts were not read from the preferences !
+  * Aspell: execute the command to retrieve the suggestions
+    instead of loading the library.
+  * GUI: we didn’t show the last snippet in "Show snippets"
+  * GUI: fix issue with Ctrl+0 in result table.
+  * Indexer: add "Flushing" state, which will be displayed by the
+    GUI and explain pauses while indexing.
+
+-------------------------------------------------------------------
+Tue Apr 20 17:04:28 UTC 2021 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.30.1
+  * misc fixes
+
+-------------------------------------------------------------------
+Sun Mar 28 08:09:40 UTC 2021 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Drop the pstotext 'Recommends'. it doesn't work anymore.
+
+-------------------------------------------------------------------
+Tue Mar 16 08:39:47 UTC 2021 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.29.2
+  * Improved GUI configurability
+  * Shortcuts editor
+
+-------------------------------------------------------------------
+Tue Dec 22 10:01:51 UTC 2020 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.27.12:
+  * Repair Python source file indexing.
+  * Repair spelling replacements in GUI.
+
+-------------------------------------------------------------------
+Sun Nov  1 21:40:57 UTC 2020 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.27.9
+  * Fix a bug in utf-8 truncation that could lead to indexing
+    failures.
+  * Easy switching to dark mode
+
+-------------------------------------------------------------------
+Fri Oct  2 17:23:05 UTC 2020 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.27.7. Changes since 1.27.6:
+  * Partial support for external term generators.
+  * Index MS-Word .docx endnotes and footnotes.
+  * GUI: Fix having to type CR twice for multi-word searches.
+  * Do not ignore white space while splitting CJK text with
+    the n-gram splitter.
+  Check https://www.lesbonscomptes.com/recoll/pages/release-1.27.html
+  for older changes.
+  
+-------------------------------------------------------------------
+Sat Jul 11 07:04:38 UTC 2020 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.27.3
+  * Fix GUI freezes with xapian 1.4
+  * If XDG_RUNTIME_DIR is set, locate index.pid in it.
+  * When splitting to generate abstract from text, take
+    care to generate all terms.
+  * GUI: fix crash on exit caused by statically declared shortcut
+  * GUI: saving/restoring simple searches: the list of active
+    external indexes is now restored with the query.
+
+-------------------------------------------------------------------
+Sat Apr 18 11:40:42 UTC 2020 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.26.7:
+  * Vastly improved OCR support, with caching
+  * Small fixes
+
+-------------------------------------------------------------------
+Thu Feb  6 11:49:57 UTC 2020 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.26.4
+  * Fix infinite loop with some corrupted compressed files.
+  * Improve memory use behaviour with some very big XML-based
+    (e.g. libreoffice or .docx) documents.
+
+-------------------------------------------------------------------
+Wed Dec 11 20:17:04 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.26.3
+  * Fix some search entry completer crashes.
+  * Add a recollq option to get an exact count of results
+  * Add shortcut to open the snippets window for a results table entry. (Ctrl+e).
+  * Extend PDF XMP custom processing interface
+  * Add options for collapsing duplicate results to the Python API and the recollq command line.
+  * Avoid explicit deletion of preview widget.
+
+-------------------------------------------------------------------
+Wed Nov 20 08:25:40 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.26.1
+  GUI: fix wrong default for the search history size preference.
+  GUI: actually remember when disabling the temp file warning from
+  the dialog.
+
+-------------------------------------------------------------------
+Sun Oct 20 19:57:09 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.26
+  * GUI: improved highlighting and snippets extraction
+  * Slightly improve processing of Hangul characters.
+  * GUI Index configuration: the skippedPaths editor now uses a file
+    picker to create entries
+  * GUI: added option to suppress all beeps.
+  * GUI: snippets: add context menu to switch page/relevance sort.
+  * GUI: add Previous/Next buttons to the preview Window.
+  * GUI: improved search completer.
+  * GUI: add preference to turn off desktop notifications.
+  * GUI: add preference to limit search history length or disable it.
+  * GUI: improved query language help tooltip.
+
+-------------------------------------------------------------------
+Fri Oct 11 21:22:03 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.23
+  * GUI: the search entry now has a completion window with contents
+    from the search history and the index terms.
+  * Better support for mountable volumes
+  * GUI: remember and manage maximized window state.
+  * Path translations changes are used without need for a GUI restart.
+  * All non-internal input handlers now use Python3.
+  * Most XML formats which were processed by a Python script interpreting
+    an XSL stylesheet are now processed internally in the C++ code.
+
+-------------------------------------------------------------------
+Mon Sep 23 21:13:26 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.22
+  * GUI: ensure WM_CLASS is set to help window management.
+  * Linux document Open: pass an encoded URL to xdg-open.
+  * GUI action editor: ensure that the current row data is always reflected
+    when the row changes, not only on mouse clicks.
+  * GUI mbox preview: wrong message was displayed for non-cached folders.
+
+-------------------------------------------------------------------
+Fri Aug  9 20:30:13 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.21
+  * Many small fixes
+  * Repair result table highlighting.
+
+-------------------------------------------------------------------
+Thu Jun 20 09:07:35 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.19
+  * Fix issues with the OCR and XMP functions of the PDF handler.
+
+-------------------------------------------------------------------
+Wed May 29 15:21:08 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.18
+  * Fixed bug in snippets generation. We sometimes dropped the best snippets in
+    case of phrase searches.
+  * Small improvements in synonyms handling, significant for big synonym files.
+  * Raw indexes: fix test for capitals in user input in a few marginal cases.
+  * GUI: fix highlighting in table mode.
+  * GUI: add "Open" button to preview window.
+
+-------------------------------------------------------------------
+Mon May 27 13:20:04 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.16
+  * Fix a GUI crash
+  * Fix a KIO Slave build issue
+  * Fix a Python module memory leak
+  * Fix result table highlighting
+  * Improvements in synonyms handling
+
+-------------------------------------------------------------------
+Tue Apr  2 08:54:41 UTC 2019 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 1.25.11
+  * Use Python 3
+  * performance improvement for big pdf and xls files
+  * Fix crashes in the Python module
+  * Small improvements
+  Check https://www.lesbonscomptes.com/recoll/release-1.25.html for
+  the full list of changes.
+- Drop fix-build.patch. Merged upstream.
+- Trim the marketing words from description.
+- Refresh stop-recoll-truncating-metadata-to-150.patch
+
+-------------------------------------------------------------------
+Sun Oct 21 22:15:19 UTC 2018 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Add fix-build.patch
+
+-------------------------------------------------------------------
+Sat May 26 16:40:08 UTC 2018 - christophe@krop.fr
+
+- Update to 1.24.1:
+  * New snippets generation method.
+  * Fixed clicks on orthographic suggestions with Qt5.
+  * All input handlers should now be compatible with Python3, but
+    still use Python2.
+  Check the ChangeLog for the complete list of changes.
+
+-------------------------------------------------------------------
+Sat Mar 25 08:22:13 UTC 2017 - tittiatcoke@gmail.com
+
+- Update to 1.23.1
+  - Input handler for ODF flat XML file formats.
+  - Configuration: some list configuration variables, namely 
+    skippedNames, noContentSuffixes, and xallexcepts, have acquired 
+    variants suffixed with + or - for adding or removing values from 
+    the default value, which is a longish list, which hence does not 
+    need to be copied for modification any more.
+  - New nomd5types variable for listing types of files for which we 
+    should not compute an MD5 hash (used for duplicates detection). 
+    See the manual for details. The default list excludes the audio 
+    file types.
+  - Unicode BOM detection for text files
+  - Allow using full CSS style for term highlighting, not just color.
+  - execm input handlers now have an alternate method to set metadata 
+    fields, easier than HTML meta fields. 
+
+-------------------------------------------------------------------
+Wed Dec  7 08:12:41 UTC 2016 - tittiatcoke@gmail.com
+
+- Update to 1.22.4
+  * Main features in 1.22.x
+    - It is now possible to define synonyms groups, used only at 
+      query-time to expand the query terms to their defined synonyms.
+    - Many shell-script input handlers have been converted to Python 
+      and are now persistent. Most are compatible with Python3.
+    - The Unix/Linux build system has been converted to use the 
+      autotools in a fairly standard way.
+    - Make dehyphenation (co-worker->coworker in addition to the 
+      normal terms) optional, active by default.
+    - For people using the Firefox web page indexer add-on: a new 
+      tool in the GUI to list and delete entries from the Web cache.
+    - Improved index statistics in the GUI, and improved display 
+      while the indexer is working.
+  * Bugfixes:
+    - Fix advanced search 'start search' button doing nothing 
+      under qt5.
+    - Fix html escaping with newer versions of pdftotext.
+    - Small bug fix in the text splitter: which resulted in missing 
+      results when matching a file name extension using.
+    - Added suffix associations for .java and .sql, to fix problems 
+      caused by the switch from 'file' to 'xdg-mime'.
+    - Sidestep bus error in qt exit code by calling _exit() instead 
+      of exit() in GUI exit code.
+    - GUI, advanced search: fix crash which occurred when restoring 
+      clause list bigger than the default size (6 clauses).
+
+-------------------------------------------------------------------
+Thu Apr  7 10:01:33 UTC 2016 - tittiatcoke@gmail.com
+
+- Update to 1.21.6
+  * KDE Frameworks5 compatibility for the KIO slave
+  * New Query parser
+  * Filters are executed in a different way for better performance
+
+- Added kio_recoll4 package to provide a KIO slave for Konqueror
+  which is still KDE4 based
+
+-------------------------------------------------------------------
+Wed Jul 15 19:25:07 UTC 2015 - tittiatcoke@gmail.com
+
+- Update to 1.20.6
+  * Support for Qt 5.3.2 and higher.
+  * An Open With entry was added to the result list and result 
+    table popup menus
+  * A new way for specifying multiple terms to be searched inside 
+    a given field: it used to be that an entry lacking whitespace 
+    but splittable, like [term1,term2] was transformed into a phrase 
+    search, which made sense in some cases, but no so many
+  * The Query Fragments tool was added to the GUI. This is a window 
+    with customizable buttons to add arbitrary query language 
+    fragments to the current search
+  * We changed the way terms are generated from a compound string 
+    (e.g. an email address)
+  * New keyboard accelerators for the result table: Ctrl+r switches 
+    the focus from the search entry to the table, Ctrl+o opens the 
+    document for the current line, Ctrl+Shift+o opens document and 
+    closes recoll, Ctrl+d previews the document
+  * A special term is now indexed for results from the web history: 
+    use "-rclbes:BGL" to exclude the web results, "rclbes:BGL" to 
+    restrict the results to the web ones
+  * Recoll now indexes #hashtags as such
+  * You can now use both -e and -i for erasing then updating the 
+    index for the given file arguments with the same recollindex 
+    command
+  * We now allow access to the Xapian docid for Recoll documents 
+    in recollq and Python API search results
+  * recollq and recoll -t get a new option -N to print field names 
+    between values when -F is used. In addition, -F "" is taken as 
+    a directive to print all fields
+  * Unicode hyphen (0x2010) is now translated to ASCII minus 
+    during indexing and searching
+
+-------------------------------------------------------------------
+Sun Jul 27 12:39:49 UTC 2014 - auxsvr@gmail.com
+
+- Update to 1.19.14p2
+  * The Open/LibreOffice document filter does not output white space
+    for tab-separated words in input, leading to search failures.
+  * On systems such as Debian Stable which use Evince version 2.x
+    (not 3.x) as PDF viewer, the default "Open" command for PDF files
+    will not work. You need to use the GUI preferences tool to change
+    the --page-index option to --page-label for the evince command
+    line used for PDF.
+  * It will sometimes happen that the result list paragraph format
+    stored in the Qt preferences file will get garbled, causing
+    result lists with no displayed paragraphs (the counts and
+    pages are ok, the results can be seen in table mode, but not in
+    list mode). The workaround is to go to Preferences->Query configuration
+    ->User interface and erase the result paragraph format string (^A DEL
+    in the text area), this will reset the string to the default value.
+  * A release 1.19 change in the way we handle minus characters ('-')
+    broke support for wildcard character ranges (e.g.: [a-z]). A fix would
+    be relatively complicated, so please speak up if you need it because
+    I won't probably do it without further motivation.
+  * Real time indexer: when running with gamin on FreeBSD, the indexer
+    can deadlock in the gamin dialog in some cases.
+  * After an upgrade, the recoll GUI sometimes crashes on startup. This
+    is fixed by removing (back it up just in case) ~/.config/Recoll.org/
+    recoll.conf, the QSettings storage for recoll.
+
+-------------------------------------------------------------------
+Tue May  6 18:27:57 UTC 2014 - tittiatcoke@gmail.com
+
+- Update to 1.19.13
+  * fixes the rare but longstanding multithread indexing crashes
+  * silences noisy but mostly harmless ppt-dump.py crashes
+
+-------------------------------------------------------------------
+Wed Apr 23 18:38:31 UTC 2014 - tittiatcoke@gmail.com
+
+- Update to 1.19.12p1
+  * adds a parameter for setting the truncation size of the stored 
+    metadata attributes
+  * new XLS filter
+
+- updated patch stop-recoll-truncating-metadata-to-150.patch as that 
+  the issue was resolved with a configuration option now
+
+-------------------------------------------------------------------
+Fri Mar 28 11:21:12 UTC 2014 - cfarrell@suse.com
+
+- removed redundant lines from patch 
+
+-------------------------------------------------------------------
+Thu Mar 27 11:44:36 UTC 2014 - cfarrell@suse.com
+
+- recoll truncates metadata at 150 chars for no reason. Apply fix
+  from http://is.gd/E4wnMG to raise limit to 1500. 
+
+-------------------------------------------------------------------
+Sat Dec  7 15:04:43 UTC 2013 - cgiboudeaux@gmx.com
+
+- Update to 1.19.11
+  * Python3 compatibility for the Python Recoll module.
+  * Add a new PPT format text extractor. Catppt just did not extract anything from more recent .ppt files.
+  * Fix various bugs related to date filtering and a GUI crash.
+  * Change the way Hindi / Devanagari text is handled.
+  * Fix the results table dups and snippets links.
+
+-------------------------------------------------------------------
+Wed Aug 21 13:04:41 UTC 2013 - tittiatcoke@gmail.com
+
+- Update to 1.19.5
+  * Additional translations (Spanish, Russian, Czech, German)
+  * Bug and usability fixes
+     - Absolute paths computations are broken by recollindex 
+     changing its working directory to /tmp, so that giving relative
+     paths to e.g. "recollindex -i" would fail.
+     - The Unity Lens would fail when the query terms had accented 
+     characters 
+     - The "autophrase" feature could sometimes create false matches.
+     - There are a number of problems when using multiple indexes 
+     which could contain identical paths values for actually 
+     different documents (on different volumes).
+     - The history list window shows snippets links, which display 
+     an error message when used and make no sense (no query data).
+  * Resolves Indexing CIFS/SMBFS kernel mounts 
+
+-------------------------------------------------------------------
+Tue May 21 21:01:49 UTC 2013 - hrvoje.senjan@gmail.com
+
+- Update to 1.19.2
+  * Indexing can use multiple threads. This can be a major performance 
+    boost for people with multiprocessor machines and big indexes. 
+    The threads setup is roughly auto-configured when recollindex starts, 
+    based on the number of processors, but it is also possible to 
+    taylor it in the configuration.There is a section in the manual 
+    to describe the configuration, and also some notes about the 
+    transformation and the performance improvements.
+  * There is a new result list/table popup menu option to display 
+    all the sub-documents for a given one. This is mostly useful 
+    to display the attachments to an email. The resulting screen can 
+    be used to select multiple entries and save them to files.
+  * It is now possible to use OR with "dir:" clauses, and wildcards
+    have been enabled.
+  * When the option to follow symbolic links is not set -which is 
+    the default- symbolic links are now indexed as such (name and content).
+  * The advanced search panel now has a history feature. 
+    Use the up/down arrows to walk the search history list.
+  * There are new GUI configuration options to run in 
+    "search as you type" mode (which I don't find useful at all...), 
+    and to disable the Qt auto-completion inside the simple search 
+    string. The completion was often more confusing and ennoying 
+    than useful, especially because it is case-insensitive when case 
+    sometimes matter for Recoll searches (capitalization to 
+    disable stemming).
+  * When the option to collapse identical results is used, 
+    documents which do have duplicates are shown with a link to 
+    list the clones. This function needs new data from the index, 
+    so it will only completely work after a full 1.19 reindex.
+  * Recoll should now behave reasonably on video files: index the name 
+    and propose an Open button in the result list to start the configured 
+    player.
+  * Thanks to Recoll user Koniu, you can now access your Recoll indexes 
+    through a Web browser interface. The server side is based on the 
+    Bottle Python Web framework and the Recoll Python module, and can 
+    run self-contained (no necessity to run apache or another web server), 
+    so it's quite simple to set up. See: See the Recoll WebUI project 
+    on GitHub.
+  * Thanks to Recoll user David, there is now a filter to index and 
+    retrieve Lotus Notes messages. See the software site on sourceforge 
+    and some notes from a user with a slightly different configuration.
+  * There is a new path translation facility, with a GUI interface, 
+    to make it easier to share an index from a network share on clients on 
+    which the mount points might be different. This could also probably 
+    be put to use to design a "portable index" feature (for removable media).
+  * The first indexing run after Recoll installation (for a new user) 
+    will run in a fashion which will put data likely to be useful into the 
+    index faster, so that an impatient user can more quickly try searches.
+  * Implemented cache for last file uncompressed. This will much 
+    improve usage, e.g. for people fetching successive messages from a 
+    compressed mail folder.
+  * Recollindex will now change its current directory to a 
+    temporary one (e.g. /tmp) to mitigate the problems of some filters 
+    creating temporary files and not cleaning them.
+  * There is a new recursive explicit reindex option to the 
+    command line indexer.
+  * The default result list paragraph format has been slightly tweaked 
+    (removed the relevance percentage and small ordering and 
+    formatting changes).
+  * Mime type wildcard expansion is now performed against the index, 
+    not the configuration. This fixes many problems when searching 
+    for, e.g., media files indexed only by name.
+  * The choice for case/diacritics sensitivity is now fully 
+    processed during wildcard expansion (for case-sensitive indexes).
+  * The Snippets popup (list of pages and excerpts typically produced 
+    for PDF documents) can now use an external CSS stylesheet. This is 
+    useful because the Qt Webkit objects do not fully inherit the Qt 
+    configuration so that, for example, a style sheet is needed for 
+    using a different background color. The style sheet is chosen 
+    from the Preferences->GUI configuration->Result list panel.
+  * Improved handling of filters during indexing resulting in 
+    less subprocesses.
+  * Added function to import tags from external application 
+    (e.g. Tmsu).
+  * Changed format for rclaptg field. Was colon-separated, now uses 
+    normal value/attributes syntax with an empty value like:
+    localfields = ; attr1 = val1 ; attr2 = val2
+  * Extended file attributes are now indexed by default. 
+    As a side effect, recoll now uses st_ctime, not st_mtime to 
+    detect file changes. This means that installing 1.19 will reindex 
+    many files (all those that were modified since created). Recoll also 
+    now processes the charset and mime_type standardized extended attributes.
+  * The Python module has been expanded to include the interface for 
+    extracting data. This means that you could now write most of the 
+    Recoll GUI in Python if you wished. There is a bit of sample code 
+    in the source package doing just this. A few incompatible changes 
+    had to be made to the Python module. Especially the "Query.next" 
+    field is gone and the module structure has been changed (different 
+    import statement needed). Adapting your code is trivial, have a look 
+    at the changes in the Unity Lens module for an example. The new module 
+    is compatible with the Python Database API Specification v2.0 for the 
+    parts that make sense for a non-relational DB.
+  * Recoll now uses a dynamic library for the code shared by the query 
+    interface, the indexer and the Python module. This should have no 
+    visible impact but was rendered necessary by the Python module 
+    evolutions.
+
+-------------------------------------------------------------------
+Tue Jan  1 10:53:20 UTC 2013 - tittiatcoke@gmail.com
+
+- Update to 1.18.1
+  * The index can now be configured for case and diacritics 
+    sensitivity, in which case raw terms are indexed. 
+  * The advanced search screen now has a history function. 
+  * Recoll has a new capacity to store page break locations and use 
+    them when opening a document at the location for a given match. 
+  * The GUI result list has a new "snippets" window for documents 
+    with page numbers, which let the user choose a snippet and open 
+    the document at the appropriate page.
+  * There is a list of MIME types that should be opened with the 
+    locally configured application even when Use Desktop Preferences 
+    is checked. 
+  * We now allow multiple directory specifications in the query 
+    language, as in: dir:/home/me -dir:tmp
+  * The search inside the GUI preview window, has been improved, 
+    and allows selecting from a list one of the initial term 
+    groups as the search target.
+  * A new script dedicated to laptops, which can start or stop 
+    recollindex according to mains power status.
+  Fixed bugs:
+  * The unac_except_trans mechanism could be buggy in some cases 
+    and generate wrong character translations.
+  * Don't terminate monitor for permissions-related addwatch error.
+  * Fix handling of ODF documents exported by Google docs.
+  * It was previously impossible to open the parent of an embedded 
+    document (e.g. the CHM file for an HTML page inside the CHM) 
+    if the parent was itself a member of an archive.
+
+-------------------------------------------------------------------
+Fri Jul  6 03:13:28 UTC 2012 - mlin@suse.com
+
+- Update to version 1.17.3
+  * 1.17.1 was released only for a small function needed for 
+    supporting the Unity Lens. If you don't need it, you can stay 
+    with 1.17.0.
+  * 1.17.2 fixes a few bugs and adds a small feature for handling 
+    characters that should not be accented in your language (ie: å 
+    in swedish). See unac_except_transx in the manual configuration 
+    section. Also a new rcldia filter for Dia files.
+  * 1.17.3 fixes a nasty indexing bug in email processing code. This 
+    was triggered most probably my messages containing Microsoft 
+    mimehtml attachments, but possibly by other ones too, and caused 
+    an indexing crash. Also fixes small glitches in result list 
+    paging.
+- Update the license
+- Cleanup the specfile
+
+-------------------------------------------------------------------
+Sun Mar 25 17:14:07 UTC 2012 - tittiatcoke@gmail.com
+
+- Update to 1.17.0
+  * GUI/config: new set of dialogs to set up the indexing schedule,
+    either as automatic real time indexing started with the user 
+    session or as discrete cron entries. This will take care of the
+    details of autostart files or crontab editing
+  * Search: Recoll now supports filtering on file sizes.
+  * GUI: it is now possible to cancel a query that takes too long. 
+    Because of limitations in Xapian, this forces a program exit, 
+    but it's probably better than staring at a hung Recoll.
+  * See http://www.lesbonscomptes.com/recoll/release-1.17.html
+
+-------------------------------------------------------------------
+Tue Nov  8 13:46:25 UTC 2011 - tittiatcoke@gmail.com
+
+- Update to 1.16.2
+  + Fixes a bug with Qt 4.7.4 where the links to the Preview or 
+    Open insdie the result list did not work. 
+  + Other bugfixes
+
+-------------------------------------------------------------------
+Thu Sep 29 15:55:40 UTC 2011 - tittiatcoke@gmail.com
+
+- Update to 1.16.1
+  + fixes a severe bug in 1.16.0, where the GUI had a good chance 
+    to crash when running a query while the indexing thread was 
+    running.
+
+-------------------------------------------------------------------
+Fri Sep 23 11:21:00 UTC 2011 - tittiatcoke@gmail.com
+
+- Update to Recoll 1.16.0
+  * Bugfixes
+  * Add. Functionality:
+    - The performance of email indexing has been slightly improved
+    - Images are displayed in preview. You can get at the fields 
+      and complete extracted text using the popup menu.
+    - It is now possible to set an increased weight for indexing 
+      some fields
+    - Improved preservation of indentation for text files displayed 
+      in the preview window.
+    - Added filters for .war (Konqueror web archive), .mhtm (other 
+      web archive format) and rar archives
+    - Show hidden (dot) files in the indexing configuration GUI 
+      dialogs.
+    - Added -f option to recollindex to ignore skippedPaths/Names 
+      when used with -i. Allows the use of a purely external file 
+      selection mechanism.
+
+-------------------------------------------------------------------
+Tue May  3 18:13:03 UTC 2011 - tittiatcoke@gmail.com
+
+- Update to Recoll 1.15.8
+  * Bugfixes
+  * Add. Functionality: 
+    - The GUI advanced search panel now allows specifying a field 
+      for each entry (ie: author/recipient, etc).
+    - Added filters for .war (Konqueror web archive) and .mhtm 
+      (other web archive format).
+    - Searches now allow negative directory filtering
+
+-------------------------------------------------------------------
+Mon Mar 14 12:23:32 UTC 2011 - tittiatcoke@gmail.com
+
+- Updated spec files to remove obsolete requires and also 
+  to ensure that we can use different versions of libwpd. 
+  (recommendations from Author)
+
+-------------------------------------------------------------------
+Sun Mar  6 13:54:53 UTC 2011 - tittiatcoke@gmail.com
+
+- Update to Recoll 1.15.5
+  * If a result table column is both added and moved in the same 
+    GUI instance, the list becomes garbled (or/and the GUI crashes). 
+  * Changing the indexing configuration parameters from the GUI 
+    while the indexing thread (not an external recollindex command) 
+    is running will sometimes (quite often) crash the GUI.
+  * Script files (ie: .sh .pl) indexed as text do not respect the 
+    maximum text file limit (a problem with, ie, shar archives 
+    identified as application/x-shellscript).
+  * Indexing script for xml formats (ie: svg) sometimes stall for 
+    30 S while xsltproc tries to access remote dtds.
+  * Recollindex inapproprietely sets the nice value for its whole 
+    process group. In certain cases where the indexing monitor was 
+    launched at session start, this could set the whole session 
+    to low priority!
+  * After an upgrade, the recoll GUI sometimes crashes on startup. 
+    This is fixed by removing (back it up just in case) 
+    ~/.config/Recoll.org/recoll.conf, the QSettings storage for recoll.
+  * The new mutagen-based audio tags filter (rclaudio) only works 
+    with very recent mutagen versions. See here for a corrected version.
+  * Performing a full index with release 1.11 or newer, over a 
+    version created with a much older recoll release may sometimes 
+    end with an error saying "backend doesn't implement metadata". 
+  * The default filter for files in microsoft word format 
+    (application/msword, .doc), antiword, has trouble with some 
+    relatively rare files with a very small text, resulting in the 
+    following error message: I'm afraid the text stream of this 
+    file is too small to handle.
+
+-------------------------------------------------------------------
+Thu Feb  3 15:36:11 UTC 2011 - tittiatcoke@gmail.com
+
+- Update to Recoll 1.15.1
+  * The GUI has a new display for the result list inside a 
+    spreadsheet-like table, with configurable columns and sort by 
+    any column. 
+  * The old sort tool is gone. There are now vertical arrows in 
+    the tool bar to directly sort by date ascending or descending, 
+    which was its only significant use.
+  * There is now a menu entry to clear search history.
+  * File name search: it used to be that multiple fragments where 
+    OR'ed together to perform the search. They are now AND'ed. 
+  * Autophrase now works with the query language where it makes sense.
+  * Support for lyrics in midi karaoke files. Works better with the 
+    Python chardet character encoding identification module.
+  * Support newer Purple/Pidgin logs using an html format.
+  * Support thunderbird extreme brokiness in handling the mbox 
+    format: naked "^From $" separators are now accepted with 
+    mhmboxquirks = tbird.
+  * A change of method for filtering on directory location makes 
+    it much more efficient and faster.
+  * The utf-8 file name is now a stored field by default.
+
+-------------------------------------------------------------------
+Thu Nov 25 10:00:55 UTC 2010 - tittiatcoke@gmail.com
+
+- Update to Recoll 1.14.3
+  * Get rid of permanent filter subprocess at the end of a GUI 
+    indexing pass.
+  * Add new filter for indexing GNU info files.
+  * Index the file name from a zip or chm internal path.
+  * Add hotrecoll.py script to help with one-key recoll 
+    activation/hiding. Move focus to search entry when unminimized.
+  * Handle bad mbox format from Thunderbird.
+  * Catch exception which was causing stderr messages while 
+    indexing encrypted zip files.
+  * Change result list "Edit" links to "Open" for consistency 
+    with menus.
+  * Change the type of character set conversion occurring when 
+    using "Copy file path" from the result list. Should work in 
+    more cases than the previous approach (but will still fail 
+    sometimes).
+  * Update lyx filter.
+  * Fix problems with white space in file name in several input 
+    filters.
+  * Support mutagen versions older than 1.17.
+
+-------------------------------------------------------------------
+Sun Aug  1 12:28:07 UTC 2010 - tittiatcoke@gmail.com
+
+- Recoll 1.13.04
+  * Provide a set of configuration defaults so that compilation 
+    has a chance to succeed on unknown systems.
+  * Install icon to the pixmaps directory.
+  * Fixes stemming, which was broken for all previous 1.13 
+    releases
+
+-------------------------------------------------------------------
+Tue Jan 26 14:41:54 UTC 2010 - tittiatcoke@gmail.com
+
+- Recoll 1.13.02
+  + Bugfix for Qt 4.6.1 (Garbled Main Window) 
+
+-------------------------------------------------------------------
+Tue Jan 22 06:45:54 UTC 2010 - tittiatcoke@gmail.com
+
+- Recoll 1.13.01
+  + Recoll has a new class of persistent external filters with the 
+    capability to process several documents, or multi-document files, 
+    in the same instance. Benefits: much faster image tag indexing, 
+    and new file formats. 
+  + New file formats: chm (microsoft help), zip archives, .ics calendar files. 
+  + Recoll can now use the output of the Beagle Firefox plugin to index 
+    visited web pages and bookmarks. 
+    This is only usable if Beagle itself is not running!!
+  + Big text files (like application logs) can now be paged for indexing, 
+    avoiding excess memory usage during indexing
+  + A cache was implemented for mbox message header offsets. 
+    This speeds up message previews for big mbox files.
+  + Miscellaneous usability improvements:
+    - Allow using page-up/down and shift-home to scroll the result list 
+      while the focus is in the search entry.
+    - Make 'Use desktop preferences' the default for new Recoll installations, 
+      and make this choice more prominent in the external viewer dialog.
+    - ^P starts the print dialog on a preview window.
+    - If a search has no result, alternate spellings are suggested.
+    - If the text of a document is empty, preview will switch to displaying 
+      the document fields.
+    - New entry in the result list contextual menu for opening the parent 
+      document of a result list hit with its native application.
+  + Indentation is now preserved when displaying text documents inside 
+    the preview window. 
+  + Allow substituting arbitrary fields in the result paragraph, using 
+    a %(fieldname) syntax
+  + The real-time indexing monitor will now accumulate modifications 
+    during 30 S before indexing.
+  + The indexer can now split camelCase words, allowing search on component terms. 
+  + The ipath is now printed by default after the url in the default result list format.
+  + recoll_noindex and skippedNames can now be changed at any point in 
+    the tree (only for topdirs previously).
+  + Allow using location/application sensitivity in external viewer choice. 
+    This uses several new functions:
+      - Allow the substitution of arbitrary document fields inside external 
+        viewer command line arguments.
+      - Allow field values to be set on all documents in a file system subtree. 
+      - New syntax in mimeview for including the rclaptg field in viewer choice 
+        (mimetype|tagvalue = ...).
+  + Allow specifiying a specific default character set for mail messages. 
+  + Improved the kio_recoll build. 
+
+-------------------------------------------------------------------
+Wed Dec 9 12:45:33 CET 2009 - tittiatcoke@gmail.com
+
+- Recoll 1.12.3
+  + bugfixes
+
+-------------------------------------------------------------------
+Thu Oct 22 09:45:33 CET 2009 - tittiatcoke@gmail.com
+
+- Recoll 1.12.2
+   + Catch two Xapian exceptions which could crash the 
+     GUI when a query was run while the index was being updated.
+   + Ensure that the result list right-click popup menu will 
+     appear even when the click is inside a table.
+   + Fix the way we retrieve the xapian library version to avoid 
+     GUI compilation problems.
+   + Inside the real-time indexer: only use the main thread to test 
+     that the X11 server is still alive. Multithreaded calls to 
+     x11IsAlive() would sometimes crash the process because of an X11 error.
+   + Define filter timeout so that a looping filter (ie: rclps trying to 
+     index loop.ps) will not completely stop the indexing. 
+     Default value: 20mn. Add loop.ps to skippedNames.
+   + Improve filter subprocesses management. Some could previously be left 
+     around after recollindex was killed. Improve cancellation request 
+     acknowledgment by recollindex (two ^C were sometimes necessary to 
+     make it terminate).
+   + Signals SIGUSR1 and SIGUSR2 are now blocked in addition to INTR/TERM/QUIT.
+   + Extended attributes indexing now works for all file types.
+   + Ensure that queries started from the command line are handled as normal 
+     ones (they previously could not be sorted).
+   + Improve man page indexing: do not index section header terms.
+   + Fixed compilation errors for new gcc and gnu libc.
+   + Use groff html output in rclman to get rid of control characters in output 
+     (improve manual pages indexing). Fix 8bit character issues in file names 
+     in rcllyx.
+   + Fixed command line arguments processing problem with "recoll -q"
+
+-------------------------------------------------------------------
+Thu Mar 19 19:12:33 CET 2009 - tittiatcoke@gmail.com
+
+- Recoll 1.12.0
+    *  Recoll now implements a KIO slave to allow searching directly 
+       from KDE applications. This does not affect the main application 
+       and is not enabled by default.
+    *  Recoll now computes md5 checksums for all indexed documents and 
+       optionally collapses duplicate entries inside the result list. 
+    *  Typing F1 anywhere in the GUI should bring up the appropriate 
+       section of the manual in the application configured for viewing 
+       HTML documents.
+    *  The result list right click menu now has an entry to save the 
+       document to a file. 
+    *  The preview window now has a right-click menu, with an entry to 
+       toggle between viewing the main text or all the metadata for the 
+       document. 
+    *  Words glued by an underscore character like compound_word are now 
+       split during indexing, and will be found when queried either as 
+       themselves or in a search for the components.
+    *  There is now a size limit over which no attempt will be made to 
+       uncompress/identify/index compressed files. Not active by default, 
+       to be set in the Indexing Configuration.
+    *  Added support for fetching field values from extended file attributes. 
+       This is not enabled by default, use configure --enable-xattr. 
+       
+
+

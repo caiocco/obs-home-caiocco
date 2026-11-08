@@ -1,0 +1,4 @@
+<multibuild>
+  <package>kio_recoll</package>
+  <package>krunner_recoll</package>
+</multibuild>
