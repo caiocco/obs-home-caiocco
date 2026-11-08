@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=SheepShaver
+GenericName=PowerPC Macintosh Emulator
+Comment=Run classic Mac OS (7.5.2 to 9.0.4)
+Exec=SheepShaver
+Icon=SheepShaver
+Terminal=false
+StartupNotify=true
+Categories=System;Emulator;
+Keywords=emulator;mac;apple;macos;powerpc;
+Actions=jit;
+
+[Desktop Action jit]
+Name=SheepShaver with JIT (needs vm.mmap_min_addr=0)
+Exec=SheepShaver-jit

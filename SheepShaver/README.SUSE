@@ -1,0 +1,45 @@
+SheepShaver on openSUSE
+=======================
+
+This package ships two programs:
+
+SheepShaver
+    PowerPC interpreter, no JIT.  Built with MEM_BULK (as the Windows
+    port is), so the Mac address space is one block mapped anywhere in
+    memory.  It works out of the box.  The "jit" preference is ignored.
+
+SheepShaver-jit
+    Upstream's default build: real addressing plus the PowerPC JIT
+    compiler, which is much faster.  It must map the Mac low memory at
+    address 0, which Linux forbids by default (vm.mmap_min_addr = 65536),
+    and fails with "Cannot map Low Memory Globals: Operation not
+    permitted".  To allow it:
+
+      for the current boot only:
+        sudo sysctl vm.mmap_min_addr=0
+
+      permanently:
+        sudo cp /usr/share/doc/packages/SheepShaver/90-sheepshaver.conf \
+                /etc/sysctl.d/
+        sudo sysctl --system
+
+    With SELinux enforcing (the default on openSUSE Leap 16), the policy
+    also denies mapping page zero until the mmap_low_allowed boolean is on:
+
+      for the current boot only:
+        sudo setsebool mmap_low_allowed 1
+      permanently:
+        sudo setsebool -P mmap_low_allowed 1
+
+    This weakens a kernel hardening setting for the whole system: kernel
+    NULL-pointer dereference bugs become easier to exploit.  On CPUs with
+    SMEP/SMAP (Intel since Broadwell, AMD since Zen) most of that risk is
+    mitigated.  Delete the file (and turn the boolean off) to undo.
+
+Why not a JIT without the sysctl?  The JIT uses precompiled x86_64 code
+snippets that assume Mac addresses equal host addresses; with MEM_BULK or
+"direct" addressing it crashes at boot.
+
+Both programs read the same preferences (~/.config/SheepShaver/prefs or
+~/.sheepshaver_prefs) and accept a ROM file named "Mac OS ROM" (New
+World) or a 4 MB Old World ROM image.

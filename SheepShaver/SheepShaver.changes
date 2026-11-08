@@ -1,0 +1,41 @@
+-------------------------------------------------------------------
+Sun Nov  8 17:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- README.SUSE, 90-sheepshaver.conf: SheepShaver-jit also needs the
+  SELinux boolean mmap_low_allowed on Leap 16
+
+-------------------------------------------------------------------
+Sun Nov  8 17:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Ship two binaries: SheepShaver (MEM_BULK, no JIT; runs out of the
+  box) and SheepShaver-jit (real addressing + JIT; needs
+  vm.mmap_min_addr=0). The precompiled x86_64 JIT ops assume real
+  addressing and crash at boot with MEM_BULK or direct addressing
+- Add README.SUSE and an example 90-sheepshaver.conf (docs only, not
+  installed to /etc/sysctl.d); add a JIT action to the .desktop file
+- ExclusiveArch: x86_64
+
+-------------------------------------------------------------------
+Sun Nov  8 17:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Use -DMEM_BULK (as the Windows port does) instead of direct
+  addressing, which crashed at boot with a New World ROM (Mac OS 8.6)
+
+-------------------------------------------------------------------
+Sun Nov  8 17:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Build with --enable-addressing=direct: the default real addressing
+  maps page zero and fails with "Cannot map Low Memory Globals"
+  unless vm.mmap_min_addr is 0
+
+-------------------------------------------------------------------
+Sun Nov  8 16:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package, built from the kanjitalk755/macemu fork (the
+  maintained upstream; also used by Debian) at commit f532be3d
+  (2026-10-21)
+  * SDL2 video/audio, GTK3 prefs editor, BIN/CUE and VDE support
+  * macemu-system-tinyxml2.patch: use the system tinyxml2, adapted
+    from Debian's 1001_use_system_tinyxml2.patch
+  * Add .desktop file and 256x256 icon taken from SheepShaver.icns
+
