@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=DOSBox 0.74-3
+GenericName=DOS Emulator
+Comment=Classic DOSBox x86/DOS emulator
+Exec=dosbox74
+Icon=dosbox74
+Terminal=false
+Categories=Game;Emulator;

@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Sun Nov  8 04:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of classic DOSBox 0.74-3, installed as dosbox74
+  to coexist with DOSBox Staging (package dosbox)
+  * dosbox074-cxx17-register.patch: drop "register" (C++17), as in
+    nixpkgs (from dosbox-x commit 006d572)
+  * From Debian: dosbox074-sdl-focus-events.patch,
+    dosbox074-format-strings.patch, dosbox074-ncurses-getbegy.patch,
+    dosbox074-manpage-errors.patch, dosbox074-spelling-fixes.patch
+  * Convert THANKS to UTF-8; add .desktop file (validated in
+    %check) and 256x256 icon

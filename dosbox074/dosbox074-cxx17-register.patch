@@ -1,0 +1,36 @@
+Description: Remove the "register" storage class, which C++17 dropped
+ (GCC 15 defaults to C++17). Hunk taken from dosbox-x commit 006d5727, as
+ applied by nixpkgs to dosbox 0.74-3.
+Origin: https://github.com/joncampbell123/dosbox-x/commit/006d5727d36d1ec598e387f2f1a3c521e3673dcb
+
+diff --git a/src/gui/render_templates_sai.h b/src/gui/render_templates_sai.h
+index 142004fb65e..c49c50c76e5 100644
+--- a/src/gui/render_templates_sai.h
++++ b/src/gui/render_templates_sai.h
+@@ -47,7 +47,7 @@ inline void conc2d(Super2xSaI,SBPP)(PTYPE * line0, PTYPE * line1, const PTYPE *
+ 	} else if (C4 == C8 && C7 != C5) {
+ 		line1[1] = line0[1] = C4;
+ 	} else if (C4 == C8 && C7 == C5) {
+-		register int r = 0;
++		int r = 0;
+ 		r += conc2d(GetResult,SBPP)(C5,C4,C6,D1);
+ 		r += conc2d(GetResult,SBPP)(C5,C4,C3,C1);
+ 		r += conc2d(GetResult,SBPP)(C5,C4,D2,D5);
+@@ -131,7 +131,7 @@ inline void conc2d(SuperEagle,SBPP)(PTYPE * line0, PTYPE * line1, const PTYPE *
+ 				line1[0] = interp_w2(C7,C8,1U,1U);
+ 			}
+ 		} else {
+-			register int r = 0;
++			int r = 0;
+ 			r += conc2d(GetResult,SBPP)(C5,C4,C6,D1);
+ 			r += conc2d(GetResult,SBPP)(C5,C4,C3,C1);
+ 			r += conc2d(GetResult,SBPP)(C5,C4,D2,D5);
+@@ -189,7 +189,7 @@ inline void conc2d(_2xSaI,SBPP)(PTYPE * line0, PTYPE * line1, const PTYPE * fc)
+ 			line1[0] = C4;
+ 			line1[1] = C4;
+ 		} else {
+-			register int r = 0;
++			int r = 0;
+ 			r += conc2d(GetResult,SBPP)(C4,C5,C3,C1);
+ 			r -= conc2d(GetResult,SBPP)(C5,C4,D4,C2);
+ 			r -= conc2d(GetResult,SBPP)(C5,C4,C6,D1);
