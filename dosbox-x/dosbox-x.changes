@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Sun Nov  8 04:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of DOSBox-X 2026.10.01 (SDL2 build), based on
+  the spec by Javier S. Pedro (home:javispedro:portpkgs)
+  * Ship %{_datadir}/dosbox-x as installed upstream (fonts,
+    translations, shaders, reference configs)
+  * Recommend zenity for the file dialogs
