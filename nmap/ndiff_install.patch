@@ -1,0 +1,42 @@
+commit 58963267164e8059531c328812aaa9b4343a2027
+Author: Robert Frohl <rfrohl@suse.com>
+Date:   Wed May 7 13:48:33 2025 +0200
+
+    Fix ndiff installation issue, if build host has no network access
+    
+    [   79s] Processing ./ndiff
+    [   79s]   Installing build dependencies: started
+    [   87s]   Installing build dependencies: finished with status 'error'
+    [   87s]   error: subprocess-exited-with-error
+    [   87s]
+    [   87s]   × pip subprocess to install build dependencies did not run successfully.
+    [   87s]   │ exit code: 1
+    [   87s]   ╰─> [8 lines of output]
+    [   87s]       WARNING: Disabling truststore because of missing certificates
+    [   87s]       WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7
+    f330b223770>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/setuptools/
+    [   87s]       WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7
+    f330b2e0910>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/setuptools/
+    [   87s]       WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7
+    f330b2e0b90>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/setuptools/
+    [   87s]       WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7
+    f330b2e0e10>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/setuptools/
+    [   87s]       WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7
+    f330b2e1090>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/setuptools/
+    [   87s]       ERROR: Could not find a version that satisfies the requirement setuptools (from versions: none)
+    [   87s]       ERROR: No matching distribution found for setuptools
+    [   87s]       [end of output]
+
+diff --git a/Makefile.in b/Makefile.in
+index 6b0e7b1..50f5f67 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -382,7 +382,7 @@ build-nping: $(NPINGDIR)/Makefile build-nbase build-nsock build-netutil $(NPINGD
+ 
+ install-ndiff:
+ 	$(INSTALL) -d $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1
+-	$(PYTHON) -m pip install $(NDIFFDIR)/ $(if $(DESTDIR),--root "$(DESTDIR)")
++	$(PYTHON) -m pip install --no-build-isolation $(NDIFFDIR)/ $(if $(DESTDIR),--root "$(DESTDIR)")
+ 	$(INSTALL) -c -m 644 $(NDIFFDIR)/docs/ndiff.1 $(DESTDIR)$(mandir)/man1/
+ 
+ NSE_FILES = scripts/script.db scripts/*.nse

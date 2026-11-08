@@ -1,0 +1,14 @@
+Index: nmap-7.94/Makefile.in
+===================================================================
+--- nmap-7.94.orig/Makefile.in
++++ nmap-7.94/Makefile.in
+@@ -316,9 +316,6 @@ distclean-%: clean-%
+ install-nmap: $(TARGET)
+ 	$(INSTALL) -d $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(nmapdatadir)
+ 	$(INSTALL) -c -m 755 nmap $(DESTDIR)$(bindir)/nmap
+-# Use strip -x to avoid stripping dynamically loaded NSE functions. See
+-# http://seclists.org/nmap-dev/2007/q4/0272.html.
+-	$(STRIP) -x $(DESTDIR)$(bindir)/nmap
+ 	$(INSTALL) -c -m 644 docs/$(TARGET).1 $(DESTDIR)$(mandir)/man1/
+ 	if [ "$(USE_NLS)" = "yes" ]; then \
+ 	  for ll in $(filter $(ALL_LINGUAS),$(LINGUAS)); do \

@@ -1,0 +1,38 @@
+commit 08f2621cd0c7dc542570bd517fab5492087837a1
+Author: Robert Frohl <rfrohl@suse.com>
+Date:   Wed May 7 13:40:17 2025 +0200
+
+    Fix ndiff build issue, if build host has no network access
+    
+    [   97s] /usr/bin/python3 -m build ndiff/
+    [   97s] * Creating isolated environment: venv+pip...
+    [   97s] * Installing packages in isolated environment:
+    [   97s]   - setuptools
+    [   97s] > /usr/bin/python3 -m pip --python /tmp/build-env-55g_0_ls/bin/python install
+    [   97s]   --use-pep517 --no-warn-script-location --no-compile -r /tmp/build-reqs-
+    [   97s]   qwsq0oeb.txt
+    [   97s] < WARNING: Disabling truststore because of missing certificates
+    [   97s] < WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None,
+    [   97s]   status=None)) after connection broken by
+    [   97s]   'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object
+    [   97s]   at 0x7f465360b0e0>: Failed to establish a new connection: [Errno -3]
+    [   97s]   Temporary failure in name resolution')': /simple/setuptools/
+    [..]
+    [   97s] < ERROR: Could not find a version that satisfies the requirement setuptools
+    [   97s]   (from versions: none)
+    [   97s] < WARNING: Disabling truststore because of missing certificates
+    [   97s] < ERROR: No matching distribution found for setuptools
+
+diff --git a/Makefile.in b/Makefile.in
+index 29a6d0e..6b0e7b1 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -375,7 +375,7 @@ install-zenmap: $(ZENMAPDIR)/pyproject.toml
+ 	ln -sf zenmap $(DESTDIR)$(bindir)/xnmap
+ 
+ build-ndiff:
+-	$(PYTHON) -m build $(NDIFFDIR)/
++	$(PYTHON) -m build --no-isolation $(NDIFFDIR)/
+ 
+ build-nping: $(NPINGDIR)/Makefile build-nbase build-nsock build-netutil $(NPINGDIR)/nping.h @DNET_BUILD@ @PCAP_BUILD@
+ 	@cd $(NPINGDIR) && $(MAKE)
