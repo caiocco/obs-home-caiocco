@@ -1,0 +1,92 @@
+-------------------------------------------------------------------
+Tue Jun  6 17:48:57 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Fix the X11 include
+- Spec cleanup
+
+-------------------------------------------------------------------
+Fri Mar  5 22:23:28 UTC 2021 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Add patch to fix a possible buffer overflow (CVE-2014-8123)
+  * 10_fix_buffer_overflow_wordole_c.patch
+
+-------------------------------------------------------------------
+Tue Jan 27 12:35:20 CET 2009 - petr.uzel@suse.cz
+
+- specfile cleanup
+
+-------------------------------------------------------------------
+Tue Jan 27 10:20:12 CET 2009 - garloff@suse.de
+
+- Some cleanup.
+
+-------------------------------------------------------------------
+Fri Feb  1 12:45:30 CET 2008 - garloff@suse.de
+
+- Update to 0.37.
+
+-------------------------------------------------------------------
+Fri Sep  2 00:16:33 CEST 2005 - garloff@suse.de
+
+- Update to 0.36.1. 
+
+-------------------------------------------------------------------
+Sat Jan 10 19:30:25 CET 2004 - adrian@suse.de
+
+- add %defattr
+
+-------------------------------------------------------------------
+Wed Dec 10 14:08:05 CET 2003 - didge@suse.de
+
+- Version 0.35
+
+-------------------------------------------------------------------
+Fri Nov 14 10:52:02 CET 2003 - didge@suse.de
+
+- Version 0.34
+
+-------------------------------------------------------------------
+Wed Aug 20 16:25:29 CEST 2003 - sbrabec@suse.cz
+
+- Removed obsolete libgtop from neededforbuild.
+
+-------------------------------------------------------------------
+Tue May 27 00:10:42 CEST 2003 - ro@suse.de
+
+- add kantiword (shell wrapper) to filelist 
+
+-------------------------------------------------------------------
+Mon Apr 14 14:27:19 CEST 2003 - didge@suse.de
+
+- Fixed bug 25479/20003
+- Added /usr/bin/kantiword, but not tested 
+
+-------------------------------------------------------------------
+Wed Jul 31 16:04:03 MEST 2002 - didge@suse.de
+
+- Version 0.33
+- Patch removed as the patch is changed to /usr/share/antiword :-)
+
+-------------------------------------------------------------------
+Mon Oct 22 15:15:46 CEST 2001 - didge@suse.de
+
+- Version 0.32
+- now supports global resources, but changed dir /opt/antiword/share
+  to /usr/share/antiword via a patch
+
+-------------------------------------------------------------------
+Thu Oct  4 12:01:55 CEST 2001 - didge@suse.de
+
+- moved the Resources to /usr/share/antiword
+
+-------------------------------------------------------------------
+Tue Oct  2 00:41:42 CEST 2001 - ro@suse.de
+
+- fix and cleanup specfile
+- todo: Resources dir should probably live in /usr/share/antiword
+
+-------------------------------------------------------------------
+Mon Oct  1 16:49:31 CEST 2001 - didge@suse.de
+
+- Initial Version 0.31 
+
