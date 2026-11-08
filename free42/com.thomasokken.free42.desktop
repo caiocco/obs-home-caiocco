@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Free42
+GenericName=HP-42S Calculator
+Comment=HP-42S calculator simulator (decimal)
+Exec=free42dec
+Icon=free42
+Terminal=false
+Categories=Utility;Calculator;
+Keywords=calculator;RPN;HP;42S;
+StartupWMClass=free42dec

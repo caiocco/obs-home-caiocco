@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Free42 (Binary)
+GenericName=HP-42S Calculator
+Comment=HP-42S calculator simulator (binary floating point)
+Exec=free42bin
+Icon=free42
+Terminal=false
+Categories=Utility;Calculator;
+Keywords=calculator;RPN;HP;42S;
+StartupWMClass=free42bin

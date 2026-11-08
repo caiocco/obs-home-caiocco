@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Sun Nov  8 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Free42 3.5.2 for openSUSE Leap 16.0
+  * Build both free42dec (Intel decimal library) and free42bin
+  * Enable ALSA audio (libasound.so.2 is dlopen()ed, with a
+    gdk_beep() fallback, so no explicit dependency)
+  * Add desktop entries and hicolor icons
