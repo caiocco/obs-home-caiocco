@@ -1,0 +1,146 @@
+-------------------------------------------------------------------
+Thu Oct 15 04:40:08 UTC 2026 - Khang Lê <neyfua@proton.me>
+
+- Update to version 1.2.1:
+  * bump to 1.2.1
+  * support missing sound.json file
+
+-------------------------------------------------------------------
+Tue Oct 13 07:02:07 UTC 2026 - Khang Lê <neyfua@proton.me>
+
+- Update to version 1.2.0:
+  * update dependencies
+  * bump to 1.2.0
+  * add Polish strings missing from #136
+  * Add support for GTK sound options
+
+-------------------------------------------------------------------
+Wed Sep 30 04:45:43 UTC 2026 - Khang Lê <neyfua@proton.me>
+
+- Update to version 1.1.2:
+  * update copyright
+  * bump to 1.1.2
+  * Update go & dependencies
+  * feat: honor LC_MESSAGES lang variable
+  * Fix spelling mistake "could'nt"
+  * Add langs/ko_KR.json
+
+-------------------------------------------------------------------
+Fri May 08 08:04:53 UTC 2026 - Khang Lê <ogkhang.05@gmail.com>
+
+- Update to version 1.1.1:
+  * bump to 1.1.1
+  * Change format to json
+  * fix spanish lang
+  * update dependencies
+  * fix: Give up on bundling gtk themes in favor of a much simpler mount strategy
+  * feat: Add option to install selected gtk theme to flatpak
+  * Include Spanish lang and keywords on nwg-look.desktop
+  * fix: Only consider/show flatpak options if flatpak is installed
+  * feat: Add option to override flatpak GTK and icon themes
+  * fix typos and mismatched format specifiers in tools.go
+
+-------------------------------------------------------------------
+Thu May 07 12:54:24 UTC 2026 - Khang Lê <ogkhang.05@gmail.com>
+
+- Update to version 1.1.0:
+  * update dependencies
+  * fix: Give up on bundling gtk themes in favor of a much simpler mount strategy
+  * feat: Add option to install selected gtk theme to flatpak
+  * Include Spanish lang and keywords on nwg-look.desktop
+  * Create es_ES.yml
+  * fix: Only consider/show flatpak options if flatpak is installed
+  * feat: Add option to override flatpak GTK and icon themes
+  * pt_BR language file added.
+  * fix #107
+
+-------------------------------------------------------------------
+Sat Apr 25 12:38:49 UTC 2026 - Khang Lê <ogkhang.05@gmail.com>
+
+- Update to version 1.0.6:
+  * export gtk-4.0/settings.ini #99
+  * export gtk-4.0/settings.ini #99
+  * Fix typo in tools.go
+  * bump to 1.0.5
+  * update dependencies
+  * create ~/.config/gtk-4.0/ if not found #94
+  * Added tr_TR lang file.
+  * Add Czech lang file
+  * bump to 1.0.4
+  * update go -> 1.23.0 #89 ; update dependencies
+  * add description
+  * don't add Inherits= if gsettings.cursorTheme == "default" #90
+  * Bump version to 1.0.3
+  * Fix the issue where the "listFiles" method does not resolve symbolic links
+  * bump to 1.0.2
+  * revert to 1.0.1
+  * bump to 1.0.2
+  * fix #82
+  * added a button to clear gtk4 symlinks in one click
+  * update license, README.md
+  * update description
+  * don't remove gtk-4.0 content unless explicit demanded
+  * symlink GTK4 stuff #79
+  * List gsettings as a dependency in README.md
+  * Add japanese lang file.
+  * Update FUNDING.yml
+
+-------------------------------------------------------------------
+Fri May 31 11:08:55 UTC 2024 - nyslay@gmail.com
+
+- Update to version 0.2.7:
+  * update README.md
+  * update dependencies; bump to 0.2.7
+  * Add $PREFIX support to Makefile.
+  * Look for glade file in all data directories.
+  * Look for en_US.json in all data directories.
+  * update README.md Makefile
+  * update README.md Makefile
+  * bump to 0.2.6
+  * update dependencies
+
+-------------------------------------------------------------------
+Fri Feb 16 21:12:33 UTC 2024 - Joshua Smith <jsmithfpv@gmail.com>
+
+- Update to version 0.2.7:
+  * update README.md
+  * update dependencies
+  * Look for glade file in all data directories.
+  * Look for en_US.json in all data directories.
+  * add `-x` for exportConfigs and quit
+
+-------------------------------------------------------------------
+Sat Nov 18 06:35:07 UTC 2023 - Joshua Smith <jsmithfpv@gmail.com>
+
+- Update to version 0.2.4:
+  * update LICENSE copyright
+  * replace FATA w/ WARN if target path nonexistent
+  * replace deprecated ioutil with os
+  * update dependencies
+  * i18n: create zh_CN translation
+  * Fixed text scale factor loading from file
+
+-------------------------------------------------------------------
+Thu May 18 20:16:20 UTC 2023 - Joshua Smith <jsmithfpv@gmail.com>
+
+- Update to version 0.2.2:
+  * Use map value, not key
+  * Add Russian localization
+  * Update README.md
+
+-------------------------------------------------------------------
+Tue Mar 07 12:15:31 UTC 2023 - Joshua Smith <jsmithfpv@gmail.com>
+
+- Update to version 0.2.1:
+  * fix "toolbar-icon-size" label
+  * fix JSON indentation
+  * add missing translations
+  * add translation engine
+  * upgrade dependencies
+  * tools.go: respect color-scheme settings
+  * Create FUNDING.yml
+
+-------------------------------------------------------------------
+Thu Jan 19 12:02:56 UTC 2023 - Joshua Smith <jsmithfpv@gmail.com>
+
+- Initial package for 0.1.4
