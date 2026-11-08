@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Sun Nov  8 05:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of PeaZip 11.4.0 for openSUSE Leap 16.0
+  * Build against Lazarus 3.6 from openSUSE:Backports:SLE-16.0
+  * Ship two mutually exclusive packages, peazip-gtk (GTK 2)
+    and peazip-qt (Qt 6), as upstream does
+  * Installed (non portable) layout like the upstream RPM:
+    binaries in %{_libdir}/peazip, resources in /usr/share/peazip
+  * Use the system 7z, zstd and brotli instead of bundled binaries
+  * Drop the Windows and macOS only resources
+  * Mark only the sample scripts with a shebang executable
