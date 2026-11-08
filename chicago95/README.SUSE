@@ -1,0 +1,65 @@
+Chicago95 on openSUSE (home:caiocco)
+====================================
+
+Upstream: https://github.com/grassmunk/Chicago95
+
+What is left out
+----------------
+The source tarball is repacked by prune-microsoft-assets.sh (in the
+source package). It removes every upstream file that reproduces
+Microsoft artwork. The list follows Clay Risser's Debian packaging
+(chicago95 3.0.1+git20260803.e89583c+ds-1, debian/copyright
+Files-Excluded):
+
+ - the Windows 95 Plymouth boot splash (Plymouth/Chicago95)
+ - the stock wallpapers and pattern tiles, Extras/setup.png
+ - the Windows 95 startup recording and the event sounds (DING, TADA,
+   CHORD...), so there is no sound theme or login sound
+ - Office (Word/Excel/PowerPoint/Access), MSN, MS-DOS executable,
+   Internet Explorer and "My Computer" icons, plus every byte-identical
+   copy of them under other names (terminal, menu, desktop, internet...)
+ - the Windows-flag Start button images and start-here/distributor-logo
+   icons of the "Chicago95" icon theme
+ - Plus/ (the Plus! theme converter), which ships Microsoft icons and
+   screenshots of third-party themes
+
+The freed names point at icons the theme keeps:
+ - office document/spreadsheet/presentation/database -> text-x-generic
+ - application-x-ms-dos-executable -> application-x-executable
+ - web browser names -> firefox
+ - computer -> computer-laptop
+ - start-here, distributor-logo and the Xfce menu-button icons in
+   "Chicago95" -> the Tux start-here of Chicago95-tux
+Other aliases of removed icons are gone; their lookup falls back to the
+inherited icon theme.
+
+Not packaged either: the LightDM webkit greeter theme, the KDE/SDDM
+themes, installer.py (per-user GUI installer) and Extras/ files meant for
+manual setup (Firefox/ScummVM/LibreOffice add-ons, Qt and compton
+configs, shell prompts). They are in the upstream repo.
+
+Setting it up in Xfce
+---------------------
+ - Settings > Appearance: Style "Chicago95", Icons "Chicago95-tux"
+   (or Chicago95 / Chicago95-puffy)
+ - Settings > Window Manager: Theme "Chicago95"
+ - Settings > Mouse and Touchpad > Theme: e.g. Chicago95_Cursor_White
+ - xfce4-terminal: Preferences > Colors > Presets "Chicago95"
+ - xfce4-panel-profiles: the "Chicago95_Panel_Preferences" layout
+ - Plymouth (package plymouth-theme-chicago95-retrotux):
+     sudo plymouth-set-default-theme -R RetroTux
+
+Upstream's INSTALL.md has the full guide; the original UI font (MS Sans
+Serif) is proprietary and not included.
+
+Licenses
+--------
+Themes, icons, cursors, RetroTux: GPL-3.0-or-later OR MIT (upstream
+README; theme files carry "License: GPL-3.0+").
+Chicago95-puffy pixel-art variations: CC-BY-SA-4.0 (Puffy is owned by
+the OpenBSD group).
+Cronyx Cyrillic bitmap fonts: Cronyx license ("may be used, modified,
+copied, distributed, and sold, in both source and binary form provided
+that the above copyright and these terms are retained").
+Perfect DOS VGA 437 (Zeh Fernando) / Less/More Perfect DOS VGA
+(laemeur): public domain.

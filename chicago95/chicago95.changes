@@ -1,0 +1,21 @@
+-------------------------------------------------------------------
+Sun Nov  8 20:45:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Own the font and plymouth theme directories
+- Dedupe across the three icon themes (icon RPM 13 -> 8 MB), drop
+  stray links.sh helpers, drop unversioned hicolor Requires
+
+-------------------------------------------------------------------
+Sun Nov  8 20:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Chicago95 3.0.1+git20261001.5da19b8
+  (includes the new GTK4/libadwaita theme)
+- Source tarball repacked by prune-microsoft-assets.sh without the
+  files that reproduce Microsoft artwork (Windows 95 splash,
+  wallpapers, sounds, Office/MSN/MS-DOS/IE icons, Windows-flag
+  Start buttons) and Plus/, following the Debian +ds repack by
+  Clay Risser; freed icon names point at generic/Tux icons
+  (see README.SUSE)
+- Subpackages: chicago95-gtk-theme, chicago95-icon-theme,
+  chicago95-cursor-theme, chicago95-fonts,
+  plymouth-theme-chicago95-retrotux
