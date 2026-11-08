@@ -1,0 +1,2 @@
+# Template copied into new user files; the shebang is intentional
+addFilter("non-executable-script .*/Templates/python3.py")

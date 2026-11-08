@@ -1,0 +1,25 @@
+-------------------------------------------------------------------
+Sun Nov  8 23:56:15 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add rox-filer2-compact-modern-toolbar.patch: drop the hardcoded
+  48px height and 5px borders of the Modern UI navigation toolbar
+  buttons and centre the location entry vertically, so the bar is
+  about 20px shorter
+
+-------------------------------------------------------------------
+Sun Nov  8 23:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Move the translations (ROX-Filer and rox-find catalogues and the
+  translated manuals) to a new rox-filer2-lang subpackage, with no
+  Supplements, so it is installed only on request
+
+-------------------------------------------------------------------
+Fri Nov  6 18:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Rox-Filer2 2.14.0-6
+  * Build with Meson; install the AppDir runtime in /usr/lib/rox-filer2
+    following the upstream Debian/Arch layout (nothing in /usr/local)
+  * Include ROX File Search (rox-find), the pkexec mount and
+    open-as-root helpers with their polkit actions
+  * Regenerate the translation catalogues from the .po files
+  * Deduplicate files with %fdupes; add rox-filer2-rpmlintrc
