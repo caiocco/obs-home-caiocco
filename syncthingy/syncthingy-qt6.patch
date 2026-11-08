@@ -1,0 +1,61 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fac0d9c..854b449 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,23 +3,23 @@ cmake_minimum_required(VERSION 3.16)
+ project(SyncThingy LANGUAGES CXX)
+ set(FLATPAK_APPID "com.github.zocker_160.SyncThingy")
+ 
+-set(CMAKE_CXX_STANDARD 14)
++set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_AUTOMOC ON)
+ set(CMAKE_AUTORCC ON)
+ set(CMAKE_AUTOUIC ON)
+ set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleApplication")
++set(QT_DEFAULT_MAJOR_VERSION 6 CACHE STRING "Qt version for SingleApplication")
+ 
+ # BS workaround for stupid Glib using "signals" that QT uses as well
+ add_definitions(-DQT_NO_KEYWORDS)
+ 
+-find_package(PkgConfig REQUIRED)
+-pkg_check_modules(PORTAL-QT REQUIRED IMPORTED_TARGET libportal-qt5)
+ 
+-find_package(Qt5 COMPONENTS
++find_package(Qt6 COMPONENTS
+         Core
+         Gui
+         Widgets
+         DBus
++        Network
+         REQUIRED
+ )
+ 
+@@ -34,11 +34,11 @@ add_executable(${PROJECT_NAME}
+ target_include_directories(${PROJECT_NAME} PRIVATE src)
+ 
+ target_link_libraries(${PROJECT_NAME} PRIVATE
+-        Qt5::Core
+-        Qt5::Gui
+-        Qt5::Widgets
+-        Qt5::DBus
+-        PkgConfig::PORTAL-QT
++        Qt6::Core
++        Qt6::Gui
++        Qt6::Widgets
++        Qt6::DBus
++        Qt6::Network
+         SingleApplication
+ )
+ 
+diff --git a/src/main.cpp b/src/main.cpp
+index 22918cd..d1437f1 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -23,7 +23,6 @@
+ #include <cstdlib>
+ #include <iostream>
+ 
+-#include <libportal-qt5/portal-qt5.h>
+ 
+ #include "SingleApplication"
+ #include "SettingsDialog.h"

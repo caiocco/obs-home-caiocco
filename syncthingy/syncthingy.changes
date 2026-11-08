@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Sun Nov  8 06:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of SyncThingy 1.0, replacing the unmaintained
+  QSyncthingTray
+  * Add syncthingy-qt6.patch: build with Qt 6 (Leap 16.0 has no
+    libportal-qt5) and without libportal
+  * Bundle SingleApplication (upstream git submodule)
+  * Add syncthingy-native.patch: open URIs with QDesktopServices,
+    native XDG autostart entry instead of the Background portal,
+    tray icons looked up under the installed app ID, and the service
+    dialog uses the syncthing.service user unit

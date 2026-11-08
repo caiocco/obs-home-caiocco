@@ -1,0 +1,169 @@
+diff --git a/src/Constants.h b/src/Constants.h
+index 36f05e9..3a24d84 100644
+--- a/src/Constants.h
++++ b/src/Constants.h
+@@ -27,5 +27,6 @@
+ 
+ #define VERSION "v1.0"
+ #define APP_NAME "SyncThingy"
++#define SYNCTHINGY_APPID "com.github.zocker_160.SyncThingy"
+ 
+ #endif //SYNCTHINGY_CONSTANTS_H
+diff --git a/src/ServiceDialog.cpp b/src/ServiceDialog.cpp
+index 28176e6..3545786 100644
+--- a/src/ServiceDialog.cpp
++++ b/src/ServiceDialog.cpp
+@@ -1,17 +1,16 @@
+ 
+ #include "ServiceDialog.h"
+ 
+-const char* installTitle = "Run in terminal to install SyncThingy as system service";
+-const char* uninstallTitle = "Run in terminal to uninstall SyncThingy as system service";
++const char* installTitle = "Run in terminal to start Syncthing as a user service";
++const char* uninstallTitle = "Run in terminal to stop the Syncthing user service";
+ 
++// Native package: use the systemd user unit shipped by the syncthing package.
++// SyncThingy detects the running instance and acts as tray icon only.
+ const char* systemdInstallCommand =
+-        "mkdir -p ~/.config/systemd/user \n"
+-        "wget https://raw.githubusercontent.com/zocker-160/SyncThingy/master/linux_packaging/syncthingy.service -O ~/.config/systemd/user/syncthingy.service \n"
+-        "systemctl --user enable --now syncthingy";
++        "systemctl --user enable --now syncthing.service";
+ 
+ const char* systemdUninstallCommand =
+-        "systemctl --user stop syncthingy \n"
+-        "systemctl --user disable syncthingy";
++        "systemctl --user disable --now syncthing.service";
+ 
+ ServiceDialog::ServiceDialog(QWidget *parent) : QDialog(parent) {
+     setupUi();
+diff --git a/src/SettingsDialog.cpp b/src/SettingsDialog.cpp
+index 9f77a2e..397d7c8 100644
+--- a/src/SettingsDialog.cpp
++++ b/src/SettingsDialog.cpp
+@@ -66,7 +66,7 @@ void SettingsDialog::setupUi(const QIcon& icon) {
+     miscBoxLayout->addWidget(notificationBox);
+ 
+     // Buttons
+-    createBGService = new QPushButton("install as system service", this);
++    createBGService = new QPushButton("run Syncthing as user service", this);
+     auto confirmButtons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+ 
+     // Main layout
+diff --git a/src/main.cpp b/src/main.cpp
+index d1437f1..b5afa5d 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -9,6 +9,11 @@
+ #include <QSettings>
+ #include <QSemaphore>
+ #include <QFileSystemWatcher>
++#include <QDesktopServices>
++#include <QDir>
++#include <QFile>
++#include <QStandardPaths>
++#include <QUrl>
+ 
+ #include <QJsonArray>
+ #include <QJsonDocument>
+@@ -248,7 +253,8 @@ private:
+         QString prefix;
+ 
+         if (flatpakID == nullptr) {
+-            prefix = "syncthing";
++            // native package: icons are installed under the app ID
++            prefix = SYNCTHINGY_APPID;
+         } else {
+             qDebug() << "running inside Flatpak \n";
+             prefix = flatpakID;
+@@ -359,47 +365,33 @@ private:
+         }
+     }
+ 
++    // Native build: libportal and the Background portal are not used;
++    // autostart is an XDG autostart entry managed directly.
+     void requestBackgroundPermission() {
+-        qDebug() << "Requesting background permission...";
+-
+-        // NOTE: --no-browser is used here, because opening the WebUI
+-        // on login (autostart) would be annoying
+-        auto commandline = g_ptr_array_new();
+-        g_ptr_array_add(commandline, (gpointer) "SyncThingy");
+-        g_ptr_array_add(commandline, (gpointer) C_ARG_NO_BROWSER);
+-
+-        char reason[] = "Reason: Ability to sync data in the background.";
+-        auto flag = settings.value(C_AUTOSTART).toBool() ? XDP_BACKGROUND_FLAG_AUTOSTART : XDP_BACKGROUND_FLAG_NONE;
+-
+-        xdp_portal_request_background(
+-            XdpQt::globalPortalObject(),
+-            nullptr,
+-            reason,
+-            commandline,
+-            flag,
+-            nullptr,
+-            SyncThingy::backgroundRequestCallback,
+-            this
+-        );
+-    }
+-
+-    static void backgroundRequestCallback(GObject* object, GAsyncResult* result, void* data) {
+-        GError* error = nullptr;
+-        auto ret = xdp_portal_request_background_finish(
+-                XdpQt::globalPortalObject(), result, &error);
+-
+-        auto tray = static_cast<SyncThingy*>(data);
+-
+-        if (ret)
+-            qDebug() << "Background / Autostart permission granted";
+-        else {
+-            qDebug() << "Background / Autostart permission revoked";
+-            tray->trayIcon->showMessage(
+-                "Background permission request failed",
+-                "SyncThingy might not work as expected",
+-                tray->trayIcon->icon(),
+-                0
+-            );
++        const QString dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/autostart";
++        const QString file = dir + "/" SYNCTHINGY_APPID ".desktop";
++
++        if (settings.value(C_AUTOSTART).toBool()) {
++            QDir().mkpath(dir);
++            QFile f(file);
++            if (f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
++                // NOTE: --no-browser is used here, because opening the WebUI
++                // on login (autostart) would be annoying
++                f.write("[Desktop Entry]\n"
++                        "Type=Application\n"
++                        "Name=SyncThingy\n"
++                        "Comment=SyncThingy = Syncthing + simple tray indicator\n"
++                        "Icon=" SYNCTHINGY_APPID "\n"
++                        "Exec=SyncThingy " C_ARG_NO_BROWSER "\n"
++                        "Terminal=false\n"
++                        "X-GNOME-Autostart-enabled=true\n");
++                qDebug() << "autostart entry written to" << file;
++            } else {
++                qDebug() << "failed to write autostart entry" << file;
++            }
++        } else if (QFile::exists(file)) {
++            QFile::remove(file);
++            qDebug() << "autostart entry removed";
+         }
+     }
+ 
+@@ -447,15 +439,7 @@ private:
+ 
+ //private slots:
+     static void openURI(const QString& url) {
+-        xdp_portal_open_uri(
+-            XdpQt::globalPortalObject(),
+-            nullptr,
+-            url.toStdString().c_str(),
+-            XdpOpenUriFlags::XDP_OPEN_URI_FLAG_NONE,
+-            nullptr,
+-            nullptr,
+-            nullptr
+-        );
++        QDesktopServices::openUrl(QUrl(url));
+     }
+ 
+     void showBrowser() {
