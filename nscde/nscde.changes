@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Sun Nov  8 21:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of NsCDE 2.3+git20261013.2d26bbe (master snapshot)
+  * Runs on Leap's fvwm2 2.7.0; dunst and dex are recommended
+  * Use absolute script interpreters instead of /bin/ksh
+  * The .desktop entries are kept as upstream ships them (FVWM
+    command lines, OnlyShowIn=NsCDE); rpmlint flags them as invalid
