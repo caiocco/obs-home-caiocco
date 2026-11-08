@@ -1,0 +1,80 @@
+--- a/treeline.spec	2026-11-08 18:54:20.143236369 -0300
++++ b/treeline.spec	2026-11-08 18:54:20.145236506 -0300
+@@ -26,6 +26,8 @@
+ Source1:        x-%{name}.desktop
+ Source2:        x-%{name}-gz.desktop
+ Source3:        x-treepad.desktop
++# PATCH-FIX-OPENSUSE treeline-system-style.patch caiocco@yahoo.com.br -- only force Fusion for TreeLine's own color themes, so the Qt style from qt6ct/KDE is used
++Patch0:         treeline-system-style.patch
+ BuildRequires:  fdupes
+ BuildRequires:  hicolor-icon-theme
+ BuildRequires:  python3
+@@ -52,8 +54,17 @@
+ TreeLine is written in Python and uses the PyQt bindings to the Qt
+ toolkit, which makes it very portable.
+ 
++%package lang
++Summary:        Translations for package %{name}
++Requires:       %{name} = %{version}
++BuildArch:      noarch
++
++%description lang
++Translations of the TreeLine user interface (de, es, pt, ru, zh) and
++the Russian help files. Installed only on request.
++
+ %prep
+-%setup -q -n TreeLine
++%autosetup -p1 -n TreeLine
+ for i in source/*.py; do
+   sed -i "s|#!%{_bindir}/env python3|#!%{_bindir}/python3|" "$i"
+ done
+@@ -92,11 +103,23 @@
+ PYTHONPATH=%{buildroot}%{_datadir}/%{name} python3 -B -c \
+     "import treeline; assert treeline.__version__ == '%{version}'"
+ 
++%files lang
++%dir %{_datadir}/%{name}/translations
++%lang(de) %{_datadir}/%{name}/translations/*_de.qm
++%lang(es) %{_datadir}/%{name}/translations/*_es.qm
++%lang(pt) %{_datadir}/%{name}/translations/*_pt.qm
++%lang(ru) %{_datadir}/%{name}/translations/*_ru.qm
++%lang(zh) %{_datadir}/%{name}/translations/*_zh.qm
++%lang(ru) %{_docdir}/%{name}/*_ru.*
++
+ %files
+ %license doc/LICENSE
+ %dir %{_datadir}/mimelnk
+ %dir %{_datadir}/mimelnk/application
+-%doc %{_docdir}/%{name}
++%dir %{_docdir}/%{name}
++%doc %{_docdir}/%{name}/basichelp.html
++%doc %{_docdir}/%{name}/documentation.trln
++%doc %{_docdir}/%{name}/samples
+ %{_bindir}/treeline
+ %{_datadir}/applications/%{name}.desktop
+ %{_datadir}/icons/hicolor/48x48/apps/treeline-icon.png
+@@ -105,5 +128,6 @@
+ %{_datadir}/mimelnk/application/x-treeline.desktop
+ %{_datadir}/mimelnk/application/x-treepad.desktop
+ %{_datadir}/treeline/
++%exclude %{_datadir}/%{name}/translations
+ 
+ %changelog
+--- a/treeline.changes	2026-11-08 18:54:20.144236437 -0300
++++ b/treeline.changes	2026-11-08 18:54:20.145236506 -0300
+@@ -1,4 +1,15 @@
+ -------------------------------------------------------------------
++Sun Nov  8 21:54:20 UTC 2026 - caiocco <caiocco@yahoo.com.br>
++
++- home:caiocco: add treeline-system-style.patch: TreeLine always
++  forced the Fusion style, ignoring the Qt style set in qt6ct/KDE.
++  Fusion is now used only with TreeLine's own light/dark/custom
++  color themes.
++- Move the translations (de, es, pt, ru, zh) and the Russian help
++  files into a new treeline-lang subpackage, with no Supplements,
++  so it is installed only on request.
++
++-------------------------------------------------------------------
+ Wed Sep 16 17:39:35 UTC 2026 - Martin Pluskal <mpluskal@suse.com>
+ 
+ - Update to 3.2.1:

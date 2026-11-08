@@ -1,0 +1,51 @@
+diff -ru a/source/colorset.py b/source/colorset.py
+--- a/source/colorset.py	2025-09-24 21:03:12.000000000 -0300
++++ b/source/colorset.py	2026-11-08 18:48:37.383726066 -0300
+@@ -60,6 +60,7 @@
+     def __init__(self):
+         """Initialize colors settings from the system or from options.
+         """
++        self.sysStyle = QApplication.style().name()
+         self.sysPalette = QApplication.palette()
+         self.colors = [Color(roleKey) for roleKey in roles.keys()]
+         self.theme = ThemeSetting[globalref.miscOptions['ColorTheme']]
+@@ -73,6 +74,17 @@
+             elif self.theme == ThemeSetting.custom:
+                 color.setFromOption()
+ 
++    def applyStyle(self):
++        """Use the system widget style for the system theme, else Fusion.
++
++        TreeLine's own color themes need Fusion to look right, but forcing
++        it always overrides the style chosen in qt6ct/KDE.
++        """
++        if self.theme == ThemeSetting.system:
++            QApplication.setStyle(self.sysStyle)
++        else:
++            QApplication.setStyle('Fusion')
++
+     def setAppColors(self):
+         """Set application to current colors.
+         """
+@@ -129,6 +141,7 @@
+         if dialog.exec() == QDialog.DialogCode.Accepted:
+             self.theme = ThemeSetting(self.themeControl.currentData())
+             globalref.miscOptions.changeValue('ColorTheme', self.theme.name)
++            self.applyStyle()
+             if self.theme == ThemeSetting.system:
+                 QApplication.setPalette(self.sysPalette)
+             else:   # named theme or custom
+diff -ru a/source/treemaincontrol.py b/source/treemaincontrol.py
+--- a/source/treemaincontrol.py	2025-09-06 21:18:01.000000000 -0300
++++ b/source/treemaincontrol.py	2026-11-08 18:48:37.383726066 -0300
+@@ -141,9 +141,9 @@
+             QApplication.setWindowIcon(windowIcon)
+         globalref.treeIcons = icondict.IconDict(iconPathList, ['', 'tree'])
+         icon = globalref.treeIcons.getIcon('default')
+-        QApplication.setStyle(QStyleFactory.create('Fusion'))
+         self.colorSet = colorset.ColorSet()
+         if globalref.miscOptions['ColorTheme'] != 'system':
++            self.colorSet.applyStyle()
+             self.colorSet.setAppColors()
+         self.recentFiles = recentfiles.RecentFileList()
+         if globalref.genOptions['AutoFileOpen'] and not pathObjects:
