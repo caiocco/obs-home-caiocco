@@ -1,0 +1,78 @@
+-------------------------------------------------------------------
+Tue Sep 30 17:11:43 UTC 2025 - Christophe Marin <christophe@krop.fr>
+
+- Update to 0.11
+Qt 6.10 support
+  * disabled cmake warnings about private Qt headers
+  * allow to override Qt plugin directory
+  * don't rely on label font for saving font settings
+  * always fallback to the QGenericUnixTheme
+
+-------------------------------------------------------------------
+Tue Mar 11 10:00:54 UTC 2025 - Christophe Marin <christophe@krop.fr>
+
+- Update to 0.10
+  * reworked color settings
+  * fixed issue with app-specific palette
+  * fixed .desktop file name
+  * fixed CMake warning
+  * enabled QPlatformTheme::HoverEffect hint
+  * increased minimum Qt version to 6.2
+  * code refactoring and optimization
+  * moved home page to opencode.net
+  * updated Dutch translation
+  * updated Polish translation
+  * updated Russian translation
+
+-------------------------------------------------------------------
+Sun Oct 29 16:10:23 UTC 2023 - Dirk Müller <dmueller@suse.com>
+
+- update to 0.9:
+  * added Qt 6.6 compatibility
+  * added compatibility with QT_STYLE_OVERRIDE=qt5ct-style
+  * improved cmake build:
+  *   - make translations optional (Jonas Kvinge)
+  *   - enabled reproducible build by default
+  *   - other fixes and improvements (Jonas Kvinge)
+  * fixed crash on QML applications
+  * fixed parallel build using qmake
+  * fixed localization support
+  * updated Dutch translation (Heimen Stoffels)
+  * updated Polish translation (Marek Adamski)
+  * updated Russian translation
+  * updated French translation (Wallon)
+
+-------------------------------------------------------------------
+Tue Apr  4 14:58:48 UTC 2023 - Christophe Marin <christophe@krop.fr>
+
+- Update to 0.8:
+  * added keywords entry to desktop file
+  * fixed compatibility with applications that use own stylesheet
+  * fixed font applying issue
+  * updated Japanese translation
+
+-------------------------------------------------------------------
+Sat Jan 28 14:05:30 UTC 2023 - kh Lai <dlshcbmuipmam@hotmail.com>
+
+- Update to 0.7
+  * fixed crash when loading default font
+  * changed font configuration format
+  * improved icon loader
+  * updated Czech translation
+
+-------------------------------------------------------------------
+Sat Oct  1 07:43:58 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Update to 0.6
+  * added Qt 6.4 support
+  * added Qt version checking
+  * added xdgdesktopportal dialogs support
+  * improved warning about incorrect environment variable
+  * only prepend user stylesheet if it has changed
+  * removed Qt Concurrent dependency
+  * updated translations
+
+-------------------------------------------------------------------
+Mon Mar 14 14:44:45 UTC 2022 - Christophe Giboudeaux <christophe@krop.fr>
+
+- Init qt6ct
