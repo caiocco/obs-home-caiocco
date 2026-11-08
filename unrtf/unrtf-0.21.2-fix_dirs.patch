@@ -1,0 +1,29 @@
+diff --git a/doc/unrtf.1.in b/doc/unrtf.1.in
+index 5628682..53b9081 100644
+--- a/doc/unrtf.1.in
++++ b/doc/unrtf.1.in
+@@ -94,20 +94,20 @@ specifies the tags output configuration file to be used.  The command
+ configuration files are a simple format.  To change the behaviour of
+ unrtf, a local copy of a system configuration file can be be made and
+ edited.  The most complete configuration file and hence the best starting
+-point is @DATADIR@/html.conf.
++point is /etc/unrtf/html.conf.
+ .TP
+ \-P config_search_path
+ specifies the directories in which the configuration file for the specified
+ format will be sought.  The path can be provided as a single directory
+ or a list of colon separated directories.
+-The default is @DATADIR@ where distributed output
++The default is /etc/unrtf/ where distributed output
+ configuration files are installed.
+ .SH FILES
+ .TP
+-@DATADIR@/*.conf
++/etc/unrtf/*.conf
+ \[en] run time output configuration files.
+ .TP
+-@DATADIR@/SYMBOL.charmap
++/etc/unrtf//SYMBOL.charmap
+ \[en] UTF encoding of the SYMBOL font
+ used in many RTF files.  Unfortunately the iconv package does not include
+ font encodings.  The format is identical to iconv code page files.
