@@ -1,0 +1,21 @@
+--- 86Box.spec.orig
++++ 86Box.spec
+@@ -68,8 +68,8 @@
+ %{qt6_install}
+ 
+ # Icons
+-for i in 48 64 72 128 256; do
+-    install -Dpm 0644 src/unix/assets/${i}x${i}/net.86box.86Box.png %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/%{name}.png
++for i in 16 24 32 48 64 72 128 256; do
++    install -Dpm 0644 src/unix/assets/${i}x${i}/net.86box.86Box.png %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/net.86box.86Box.png
+ done
+ # Desktop file
+ mkdir -p %{buildroot}%{_datadir}/applications
+@@ -80,6 +80,6 @@
+ %license COPYING
+ %{_bindir}/%{name}
+ %{_datadir}/applications/net.86box.86Box.desktop
+-%{_datadir}/icons/hicolor/*/apps/%{name}.png
++%{_datadir}/icons/hicolor/*/apps/net.86box.86Box.png
+ 
+ %changelog
