@@ -1,0 +1,16 @@
+-------------------------------------------------------------------
+Sun Nov  8 17:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Install tunconfig as executable (rpmlint non-executable-script)
+
+-------------------------------------------------------------------
+Sun Nov  8 16:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package, built from the kanjitalk755/macemu fork (the
+  maintained upstream; also used by Debian) at commit f532be3d
+  (2026-10-21)
+  * SDL2 video/audio, GTK3 prefs editor, BIN/CUE and VDE support
+  * macemu-system-tinyxml2.patch: use the system tinyxml2, adapted
+    from Debian's 1001_use_system_tinyxml2.patch
+  * Replaces the orphaned cebix-based package from Emulators
+

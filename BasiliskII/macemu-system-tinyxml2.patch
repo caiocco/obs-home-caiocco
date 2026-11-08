@@ -1,0 +1,93 @@
+diff --git a/BasiliskII/src/Unix/Makefile.in b/BasiliskII/src/Unix/Makefile.in
+index 4503e3d6..c197ad81 100644
+--- a/BasiliskII/src/Unix/Makefile.in
++++ b/BasiliskII/src/Unix/Makefile.in
+@@ -58,7 +58,6 @@ SRCS = ../main.cpp ../prefs.cpp ../prefs_items.cpp \
+     timer_unix.cpp ../adb.cpp ../serial.cpp ../ether.cpp \
+     ../sony.cpp ../disk.cpp ../cdrom.cpp ../scsi.cpp ../video.cpp \
+     ../audio.cpp ../extfs.cpp disk_sparsebundle.cpp \
+-	tinyxml2.cpp \
+     ../user_strings.cpp user_strings_unix.cpp sshpty.c strlcpy.c rpc_unix.cpp \
+     $(XPLAT_SRCS) $(SYSSRCS) $(CPUSRCS) $(SLIRP_SRCS)
+ APP_FLAVOR ?=
+diff --git a/BasiliskII/src/Unix/configure.ac b/BasiliskII/src/Unix/configure.ac
+index d4572265..1aded161 100644
+--- a/BasiliskII/src/Unix/configure.ac
++++ b/BasiliskII/src/Unix/configure.ac
+@@ -1949,6 +1949,13 @@ fi
+ CFLAGS="$CFLAGS -fwrapv"
+ CXXFLAGS="$CXXFLAGS -fwrapv"
+ 
++dnl Use the system tinyxml2 instead of the bundled copy
++PKG_CHECK_MODULES([tinyxml2], [tinyxml2], [
++  CFLAGS="$CFLAGS $tinyxml2_CFLAGS"
++  CXXFLAGS="$CXXFLAGS $tinyxml2_CFLAGS"
++  LIBS="$LIBS $tinyxml2_LIBS"
++])
++
+ dnl Generate Makefile.
+ AC_SUBST(DEFINES)
+ AC_SUBST(SYSSRCS)
+diff --git a/BasiliskII/src/Unix/disk_sparsebundle.cpp b/BasiliskII/src/Unix/disk_sparsebundle.cpp
+index 063e3296..3124f292 100644
+--- a/BasiliskII/src/Unix/disk_sparsebundle.cpp
++++ b/BasiliskII/src/Unix/disk_sparsebundle.cpp
+@@ -19,7 +19,7 @@
+  */
+ 
+ #include "disk_unix.h"
+-#include "tinyxml2.h"
++#include <tinyxml2.h>
+ 
+ #include <errno.h>
+ #include <limits.h>
+@@ -180,7 +180,7 @@ protected:
+ 
+ 
+ 
+-using tinyxml2::XML_NO_ERROR;
++using tinyxml2::XML_SUCCESS;
+ using tinyxml2::XMLElement;
+ 
+ // Simplistic plist parser
+@@ -188,7 +188,7 @@ struct plist {
+ 	plist() : doc(true, tinyxml2::COLLAPSE_WHITESPACE) { }
+ 	
+ 	bool open(const char *path) {
+-		if (doc.LoadFile(path) != XML_NO_ERROR)
++		if (doc.LoadFile(path) != XML_SUCCESS)
+ 			return false;
+ 		tinyxml2::XMLHandle hnd(&doc);
+ 		dict = hnd.FirstChildElement("plist").FirstChildElement("dict")
+diff --git a/SheepShaver/src/Unix/Makefile.in b/SheepShaver/src/Unix/Makefile.in
+index ea68538d..e02bd89d 100644
+--- a/SheepShaver/src/Unix/Makefile.in
++++ b/SheepShaver/src/Unix/Makefile.in
+@@ -69,7 +69,7 @@ SRCS = ../main.cpp main_unix.cpp ../prefs.cpp ../prefs_items.cpp prefs_unix.cpp
+     ../macos_util.cpp ../timer.cpp timer_unix.cpp ../xpram.cpp xpram_unix.cpp \
+     ../adb.cpp ../sony.cpp ../disk.cpp ../cdrom.cpp ../scsi.cpp \
+     ../gfxaccel.cpp ../video.cpp ../audio.cpp ../ether.cpp ../thunks.cpp \
+-    ../serial.cpp ../extfs.cpp disk_sparsebundle.cpp tinyxml2.cpp \
++    ../serial.cpp ../extfs.cpp disk_sparsebundle.cpp \
+     about_window_unix.cpp ../user_strings.cpp user_strings_unix.cpp rpc_unix.cpp \
+     sshpty.c strlcpy.c $(XPLAT_SRCS) $(SYSSRCS) $(CPUSRCS) $(MONSRCS) $(SLIRP_SRCS)
+ APP = SheepShaver
+diff --git a/SheepShaver/src/Unix/configure.ac b/SheepShaver/src/Unix/configure.ac
+index d2be8a5c..ade14ea9 100644
+--- a/SheepShaver/src/Unix/configure.ac
++++ b/SheepShaver/src/Unix/configure.ac
+@@ -773,6 +773,14 @@ if [[ -n "$CAN_SLIRP" ]]; then
+ fi
+ AC_SUBST(SLIRP_SRCS)
+ 
++dnl Use the system tinyxml2 instead of the bundled copy
++PKG_CHECK_MODULES([tinyxml2], [tinyxml2], [
++  CFLAGS="$CFLAGS $tinyxml2_CFLAGS"
++  CXXFLAGS="$CXXFLAGS $tinyxml2_CFLAGS"
++  LIBS="$LIBS $tinyxml2_LIBS"
++])
++
++
+ dnl Is libvdeplug available?
+ have_vdeplug=no
+ AS_IF([test "x$with_vdeplug" = "xyes"], [
