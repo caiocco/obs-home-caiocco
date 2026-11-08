@@ -1,0 +1,18 @@
+<!-- Run "osc service manualrun" to regenerate the tarball (includes submodules) -->
+<services>
+  <service name="tar_scm" mode="manual">
+    <param name="url">https://github.com/LMMS/lmms.git</param>
+    <param name="scm">git</param>
+    <param name="exclude">.git</param>
+    <param name="exclude">doc/wiki</param>
+    <param name="submodules">enable</param>
+    <param name="revision">v1.3.0-alpha.2</param>
+    <param name="version">1.3.0~alpha.2</param>
+    <param name="filename">lmms</param>
+  </service>
+  <service name="recompress" mode="manual">
+    <param name="file">*.tar</param>
+    <param name="compression">xz</param>
+  </service>
+  <service name="set_version" mode="manual"/>
+</services>
