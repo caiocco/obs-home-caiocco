@@ -1,0 +1,11 @@
+-------------------------------------------------------------------
+Sun Nov  8 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of the Bluecurve cursor theme 8.0.2, replacing
+  the build from Phantom X's chinforpms Copr
+  * Cursors only, taken from Fedora's last bluecurve-icon-theme
+    tarball plus the Bluecurve-classic sets from chinforpms
+  * Keep the chinforpms cursor aliases (freedesktop, Qt, GTK and
+    Mozilla names) and upstream's symlink.manifest links
+  * Epoch 1, as in the Copr package, so this one is an upgrade
+  * Run %fdupes -s: the inverse and classic sets share many cursors
