@@ -1,0 +1,10 @@
+-------------------------------------------------------------------
+Mon Nov  9 05:50:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of the wxWidgets 3.2.8 "wxstd" translations for
+  openSUSE Leap 16.0
+  * openSUSE's wxWidgets-3_2 deletes the catalogs and Recommends
+    wxWidgets-lang, which no longer exists; wxMaxima showed
+    "Translations: no standard wxWidgets catalogs were found"
+  * Catalogs are rebuilt from the .po files and installed as
+    wxstd-3.2.mo, the first name wxTranslations::AddStdCatalog() tries
