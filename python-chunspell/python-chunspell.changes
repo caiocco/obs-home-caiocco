@@ -1,0 +1,9 @@
+-------------------------------------------------------------------
+Mon Nov  9 14:05:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of chunspell 2.0.5, needed by OutWiker
+  * chunspell-system-hunspell.patch: link against the system
+    hunspell instead of downloading and building a private copy;
+    drop the forced -O3 -g0 flags and the $ORIGIN rpath
+  * Remove the prebuilt libhunspell-1.7.so.0 from the sdist
+  * %check exercises spell/suggest with the bundled en_US dictionary

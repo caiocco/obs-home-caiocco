@@ -1,0 +1,73 @@
+--- chunspell-2.0.5.orig/build_hunspell.py	2026-11-09 10:59:00.164513639 -0300
++++ chunspell-2.0.5/build_hunspell.py	2026-11-09 10:59:00.185515081 -0300
+@@ -79,42 +79,13 @@
+     return export_lib_name, hunspell_so_dir
+ 
+ def pkgconfig(**kw):
+-    kw['include_dirs'] = include_dirs()
++    # openSUSE: link against the system hunspell instead of downloading and
++    # building a private copy (and shipping it next to the extension)
++    kw['include_dirs'] = [os.path.abspath(os.path.join(BASE_DIR, 'hunspell'))]
+     kw['library_dirs'] = []
+-    kw['libraries'] = []
++    kw['libraries'] = ['hunspell-1.7']
+     kw['extra_link_args'] = []
+     kw['language'] = 'c++'
+-    # Need to set the linker locations
+-    if platform.system() in ('Linux', 'FreeBSD'):
+-        kw['runtime_library_dirs'] = [os.path.join('$ORIGIN')]
+-    if platform.system() == 'Darwin':
+-        # See https://stackoverflow.com/questions/9795793/shared-library-dependencies-with-distutils
+-        kw['extra_link_args'] = ['-Wl,-rpath,"@loader_path/']
+-    # If changing to a dynamic link dependency
+-    # if platform.system() == 'Windows':
+-    #     # See https://stackoverflow.com/questions/62662816/how-do-i-use-the-correct-dll-files-to-enable-3rd-party-c-libraries-in-a-cython-c
+-    #     for filename in os.listdir(os.path.join(BASE_DIR, 'libs', 'msvc')):
+-    #         shutil.copyfile(os.path.join(BASE_DIR, 'libs', 'msvc', filename), os.path.join(BASE_DIR, 'hunspell', filename))
+-
+-    if not os.path.exists(os.path.join(BASE_DIR, 'external', 'hunspell-1.7.2')):
+-        # Prepare for hunspell if it's missing
+-        download_and_extract('https://github.com/hunspell/hunspell/archive/v1.7.2.tar.gz',
+-            os.path.join(BASE_DIR, 'external'))
+-        kw['include_dirs'] = include_dirs()
+-
+-    if platform.system() == 'Windows':
+-        # These should be hardcoded to both architectures
+-        kw['libraries'] = ['libhunspell-msvc14-x64', 'libhunspell-msvc14-x86']
+-        kw['library_dirs'] = [os.path.join(BASE_DIR, 'libs', 'msvc')]
+-        kw['extra_link_args'] = ['/NODEFAULTLIB:libucrt.lib ucrt.lib']
+-    else:
+-        force_build = os.environ.get('CYHUNSPELL_FORCE_BUILD', False)
+-        if force_build == '0' or force_build == 0:
+-            force_build = False
+-        lib_name, lib_path = build_hunspell_package(os.path.join(BASE_DIR, 'external', 'hunspell-1.7.2'), force_build)
+-        kw['library_dirs'] = [lib_path]
+-        kw['libraries'] = [lib_name]
+-
+     return kw
+ 
+ def get_build_dir():
+--- chunspell-2.0.5.orig/setup.py	2026-11-09 10:59:00.164513639 -0300
++++ chunspell-2.0.5/setup.py	2026-11-09 10:59:00.185515081 -0300
+@@ -18,10 +18,10 @@
+         self.root_is_pure = False
+ 
+ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+-BUILD_ARGS = defaultdict(lambda: ['-O3', '-g0'])
++BUILD_ARGS = defaultdict(list)
+ for compiler, args in [
+         ('msvc', ['/EHsc', '/MD', '/DHUNSPELL_STATIC']),
+-        ('gcc', ['-O3', '-g0', '-DHUNSPELL_STATIC'])]:
++        ('gcc', [])]:
+     BUILD_ARGS[compiler] = args
+ 
+ def cleanup_pycs():
+@@ -47,7 +47,7 @@
+ building_ext = 'build_ext' in sys.argv
+ force_rebuild = '--force' in sys.argv or '-f' in sys.argv and building
+ 
+-datatypes = ['*.aff', '*.dic', '*.pxd', '*.pyx', '*.pyd', '*.pxd', '*.so', '*.so.*', '*.dylib', '*.dylib.*', '*.lib', '*.hpp', '*.cpp']
++datatypes = ['*.aff', '*.dic']
+ packages = find_packages(exclude=['*.tests', '*.tests.*', 'tests.*', 'tests'])
+ packages.append('hunspell.dictionaries')
+ package_data = {'' : datatypes}
