@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=XFile
+GenericName=File Manager
+Comment=Browse the file system with a Motif file manager
+Exec=xfile %f
+Icon=xfile_64x64
+Terminal=false
+Categories=System;FileTools;FileManager;Motif;
+MimeType=inode/directory;

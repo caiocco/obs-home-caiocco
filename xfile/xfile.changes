@@ -1,0 +1,17 @@
+-------------------------------------------------------------------
+Sun Nov  8 23:15:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add xfile-cde-font-resource.patch: under CDE the global *Font
+  resource from dtsession was applied to the file list's Xft
+  renditions, leaving them without an Xft font and crashing in
+  XmStringWidth at startup; reload such renditions as Xft
+
+-------------------------------------------------------------------
+Fri Nov  6 20:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of xfile 1.2.1+git20260914.ab96ebd
+  * Build with %optflags and the distribution linker flags
+  * Install without forcing root ownership; make xfile-open a
+    relative symlink
+  * Install the app-defaults file into /usr/share/X11/app-defaults
+  * Add a desktop entry and install the application icons

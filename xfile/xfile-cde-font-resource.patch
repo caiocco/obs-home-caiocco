@@ -1,0 +1,112 @@
+--- a/src/listw.c	2026-09-14 16:10:52.000000000 -0300
++++ b/src/listw.c	2026-11-08 23:09:58.224559973 -0300
+@@ -46,6 +46,7 @@
+ static XtGeometryResult query_geometry(Widget,
+ 	XtWidgetGeometry*, XtWidgetGeometry*);
+ static void default_render_table(Widget, int, XrmValue*);
++static XmRenderTable fix_xft_renditions(Widget, XmRenderTable);
+ static void default_hspacing(Widget, int, XrmValue*);
+ static void default_select_color(Widget, int, XrmValue*);
+ static void free_item(struct item_rec*);
+@@ -1826,6 +1827,8 @@
+ 	memset(fl->file_list.item_width_max, 0,
+ 		sizeof(fl->file_list.item_width_max));
+ 	
++	fl->file_list.label_rt = fix_xft_renditions(wnew, fl->file_list.label_rt);
++
+ 	/* Dynamic defaults */
+ 	if(fl->file_list.dblclk_int == -1) {
+ 		fl->file_list.dblclk_int = XtGetMultiClickTime(XtDisplay(wnew));
+@@ -2021,6 +2024,92 @@
+ /*
+  * Dynamic defaults
+  */
++/*
++ * CDE's dtsession (sys.resources) sets a global "*Font" resource. Motif
++ * applies it to every rendition, FONT_IS_XFT ones included, and since a
++ * core font is then present it never opens the Xft font, overwriting
++ * fontName with the XLFD as well. Such a rendition has no usable font,
++ * and XmString metrics functions dereference a NULL XftFont.
++ * Detect these and reload them as Xft, using the fontName found in the
++ * resource database for this widget's render table.
++ */
++static XmRenderTable fix_xft_renditions(Widget w, XmRenderTable rt)
++{
++	XmStringTag *tags = NULL;
++	XrmName names[104];
++	XrmClass classes[104];
++	XrmDatabase db;
++	Widget wp;
++	int ntags, depth, i;
++	XmRenderTable new_rt = NULL;
++
++	if(!rt) return rt;
++	ntags = XmRenderTableGetTags(rt, &tags);
++	if(ntags <= 0) return rt;
++
++	/* Resource name/class path: app...widget.renderTable.<tag>.fontName */
++	for(depth = 0, wp = w; wp && depth < 100; wp = XtParent(wp)) depth++;
++	for(i = depth - 1, wp = w; i >= 0; wp = XtParent(wp), i--) {
++		names[i] = XrmStringToQuark(XtName(wp));
++		if(!XtParent(wp)) {
++			String app_name, app_class;
++			XtGetApplicationNameAndClass(XtDisplay(w), &app_name, &app_class);
++			classes[i] = XrmStringToQuark(app_class);
++		} else {
++			classes[i] = XrmStringToQuark(XtClass(wp)->core_class.class_name);
++		}
++	}
++	names[depth] = XrmStringToQuark(XmNrenderTable);
++	classes[depth] = XrmStringToQuark(XmCRenderTable);
++	classes[depth + 1] = XrmStringToQuark(XmCRendition);
++	names[depth + 2] = XrmStringToQuark(XmNfontName);
++	classes[depth + 2] = XrmStringToQuark(XmCFontName);
++	names[depth + 3] = classes[depth + 3] = NULLQUARK;
++	db = XtScreenDatabase(XtScreen(w));
++
++	for(i = 0; i < ntags; i++) {
++		XmRendition rend;
++		XmFontType type = XmAS_IS;
++		XtPointer font = NULL;
++		XrmRepresentation rep;
++		XrmValue value;
++		char *family = "Sans";
++		Arg args[3];
++
++		rend = XmRenderTableGetRendition(rt, tags[i]);
++		if(!rend) continue;
++
++		XtSetArg(args[0], XmNfontType, &type);
++		XtSetArg(args[1], XmNfont, &font);
++		XmRenditionRetrieve(rend, args, 2);
++
++		if(type != XmFONT_IS_XFT || font == NULL ||
++			font == (XtPointer)XmAS_IS) {
++			XmRenditionFree(rend);
++			continue;
++		}
++
++		names[depth + 1] = XrmStringToQuark(tags[i]);
++		if(XrmQGetResource(db, names, classes, &rep, &value) &&
++			value.addr && *(char*)value.addr) {
++			family = (char*)value.addr;
++		}
++
++		XtSetArg(args[0], XmNfont, NULL);
++		XtSetArg(args[1], XmNfontName, family);
++		XmRenditionUpdate(rend, args, 2);
++
++		if(!new_rt) new_rt = XmRenderTableCopy(rt, NULL, 0);
++		new_rt = XmRenderTableAddRenditions(new_rt, &rend, 1, XmMERGE_REPLACE);
++		XmRenditionFree(rend);
++	}
++
++	for(i = 0; i < ntags; i++) XtFree(tags[i]);
++	XtFree((char*)tags);
++
++	return new_rt ? new_rt : rt;
++}
++
+ static void default_render_table(Widget w, int offset, XrmValue *pv)
+ {
+ 	static XmRenderTable rt;
