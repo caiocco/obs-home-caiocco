@@ -1,0 +1,103 @@
+--- outwiker-4.1.0-stable.orig/src/outwiker/app/owapplication.py	2026-11-09 11:11:23.400535246 -0300
++++ outwiker-4.1.0-stable/src/outwiker/app/owapplication.py	2026-11-09 11:11:23.417536413 -0300
+@@ -13,6 +13,7 @@
+ 
+ from outwiker.app.core.logredirector import LogRedirector
+ from outwiker.app.core.spellcontroller import SpellCheckersController
++from outwiker.app.gtklighttheme import avoid_dark_gtk_theme
+ from outwiker.app.gui.mainwindow import MainWindow
+ from outwiker.app.gui.themecontroller import ThemeController
+ from outwiker.core.application import Application
+@@ -32,10 +33,13 @@
+     """
+ 
+     def __init__(self, application: Application):
+-        # Disable dark theme for GTK in Linux
+-        os.environ["GTK_THEME"] = ":light"
++        # Upstream forced GTK_THEME=":light" here to disable dark themes,
++        # which also threw away the user's (light) theme.  Only dark themes
++        # are replaced now, once GTK has been initialized.
+         os.environ["WEBKIT_DISABLE_DMABUF_RENDERER"] = "1"
+         super().__init__()
++        if sys.platform.startswith("linux"):
++            avoid_dark_gtk_theme()
+ 
+         self.logFileName = "outwiker.log"
+         self._application = application
+--- /dev/null	2026-11-08 16:20:23.688595301 -0300
++++ outwiker-4.1.0-stable/src/outwiker/app/gtklighttheme.py	2026-11-09 11:11:23.403535452 -0300
+@@ -0,0 +1,74 @@
++import ctypes
++import logging
++import os
++import re
++
++logger = logging.getLogger("outwiker")
++
++_DARK_RE = re.compile(r"([-_ .]?)(dark(?:er|est)?)(?=$|[-_ .])", re.IGNORECASE)
++
++
++def _theme_dirs():
++    home = os.path.expanduser("~")
++    data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local", "share")
++    data_dirs = os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
++    dirs = [os.path.join(data_home, "themes"), os.path.join(home, ".themes")]
++    dirs += [os.path.join(d, "themes") for d in data_dirs.split(":") if d]
++    return dirs
++
++
++def _gtk3_theme_exists(name):
++    return any(os.path.isdir(os.path.join(d, name, "gtk-3.0")) for d in _theme_dirs())
++
++
++def avoid_dark_gtk_theme():
++    """
++    OutWiker's layout assumes a light theme.  Keep the user's GTK theme,
++    but switch away from a dark one (to its light variant if it exists,
++    else to Adwaita) and turn off the dark-theme preference.
++    Must be called after GTK has been initialized (after wx.App()).
++    """
++    if os.environ.get("GTK_THEME"):
++        # Explicit choice of the user: leave it alone
++        return
++    try:
++        gtk = ctypes.CDLL("libgtk-3.so.0")
++        gobject = ctypes.CDLL("libgobject-2.0.so.0")
++        glib = ctypes.CDLL("libglib-2.0.so.0")
++    except OSError:
++        return
++
++    gtk.gtk_settings_get_default.restype = ctypes.c_void_p
++    settings = gtk.gtk_settings_get_default()
++    if not settings:
++        return
++
++    gobject.g_object_get.argtypes = [ctypes.c_void_p, ctypes.c_char_p,
++                                     ctypes.c_void_p, ctypes.c_void_p]
++    gobject.g_object_set.argtypes = [ctypes.c_void_p, ctypes.c_char_p,
++                                     ctypes.c_void_p, ctypes.c_void_p]
++    glib.g_free.argtypes = [ctypes.c_void_p]
++
++    gobject.g_object_set(settings, b"gtk-application-prefer-dark-theme",
++                         ctypes.c_void_p(0), None)
++
++    value = ctypes.c_void_p()
++    gobject.g_object_get(settings, b"gtk-theme-name", ctypes.byref(value), None)
++    if not value.value:
++        return
++    name = ctypes.string_at(value.value).decode("utf-8", "replace")
++    glib.g_free(value)
++
++    if not _DARK_RE.search(name):
++        return
++
++    # "Foo-Dark" -> "Foo-Light" or "Foo"; "Foo-dark" -> "Foo-light" or "Foo"
++    def to_light(match):
++        word = match.group(2)
++        return match.group(1) + ("Light" if word[0].isupper() else "light")
++
++    candidates = [_DARK_RE.sub(to_light, name), _DARK_RE.sub("", name)]
++    light = next((c for c in candidates if c and _gtk3_theme_exists(c)), "Adwaita")
++    logger.info("Dark GTK theme %s replaced by %s", name, light)
++    gobject.g_object_set(settings, b"gtk-theme-name",
++                         ctypes.c_char_p(light.encode("utf-8")), None)

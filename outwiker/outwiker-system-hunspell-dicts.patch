@@ -1,0 +1,16 @@
+--- outwiker-4.1.0-stable.orig/src/outwiker/core/system.py	2026-11-09 11:00:19.282944955 -0300
++++ outwiker-4.1.0-stable/src/outwiker/core/system.py	2026-11-09 11:00:19.299946122 -0300
+@@ -471,7 +471,12 @@
+     """
+     Returns a list of directories with spelling dictionaries
+     """
+-    return getSpecialDirList(SPELL_FOLDER_NAME, configDirName, configFileName)
++    dirs = getSpecialDirList(SPELL_FOLDER_NAME, configDirName, configFileName)
++    # Also use the system hunspell dictionaries (myspell-* packages).
++    # The last item must stay the user's folder (custom dictionary).
++    system_dirs = [path for path in ("/usr/share/hunspell", "/usr/share/myspell")
++                   if os.path.isdir(path)]
++    return dirs[:-1] + system_dirs + dirs[-1:]
+ 
+ 
+ def getSpecialDirList(

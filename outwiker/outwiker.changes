@@ -1,0 +1,24 @@
+-------------------------------------------------------------------
+Mon Nov  9 14:20:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Replace outwiker-respect-gtk-theme.patch with
+  outwiker-avoid-dark-gtk-theme.patch: GTK_THEME is no longer set
+  at all, so the theme from XSETTINGS/settings.ini is used; once GTK
+  is up, a dark theme is swapped for its light variant ("Foo-Dark"
+  -> "Foo-Light" or "Foo") or Adwaita, and the dark-theme
+  preference is turned off.  An explicit GTK_THEME is respected.
+
+-------------------------------------------------------------------
+Mon Nov  9 14:10:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of OutWiker 4.1.0.982 (tag 4.1.0-stable),
+  replacing the Flatpak
+  * Installed like upstream's Makefile (/usr/share/outwiker), with
+    the official plugins and their bundled libraries
+  * outwiker-respect-gtk-theme.patch: only default GTK_THEME to
+    ":light" instead of overriding the user's theme
+  * outwiker-system-hunspell-dicts.patch: also offer the system
+    hunspell dictionaries from /usr/share/hunspell
+  * Own launcher without the "cd /usr/share/outwiker" of upstream's
+  * Desktop file installed as net.jenyay.Outwiker.desktop (matching
+    the AppStream metadata), with StartupWMClass
