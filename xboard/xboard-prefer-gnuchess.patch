@@ -1,0 +1,40 @@
+From: Luigi Baldoni <aloisio@gmx.com>
+Date: 2017-09-01 06:43:15 +0200
+Subject: Prefer gnuchess
+References: bnc#1055758
+
+xboard has the fairymax backend hardcoded as first chess program
+but gnuchess is a better option
+
+Index: xboard-4.9.1/gtk/xboard.h
+===================================================================
+--- xboard-4.9.1.orig/gtk/xboard.h
++++ xboard-4.9.1/gtk/xboard.h
+@@ -109,7 +109,7 @@ typedef struct {
+ 
+ #define BORDER_X_OFFSET 3
+ #define BORDER_Y_OFFSET 27
+-#define FIRST_CHESS_PROGRAM	"fairymax"
++#define FIRST_CHESS_PROGRAM	"gnuchess"
+ #define SECOND_CHESS_PROGRAM	""
+ #define FIRST_DIRECTORY         "."
+ #define SECOND_DIRECTORY        "."
+Index: xboard-4.9.1/xboard.conf
+===================================================================
+--- xboard-4.9.1.orig/xboard.conf
++++ xboard-4.9.1/xboard.conf
+@@ -73,11 +73,11 @@
+ ;
+ ; Engines & adjudicatons in engine-engine games
+ ;
+--firstChessProgram fairymax
+--firstChessProgramNames {fairymax
++-firstChessProgram gnuchess
++-firstChessProgramNames {gnuchess
+ "Fruit 2.1" -fcp fruit -fUCI
+ "Crafty" -fcp crafty
+-"GNU Chess" -fcp gnuchess
++"Fairy-Max" -fcp fairymax
+ }
+ -niceEngines 0
+ -polyglotDir ""

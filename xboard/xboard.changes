@@ -1,0 +1,753 @@
+-------------------------------------------------------------------
+Mon Nov 10 12:23:37 UTC 2025 - Giacomo Comes <gcomes.obs@gmail.com>
+
+- remove BuildRequires:  xorg-x11-devel
+- Use %patch -P N instead of deprecated %patchN
+- add CFLAGS option -fcommon
+
+-------------------------------------------------------------------
+Sun Apr 29 12:37:28 UTC 2018 - antoine.belvire@opensuse.org
+
+- Fix install_info usage.
+- Dont't call obsolete macros on Leap 15 and Tumbleweed.
+
+-------------------------------------------------------------------
+Fri Sep  1 06:51:44 UTC 2017 - aloisio@gmx.com
+
+- Added xboard-prefer-gnuchess.patch and recommend gnuchess
+  fixes (boo#1055758)  
+
+-------------------------------------------------------------------
+Sun Aug  7 16:22:15 UTC 2016 - astieger@suse.com
+
+- xboard 4.9.1:
+  * Fix crash when logging out from ICS
+  * Defer book faking input move until ping balance
+  * Fix setting up btm positions with 'edit'
+  * Fix bare King adjudication
+  * Fix check testing in games without King
+  * Fix disambiguating Pawn moves in Xiangqi
+  * Fix King leaving Palace in Xiangqi
+  * Fix compile error Xaw build
+
+-------------------------------------------------------------------
+Sun May 22 07:20:01 UTC 2016 - aloisio@gmx.com
+
+- Update to 4.9.0
+  (see https://www.gnu.org/software/xboard/whats_new/4.9.0/ )
+  New features in this release:
+  * Running EPD test suites
+  * Getting instant help (XB)
+  * Editing castling rights in a position
+  * Use mouse wheel to set up position (XB)
+  * Allow engine to pop up its settings dialog
+  * Specifying ultra-fast games (XB)
+  * Installing board themes from packages (XB)
+  * Using a single-button mouse
+  * A special directory for start positions
+  * Allow terminal-less ICS play (XB)
+  * Sound warnings in analysis mode
+  * Changing fonts through the GUI (XB)
+  * Automatic adapting of fonts to board size (XB)
+  * Instant preview of the board theme (XB)
+  * Editing theme list or ICS text menu (XB) 
+  New variant support:
+  * New piece types
+  * Allowing more than 26 piece types
+  * More flexible piece promotion
+  * Restricting promotion choice
+  * New configurable move types
+  * Inscribing pieces with text
+  * Setting rules from the command line
+  * Allow inaccessible squares
+  * Load Shogi games in .kif format 
+  Fixed bugs:
+  * Fix crash on using Game List Tags dialog when Game List 
+    was not up.
+  * Fix Browse buttons in Tournament Options dialog.
+  * Fix file-type drop-down in Xaw file-selector dialog.
+  * Fix crash on pasting garbage FEN.
+  * Fix crash on loading empty PGN file.
+  * Fix hanging on non-existent texture file (XB).
+  * Fix spurious copying instead of moving in Edit Position 
+    mode.
+  * Do not delay showing book changes while editing book.
+  * Fix spurious clearing of Engine Output panes when PV 
+    walking.
+  * Fix remembering tourney file and (WB) ticking of auto-step 
+    boxes in Tournament Options dialog when using Continue Later.
+  * Ignore Continue Later button in Tournament Options when 
+    match in progress.
+  * Fix closing of Error popup from Tournament Options dialog.
+  * Prevent popup of Time Control dialog during game in XBoard.
+  * Improve horizontal sizing of menu bar by better clipping 
+    of the menu names.
+  * Fix date measurement in -addMaster option.
+  * Wait for engine when switching to Edit Game mode when 
+    first engine is thinking.
+  * Fix defaulting of second engine to first when UCI flag or 
+    directory specified (XB).
+  * Cosmetic
+  * Print mate scores in #N format also in message field.
+  * Fix sorting of #N mate scores in Engine Output window 
+    (where smaller N is better).
+  * Show moves as SAN in Edit Book window.
+  * Display exclusion header in Engine Output window only for 
+    engines that support move exclusion.
+  * Gray-out Machine Match menu when match already scheduled 
+    for termination.
+  * Update user logo when username is changed.
+  * Prevent old logos from remaining (partially) visible when 
+    new one does not exist or has deviant format.
+  * Use result mentioned in game to reconstruct missing PGN 
+    Result tag, rather than considering it 'unfinished'.
+  * Fix highlight clearing in Edit Position mode.
+  * Fix highlighting of last move after rejection of premove.
+  * Improve pointing of highlight arrow and its erasure.
+  * Fix thick border around saved diagrams (WB).
+  * Ignore grabbing / selecting opponent pieces in Analyze 
+    mode.
+  * GTK build
+  * Provide OK and Cancel buttons in top-level windows (that 
+    want them) for GTK build.
+  * Fix periodic updates during analysis for GTK build.
+  * Fix highlighting text in Engine Output and Move History 
+    windows GTK build.
+  * Repair flashing of moved piece in GTK build (flaky!).
+  * Allow default context menu to appear on 'off-target' 
+    right-clicks in GTK build.
+  * Define mnemonic keys for items on menu bar.
+  * Remember last browsed folder per file type rather than 
+    globally in GTK build.
+  * OSX App
+  * Save settings on quitting through menu in OSX App.
+  * Fix behavior on case-sensitive OS X file systems.
+  * Fix creation of spurious XBoard instances on OS X.
+  * ICS and zippy mode
+  * Fix crashing of Xaw build in ICS-zippy mode when opponent 
+    kibitzes and chat window is open.
+  * Fix spurious undo at start of ICS game in zippy mode 
+    immediately after previous game was resigned.
+  * Fix width of secondary board (for ICS background observe) 
+    in the GTK build.
+  * Logout from ICS after engine failure in zippy mode.
+  * Prevent bell character from being printed in ICS Console 
+    window.
+  * Variants
+  * Fix behavior of engine-defined castling moves w.r.t. board 
+    holes and King rank.
+  * Fix e.p. capture of triply-pushed Pawns.
+  * Fix accepting illegal drops with legality testing off.
+  * Fix higlight-induced promotions (moves to squares marked 
+    purple by the engine).
+  * Fix sweep-promotion problems (black Pawns in Shogi, 
+    up-clicks in from-square, spurious promotion popups).
+  * Fix spurious promotion suffix on drop moves parsed after a 
+    promotion move.
+  * Fix sending of spurious 'lift' command to engine on 
+    deselecting a piece.
+  * Fix parsing of SAN moves for pieces with redefined moves 
+    when legality testing is off.
+  * Fix pasting FENs that start with an inaccessible square.
+  * The GUI book code can now handle up to 48 (unpromoted) 
+    piece types, and boards up to 256 squares.
+  * Allow promotion choice in variant ASEAN (to support the 
+    corresponding rule change).
+  * Fix bare-king adjudication correction for Atomic, where a 
+    bare King beats an exploded one.
+  * Fix pasting of moves immediately after starting from 
+    position file.
+  * Reset old piece redefinitions when loading new game.
+  * Fix setting of piece virginity from reading PGN.
+  * Fix variant switching triggered by engine load.
+
+- Updated xboard.keyring from pgp.mit.edu
+
+-------------------------------------------------------------------
+Mon Nov  3 04:01:12 UTC 2014 - arun@gmx.de
+
+- xboard 4.8.0:
+   (see http://www.gnu.org/software/xboard/whats_new/4.8.0/ )
+
+   * New features in this release
+    * Resuming saved unfinished games
+    * Setting up positions more easily
+    * Bitbase adjudication
+    * Showing tablebase hits
+    * A new ICS window
+    * Recalling board themes (XBoard)
+    * Playing moves by clicking them
+    * Fonts in the XBoard GTK build
+    * Using the mousewheel (XBoard)
+    * Displaying a blunder graph
+    * Slicing up a PGN database
+    * Auto-install of engines
+
+   * New variant support
+    * ASEAN Chess
+    * Chu Shogi
+    * Mighty Lion
+    * Highlighting squares on engine command
+    * Let the engine finish a user move
+    * Non-standard variant names
+    * Fischer castling in any variant
+    * Knowing the moves of unknown pieces
+
+   * Fixed bugs
+    * Fix crash on using some Browse buttons in dialogs of the GTK
+      build.
+    * Fix buffer overflow in PGN parser, when all lines end in
+      comments.
+    * Fix crash on specifying non-existent board texture.
+    * Prevent crash on double-click in XB Game List Tags dialog.
+    * Fix the auto-display comment control in the General Options
+      dialog of WinBoard, which was ignored.
+    * Fix adjusting clocks by clicking them in Xaw build.
+    * Fix zooming of Evaluation Graph XB with mousewheel, which was
+      not working at all.
+    * Fix sticky-windows feature WB for Windows 8, where it did not
+      work at all.
+    * WinBoard's seek graph is now sized to also cover any board rim.
+    * Key bindings XB for non menu items are no longer ignored.
+    * Set castling rights correctly after loading of game file from
+      command line.
+    * Allow castling and e.p. moves to be edited into opening book
+      (and prevent their disappearance from it).
+    * The sorting of engine output was made more robust against
+      engines that send thinking output on fail lows.
+    * Fix node-count display, which was clipped to 32 bits.
+    * Suppress board-size oscillations in GTK build.
+    * Fixed detection of screen size in GTK.  (This is a mixed
+      blessing, as now it picks the largest possible window size, and
+      in GTK interactive down-sizing is not possible.)
+    * Fix mode highlighting after refusal of Two Machines mode because
+      2nd engine did not support variant.
+    * Blow up textures that are too small.
+    * Ignore invalid color specs in stead of treating them as black
+      (important because Cairo does not understand old xpm color
+      names).
+    * Prevent XB and WB from becoming unresponsive during lengthy
+      tasks such as book building.
+    * Fix slowdown of WB during loading of huge PGN files due to
+      Game-List window update.
+    * Limit width of menu bar for small board sizes in GTK build.
+    * Improve the code to kill rogue engines in XB.
+    * Drawing of pieces outside the board (in maximaized windows),
+      which left lots of debris, is now suppressed.
+    * Make WB window sizing handle multiple screens.
+    * 50-move counter is no longer reset on Chess960 castlings.
+    * Fix legality testing of A-side castling in FRC (which was
+      allowed with Rook on a- and blocker on b-file).
+    * Fixed piece ID of Falcon in Falcon Chess, which was written as
+      '.' and could not be selected on promotion.
+    * Fix cross-edge e.p. captures in Cylinder Chess (which was not
+      recognized as e.p.).
+    * Fix animation of Seirawan Chess castling + gating at Rook
+      square, which made Rook disappear.
+    * Fix adjudication of stalemates in variant Giveaway.
+    * Display of the variant tag in the Game List now works.
+    * Reset move entry (clearing target-square markers) on 'clear
+      board' in Edit Position mode.
+    * The Game List is automatically updated when you alter the tag
+      selection for the game lines.
+    * Indicate current variant in New Variant dialog of the GTK build
+      (by printing it in boldface on the button).
+
+   * Known Problems
+    * GTK: in a tiling window manager the size of the board seems to be
+      calculated incorrectly. A temporary fix for this is to use a fixed
+      size by using the "-size <N>" and "-fixedSize true" options
+      on the command line.
+
+
+-------------------------------------------------------------------
+Wed Oct  8 20:56:02 UTC 2014 - andreas.stieger@gmx.de
+
+- xboard 4.7.3:
+   * Fix buffer overflow in parser on long PGN with scores
+   * Allow castling and e.p. capture moves to survive when editing
+     opening book
+   * Fix node-count overflow in engine output
+   * Better sorting of fail-low lines in engine output
+   * Fix Chess960 a-side castling legality check
+   * Fix position search in Chess960
+   * Fix adjudication of Giveaway stalemates
+   * Adapt WinBoard window positioning to work with multiple
+     screens
+   * Cure some weirdness in XBoard when dragging pieces outside
+     the board
+   * Some dialog layout improvements to facilitate
+     internationalization
+   * Fix crash on using some dialog Browse buttons in GTK version
+   * Connect manual menu item work in GTK version
+- clean spec file
+- use verbatim upstream tarball
+- add source URLs
+- verify source signature
+- fix SLE build
+
+-------------------------------------------------------------------
+Sat Nov 23 05:33:50 UTC 2013 - arun@gmx.de
+
+- updated to 4.7.2
+
+-- Version 4.7.2
+
+   (see http://www.gnu.org/software/xboard/whats_new/4.7.2/ )
+
+   bugfix release for 4.7.1
+
+   * Make PGN parser immune to unprotected time stamps
+   * Fix book creation
+   * Fix GUI book after setup position
+   * Allow drops / promotions/ deferrals to be edited into book
+   * Allow entry of negative numbers in spin control (WB)
+   * Fix grabbing of selected piece
+   * Fix initial board sizing WB
+   * Fix -zippyVariants option
+
+
+-- Version 4.7.1
+
+   (see http://www.gnu.org/software/xboard/whats_new/4.7.1/ )
+
+   bugfix release for 4.7.0
+
+   * updated translations
+   * fixed texinfo 5.0 problems
+   * Work-around for Xt selection bug
+   * Add -backupSettingsFile option
+   * Make skipping of unknown option smarter
+   * Let popping up of WinBoard chatbox for channel open it
+   * Fix vertical sizing of GTK board
+   * Fix buffer overflow in feature parsing
+   * Accept setup command for non-standard board size
+   * Fix fatal error on unsupported board size
+   * Fix GTK box popup
+   * Let XBoard -autoBox option also affect move type-in
+   * Fix spurious popup after batch-mode Analyze Game
+   * Fix saving of analyzed game
+   * Provide compatibility with Alien Edition setup command
+   * Fix quoting of book name in tourney file
+   * Fix disappearence of pieces that were moved illegally
+   * Fix horrible bug in reading scores from PGN
+   * Print score of final position in Analyze Game
+   * Fix GTK SetInsertPos
+   * Fix scrolling of Chat Box
+   * Make Chat Box window obey -topLevel option
+   * Fix Xaw file browser
+   * Update zippy.README
+
+-------------------------------------------------------------------
+Sun Feb 24 18:07:05 UTC 2013 - arun@gmx.de
+
+- updated to 4.7.0
+
+   (see http://www.gnu.org/software/xboard/whats_new/4.7.0/ )
+
+   * Code refactoring of XBoard
+    * The old X11 front-end has been largely rewritten,
+      so that all windows are now created by a single
+      generic routine
+    * XBoard now uses the Cairo library for all drawing
+    * Pixmaps and bitmaps no longer supported;
+      XBoard now uses PNG and SVG images instead.
+    * An alternative (as yet experimental) front-end
+      using GTK has been added
+
+   * Interactive Analysis
+    * Excluding moves from analysis by playing them
+    * Excluded-moves header in Engine Output window
+    * Analyzing with two engines simultaneously
+    * Annotating an entire muti-game file
+    * Analysing positions by Monte-Carlo play
+
+   * Other New Functionality
+    * Displaying player logos (XB)
+    * Player logo on ICS can be based on player handle
+    * Chat boxes for XBoard
+    * Narrowing down of position searches
+    * Copying pieces when editing a position
+    * Starting WinBoard through drag & drop
+    * Recalling fully configured engines and ICS
+    * Creating an opening book from a game file
+    * Pausing a game
+    * Automatically observing partner games with dual-board
+
+   * Interface Improvements
+    * Recognizes file type of lone argument by extension
+    * Default startup settings configurable per mode
+    * Separate menu items for loading 1st and 2nd engine
+    * Engines can be selected from listboxes
+    * Grouping of engines in the installed-engines list
+    * Stay in Analyze or Game Start mode after engine loading
+    * 'Continue Later' button in WB tournament dialog
+    * A new --help option (XB)
+    * A second board window for observing ICS games (XB)
+    * Smoother graphics and a resizable board (XB)
+    * A rejuvenated file browser (XB Xaw)
+    * Scrolling listboxes with mouse wheel (XB Xaw)
+    * Tabbing through dialog etry fields (XB Xaw)
+    * Adapt width of auxilliary windows on board resize (WB)
+    * External piece bitmaps (WB)
+    * Border around the board (WB)
+    * Saving settings as themes (WB)
+
+   * Bug fixes
+    * Grayout of Analysis menu item in zippy mode
+    * Crash on flagging in -st mode
+    * Keep track of virginity in variant seirawan FENs
+    * Immunity to capitalized promo pieces
+    * Avoid board sizes with unavailabile variant pieces
+    * Work-around for FICS violation of SAN
+    * Check validity of tourney participants
+    * Loop-Chess promotions with legality testing on
+    * Fix -fSAN option in Analyze File mode
+    * Scrolling of Engine Output after PV walk (XB)
+    * Start browsing in currently-selected folder (WB)
+    * Allow entry of fractional timeIncrement (WB)
+    * Resolve conflict between -mps and -inc options
+    * Size of mini-Shogi promotion zone
+    * Adjudication of stalemate and perpetuals in Shogi
+    * Rep-draw detection in drop games
+    * Insufficient-material draws in Knightmate
+    * Replacing of engine in non-last game position
+    * Sweep selection of promo-piece in click-click move
+    * Don't save aborted games in tourney PGN
+    * Remember ponder, book and other settings in tourney file
+    * Do not erase PGN tags on engine loading
+    * Solved feature problems with engine loading in match mode
+    * Re-send option settings to -xreuse engine
+    * Allow use of 'shadow' promotion pieces in any variant
+    * WinBoard did not always start in its installation folder
+    * Initialization of 'Twice' checkbox in Tournament dialog (WB)
+    * Clearing of marker dots after mode or settings change
+    * some smaller bugfixes 
+
+-------------------------------------------------------------------
+Sun May  6 21:34:57 UTC 2012 - arun@gmx.de
+
+- patch not needed after removing autoreconf 
+
+-------------------------------------------------------------------
+Sun May  6 21:19:43 UTC 2012 - arun@gmx.de
+
+- test if patch is needed 
+
+-------------------------------------------------------------------
+Sun May  6 21:06:14 UTC 2012 - arun@gmx.de
+
+- fix more build errors: update buildrequires, fix wrong filename in %install, remove autoreconf call
+
+-------------------------------------------------------------------
+Sat May  5 17:37:55 UTC 2012 - arun@gmx.de
+
+- fixed issues with spec file reported by RedDwarf:
+  * changed jobs to _smp_flags
+  * removed Required(post)/Required(postun) that were not needed
+  * removed calls to xdg-icon-resource and installed them directly in %install  
+
+-------------------------------------------------------------------
+Wed Apr 18 02:52:15 UTC 2012 - arun@gmx.de
+
+- updated to 4.6.2
+
+   bugfix relase for 4.6.1
+   * Suppress clear-board message after pasting FEN
+   * Fix faking of castling rights after editing position with holdings
+   * Fix second-engine variant test
+ 
+
+-------------------------------------------------------------------
+Tue Apr 17 06:32:50 UTC 2012 - arun@gmx.de
+
+- added dependency on autoconf 
+
+-------------------------------------------------------------------
+Tue Apr 17 03:40:52 UTC 2012 - arun@gmx.de
+
+- removed duplicated suse_update_desktop_file 
+
+-------------------------------------------------------------------
+Tue Apr 17 03:32:42 UTC 2012 - arun@gmx.de
+
+- patched gettext version, so that autoreconf (autopoint) doesn't complain 
+
+-------------------------------------------------------------------
+Tue Apr 17 02:55:40 UTC 2012 - arun@gmx.de
+
+- fixed spec file 
+
+-------------------------------------------------------------------
+Tue Apr 17 02:40:01 UTC 2012 - arun@gmx.de
+
+- updated spec file
+- updated to version 4.6.1
+
+changes from 4.6.1 to 4.6.0:
+
+   bugfix release for 4.6.0
+
+   * Fix memory corruption bug on second-engine loading (through menu or in tournament),
+     which could destroy -firstInitString
+   * Fix bug loading a new engine through the menu (not loading it with the full game, 
+     but just upto the current move)
+   * Prefix engine command with "./" when a pathname is split up during install, so the engine actually runs (XB)
+   * Fix fall-back to -ncp mode when engine does not start (cutting short the feature timeout)
+   * Fix bug in position search for FRC castlings (where a King could 'fall off' the board)
+   * Add a message to inform the user how to clear the board, in sweep-select edit-position mode
+   * Fix a bug that could stop the clock when the board window was dragged (XB)
+   * Fix switching off highlighting during game (so last highlights do not remain for the rest of the game)
+   * Allow user to enter the name of a non-existing file when browsing for a save file (WB)
+   * Make sure rarely used engine-related options (such as -firstNPS) are also correctly loaded during session
+   * Correctly handle parsing of Crazyhouse promotions with legality-testing off
+   * Fix click-click detour under-promotions, which were not working for non-captures
+   * Don't strip path from engine command if directory is explicitly given in Load Engine dialog
+   * Consistently make auxiliary windows top level-shells or not, with new -topLevel option (XB)
+   * No longer fatal if second engine does not support current variant (just refuse Two Machines mode)
+   * Scroll XBoard game list to keep selected item in view (XB)
+   * Suppress spurious error popup when starting observing of bughouse games
+   * Fix vertical axis ticks in eval graph with drop games
+   * Put title on same line as menu bar only for -size 72 and larger (with -titleInWindow, XB)
+   * Properly open and close debug file when switching debug mode through key binding Ctrl-D (XB)
+
+changes for 4.6.0:
+
+   (for a more detailed list with screenshots see http://www.gnu.org/software/xboard/whats_new/4.6.0/ )
+
+   * Engine vs. Engine
+    * Loading and installing engines through the menu
+    * Running tournaments with more than two partipants
+    * Stopping a match between two engines
+    * Replacing a tourney participant
+    * Playing openings in color-reversed pairs
+    * Perpetual chasing in Xiangqi
+
+   * Interface Improvements
+    * Auto-Queen, and still under-promote?
+    * Piece fonts and figurine fonts
+    * Displaying PVs as SAN
+    * Small scores in the Eval Graph
+    * How close is the 50-move draw?
+    * Sign of the engine scores
+    * Loading frequently used engines
+    * Collapsing groups of engines
+
+   * Interactive Analysis
+    * Playing moves from the PV
+    * Rapidly changing the number of PVs
+    * Setting the other side to move in analysis
+    * Annotating a game with an engine
+
+   * Other New Functionality
+    * Searching a position in a PGN file
+    * Editing the opening book
+    * Recording game sequence number in PGN
+    * Each tourney game its own debug file
+
+   * XBoard -> WinBoard Convergence
+    * Exporting the game list (XB)
+    * A move type-in box (XB)
+    * New-style Move History window (XB)
+    * Associating XBoard with file types
+    * Many Windows behave as one (XB)
+
+-------------------------------------------------------------------
+Sun Oct 02 03:27:54 UTC 2011 - arun@gmx.de
+
+- updated to version 4.5.3
+- For a summary of changes visit: http://www.gnu.org/software/xboard/whats_new.html
+
+-------------------------------------------------------------------
+Fri Apr 30 06:57:13 UTC 2011 - arun@gmx.de
+
+- updated to version 4.5.2 
+- For a summary of changes visit: http://www.gnu.org/software/xboard/whats_new.html
+- changes in packaging: includes sounds and bitmaps files
+
+-------------------------------------------------------------------
+Mon Feb 21 17:21:34 UTC 2011 - arun@gmx.de
+
+- updated to version 4.5.1 
+- changed to Xaw instead of Xaw3d (due to a bug in the Xaw3d version)
+- updated license information in .spec file to GPL 3.0
+- .desktop file is now included, removed the patch
+- For changes in the program visit: http://www.gnu.org/software/xboard/whats_new.html
+
+-------------------------------------------------------------------
+Thu Aug 19 04:46:56 UTC 2010 - arun@gmx.de
+
+- updated to version 4.4.4 
+
+-------------------------------------------------------------------
+Sun Apr  4 21:59:22 UTC 2010 - arun@gmx.de
+
+- updated to version 4.4.3 
+
+-------------------------------------------------------------------
+Fri Feb  5 07:07:48 UTC 2010 - arun@gmx.de
+
+- updated link to homepage in spec file 
+
+-------------------------------------------------------------------
+Fri Dec 11 18:21:36 CET 2009 - sbrabec@suse.cz
+
+- Updated to version 4.4.2.
+
+-------------------------------------------------------------------
+Wed Sep 10 15:54:10 CEST 2008 - sbrabec@suse.cz
+
+- Change default back from crafty to gnuchess (bnc#299579).
+- Require default backend unconditionally - xboard rejects to start
+  giving no chance to change it.
+
+-------------------------------------------------------------------
+Sun Apr 22 22:35:22 CEST 2007 - ro@suse.de
+
+- use texlive for building 
+
+-------------------------------------------------------------------
+Fri Mar 30 12:30:09 CEST 2007 - dmueller@suse.de
+
+- update BuildRequires
+
+-------------------------------------------------------------------
+Fri May 26 12:37:41 CEST 2006 - schwab@suse.de
+
+- Don't strip binaries.
+
+-------------------------------------------------------------------
+Wed Jan 25 21:42:59 CET 2006 - mls@suse.de
+
+- converted neededforbuild to BuildRequires
+
+-------------------------------------------------------------------
+Tue Dec  6 09:33:33 CET 2005 - mmarek@suse.cz
+
+- fix parser.l to work with new flex
+- mention flex in nfb
+
+-------------------------------------------------------------------
+Sun Feb 29 10:42:54 CET 2004 - meissner@suse.de
+
+- cleaned up optflags (make them actually work), update config.guess
+  so it builds on ppc64.
+
+-------------------------------------------------------------------
+Mon Feb 09 18:41:39 CET 2004 - sbrabec@suse.cz
+
+- Updated to version 4.2.7.
+- Prefix changed to /usr.
+
+-------------------------------------------------------------------
+Sat Jan 10 20:28:25 CET 2004 - adrian@suse.de
+
+- add %defattr
+
+-------------------------------------------------------------------
+Sun Sep  7 08:43:20 CEST 2003 - sndirsch@suse.de
+
+- added desktop icon
+
+-------------------------------------------------------------------
+Mon Aug 11 09:19:50 CEST 2003 - sndirsch@suse.de
+
+- added desktop file
+
+-------------------------------------------------------------------
+Thu Apr 24 12:20:23 CEST 2003 - ro@suse.de
+
+- fix install_info --delete call and move from preun to postun
+
+-------------------------------------------------------------------
+Mon Feb 10 17:56:11 CET 2003 - sbrabec@suse.cz
+
+- Use %install_info (bug #23471).
+
+-------------------------------------------------------------------
+Mon Feb 10 17:01:46 CET 2003 - sbrabec@suse.cz
+
+- Change man page - crafty is default.
+- Require check_backend virtual package.
+
+-------------------------------------------------------------------
+Mon Feb  3 23:01:39 CET 2003 - sndirsch@suse.de
+
+- using crafty instead of gnuchess as chess backend
+
+-------------------------------------------------------------------
+Fri Apr 26 16:05:01 CEST 2002 - prehak@suse.cz
+
+- update on version 4.2.6
+- fixed non-updated macro SECOND_CHESS_PROGRAM in xboard.h
+
+-------------------------------------------------------------------
+Sun Jan 20 12:42:30 CET 2002 - vinil@suse.cz
+
+- update on 4.2.3 
+- URL added to spec
+- xboard.ps included
+
+-------------------------------------------------------------------
+Sat Sep 22 13:34:09 CEST 2001 - sndirsch@suse.de
+
+- RPM Group tag set to Amusements/Games, so it can be found easier 
+
+-------------------------------------------------------------------
+Mon Aug  6 11:47:32 CEST 2001 - dan@suse.cz
+
+- patched to run with new gnuchess (5.02)
+
+-------------------------------------------------------------------
+Thu Apr 12 15:48:21 CEST 2001 - ro@suse.de
+
+- removed unsupported -I option from texi2html call 
+
+-------------------------------------------------------------------
+Thu Feb 22 10:54:48 CET 2001 - pblaha@suse.cz
+
+- update on 4.2.3 
+
+-------------------------------------------------------------------
+Thu Feb  8 10:10:07 CET 2001 - pblaha@suse.cz
+
+- update on 4.2.2 
+
+-------------------------------------------------------------------
+Fri Sep 22 14:06:54 CEST 2000 - vinil@suse.cz
+
+- update to 4.1.0;
+- %{_infodir} used
+
+-------------------------------------------------------------------
+Tue May  2 13:43:23 CEST 2000 - vinil@suse.cz
+
+- buildroot added
+
+-------------------------------------------------------------------
+Wed Jan 26 00:29:39 CET 2000 - ro@suse.de
+
+- update to 4.0.5 ; info to /usr/share 
+
+-------------------------------------------------------------------
+Mon Sep 13 17:23:57 CEST 1999 - bs@suse.de
+
+- ran old prepare_spec on spec file to switch to new prepare_spec.
+
+-------------------------------------------------------------------
+Tue Aug 18 13:50:10 MEST 1998 - ro@suse.de
+
+- updated to version 4.0.0 / added tool zic2xpm and html-documentation
+- html start-page is /usr/doc/packages/xboard/html/xboard_toc.html
+
+----------------------------------------------------------------------
+Thu Jul 23 16:29:43 MET DST 1998 - werner@suse.de
+
+Make pxboard more secure ... use mktmep if avaliable
+
+----------------------------------------------------------------------
+Thu Oct  9 16:50:06 MEST 1997 - ro@suse.de
+
+ready for autobuild
+
+
