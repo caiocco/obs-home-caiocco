@@ -1,0 +1,37 @@
+diff -ru hardinfo2-2.3.1.orig/includes/uidefs.h hardinfo2-2.3.1/includes/uidefs.h
+--- hardinfo2-2.3.1.orig/includes/uidefs.h	2026-07-03 17:18:07.000000000 -0300
++++ hardinfo2-2.3.1/includes/uidefs.h	2026-11-09 02:00:30.900403338 -0300
+@@ -18,17 +18,6 @@
+     "	<menu name=\"ViewMenu\" action=\"ViewMenuAction\">"
+     "		<menuitem name=\"SidePane\" action=\"SidePaneAction\"/>"
+     "		<menuitem name=\"Toolbar\" action=\"ToolbarAction\"/>"
+-#if GTK_CHECK_VERSION(3, 20, 0)
+-    "	        <menu name=\"ThemeMenu\" action=\"ThemeMenuAction\">"
+-    "               <menuitem name=\"DisableTheme\" action=\"DisableThemeAction\"/>"
+-    "               <menuitem name=\"Theme1\" action=\"Theme1Action\"/>"
+-    "               <menuitem name=\"Theme2\" action=\"Theme2Action\"/>"
+-    "               <menuitem name=\"Theme3\" action=\"Theme3Action\"/>"
+-    "               <menuitem name=\"Theme4\" action=\"Theme4Action\"/>"
+-    "               <menuitem name=\"Theme5\" action=\"Theme5Action\"/>"
+-    "               <menuitem name=\"Theme6\" action=\"Theme6Action\"/>"
+-    "	        </menu>"
+-#endif
+     "		<separator/>"
+     "		<separator name=\"LastSep\"/>"
+     "		<menuitem name=\"Refresh\" action=\"RefreshAction\" always-show-image=\"true\"/>"
+diff -ru hardinfo2-2.3.1.orig/shell/shell.c hardinfo2-2.3.1/shell/shell.c
+--- hardinfo2-2.3.1.orig/shell/shell.c	2026-07-03 17:18:07.000000000 -0300
++++ hardinfo2-2.3.1/shell/shell.c	2026-11-09 02:00:30.900403338 -0300
+@@ -1092,10 +1092,8 @@
+     GKeyFile *key_file = g_key_file_new();
+     gchar *conf_path = g_build_filename(g_get_user_config_dir(), "hardinfo2","settings.ini", NULL);
+     g_key_file_load_from_file(key_file, conf_path, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
+-    params.theme = g_key_file_get_integer(key_file, "Theme", "ThemeNumber", NULL);
+-    if(params.theme==0) params.theme=1;
+-    if(params.theme<-1) params.theme=-1;
+-    if(params.theme>6) params.theme=-1;
++    /* openSUSE: background pictures are not shipped, so no theme */
++    params.theme = -1;
+ 
+     g_free(conf_path);
+     g_key_file_free(key_file);

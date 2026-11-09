@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Mon Nov  9 05:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Hardinfo2 2.3.1 for openSUSE Leap 16.0
+  * GTK3 + libsoup3; OpenGL benchmark (qgears2) built with Qt5, as
+    upstream recommends; Vulkan benchmark (vkgears) for X11/Wayland
+  * Source repacked by prune-backgrounds.sh without the window
+    background pictures (pixmaps/bg*.jpg)
+  * hardinfo2-no-background-themes.patch: remove the View > Theme
+    menu and always run without a background picture
+  * hardinfo2 service (root data collector) shipped but not enabled;
+    hardinfo2 group created through sysusers.d
