@@ -1,0 +1,17 @@
+dtwm: look for the factory sys.dtwmrc under the data directory
+
+With --with-cde-data-dir the default config lives in CDE_DATA_TOP/config,
+but the fallback still used CDE_INSTALLATION_TOP (/usr/config/C/sys.dtwmrc),
+so dtwm ran without DtPanelMenu, DtKeyBindings and DtButtonBindings.
+
+--- a/programs/dtwm/WmResParse.c	2026-11-08 22:39:44.367762425 -0300
++++ b/programs/dtwm/WmResParse.c	2026-11-08 22:39:44.368762493 -0300
+@@ -2029,7 +2029,7 @@
+     }
+   }
+ 
+-#define DTLIBDIR  CDE_INSTALLATION_TOP
++#define DTLIBDIR  CDE_DATA_TOP
+ #define DTADMINDIR  CDE_CONFIGURATION_TOP
+ #define SLASH_DT_WMRC "/sys.dtwmrc"
+ 

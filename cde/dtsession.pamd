@@ -1,0 +1,6 @@
+#%PAM-1.0
+# dtsession only checks the password to unlock the screen
+auth     include        common-auth
+account  required       pam_deny.so
+password required       pam_deny.so
+session  required       pam_deny.so

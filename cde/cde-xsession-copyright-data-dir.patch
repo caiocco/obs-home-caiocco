@@ -1,0 +1,62 @@
+Xsession: read the dthello copyright text from the data directory
+
+With --with-cde-data-dir the installation top is /usr, so dthello was
+pointed at /usr/copyright. Look for it in CDE_DATA_TOP instead; the
+macro has to stay outside the quoted cpp_HELLO strings because the
+preprocessor does not expand it there.
+
+--- a/programs/dtlogin/config/Xsession.src	2026-11-08 22:44:42.796076141 -0300
++++ b/programs/dtlogin/config/Xsession.src	2026-11-08 22:44:42.799076346 -0300
+@@ -58,7 +58,7 @@
+ #  define cpp_XINITUSER "$HOME/.xinitrc"
+ #  define cpp_MAIL "/var/mail/$USER"
+ #  undef cpp_HELLO
+-#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL/copyright &"
++#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL_DATA/copyright &"
+ #endif
+ 
+ #ifdef linux
+@@ -67,7 +67,7 @@
+ #  define cpp_XINITUSER "$HOME/.xinitrc"
+ #  define cpp_XDMSYS "/etc/X11/Xsession"
+ #  undef cpp_HELLO
+-#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL/copyright &"
++#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL_DATA/copyright &"
+ #endif
+ 
+ #ifdef __FreeBSD__
+@@ -75,7 +75,7 @@
+ #  define cpp_XINITUSER "$HOME/.xinitrc"
+ #  define cpp_XDMSYS "/usr/local/lib/X11/xdm/Xsession"
+ #  undef cpp_HELLO
+-#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL/copyright &"
++#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL_DATA/copyright &"
+ #endif
+ 
+ #ifdef __OpenBSD__
+@@ -83,7 +83,7 @@
+ #  define cpp_XINITUSER "$HOME/.xinitrc"
+ #  define cpp_XDMSYS "/etc/X11/xdm/Xsession"
+ #  undef cpp_HELLO
+-#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL/copyright &"
++#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL_DATA/copyright &"
+ #endif
+ 
+ #ifdef __NetBSD__
+@@ -91,7 +91,7 @@
+ #  define cpp_XINITUSER "$HOME/.xinitrc"
+ #  define cpp_XDMSYS "/etc/X11/xdm/Xsession"
+ #  undef cpp_HELLO
+-#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL/copyright &"
++#  define cpp_HELLO "$DT_BINPATH/dthello -file $DT_INSTALL_DATA/copyright &"
+ #endif
+ 
+ 
+@@ -239,6 +239,7 @@
+   XDIR=XPROJECTROOT/bin
+   DT_BINPATH=CDE_INSTALLATION_TOP/bin
+   DT_INSTALL=CDE_INSTALLATION_TOP
++  DT_INSTALL_DATA=CDE_DATA_TOP
+   DT_INSTALL_CONFIG=CDE_DATA_TOP/config
+   DT_CONFIG=CDE_CONFIGURATION_TOP/config
+   DT_CONFIG_PATH="$DT_INSTALL_CONFIG $DT_CONFIG"

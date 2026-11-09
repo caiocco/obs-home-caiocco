@@ -1,0 +1,101 @@
+fontaliases: add ISO10646-1 interface and application aliases
+
+In a UTF-8 locale Xlib builds font sets from ISO10646-1 fonts, but the
+generated aliases only covered ISO8859-*, KOI8-R and the CJK sets, so
+every -dt-interface/-dt-application font set came out with missing
+charsets and Motif fell back to fixed fonts ("Missing charsets in
+String to FontSet conversion", dtwm "XmeRenderTableGetDefaultFont()
+failed"). The misc-fixed, b&h lucida and adobe fonts behind the
+ISO8859-1 aliases ship ISO10646-1 variants with the same metrics, so
+alias those under the same names.
+
+--- a/programs/fontaliases/mk_fonts_alias.c	2026-11-08 23:22:23.822535526 -0300
++++ b/programs/fontaliases/mk_fonts_alias.c	2026-11-08 23:22:23.835536415 -0300
+@@ -104,6 +104,18 @@
+   print_xlfd(pfa->font);  fprintf(stdout, "\n");
+ }
+ 
++/*
++ * UTF-8 locales build their font sets from ISO10646-1 fonts. The
++ * misc-fixed, b&h lucida and adobe fonts behind the ISO8859-1 aliases
++ * also come in ISO10646-1 with the same metrics, so alias those too.
++ */
++static void set_iso10646(struct font_alias_t *pfal, int n) {
++  for (int i = 0; i < n; ++i) {
++    pfal[i].font->rgstry  = "iso10646";
++    pfal[i].alias->rgstry = "iso10646";
++  }
++}
++
+ static void iface_iso8859(bool is_user, bool is_bold) {
+   for (int i = 0; i < IFACE_FAL_SIZE; ++i) {
+     struct font_alias_t *pfa = &iface_fal[i];
+@@ -350,6 +362,15 @@
+   print_iface(iface_iso8859, encdng);
+ }
+ 
++static void iface_iso10646(bool is_user, bool is_bold) {
++  iface_iso8859(is_user, is_bold);
++  set_iso10646(iface_fal, IFACE_FAL_SIZE);
++}
++
++static void print_iface_iso10646_1(void) {
++  print_iface(iface_iso10646, "1");
++}
++
+ static void print_iface_iso8859_11(void) {
+   print_iface(iface_iso8859_11, "11");
+ }
+@@ -1166,6 +1187,17 @@
+   print_app(app_iso8859_full, encdng);
+ }
+ 
++static void app_iso10646(enum app_adstyl_spc_t adstyl_spc, bool is_bold,
++    bool is_italic)
++{
++  app_iso8859_full(adstyl_spc, is_bold, is_italic);
++  set_iso10646(app_fal, APP_FAL_SIZE);
++}
++
++static void print_app_iso10646_1(void) {
++  print_app(app_iso10646, "1");
++}
++
+ static void print_app_iso8859_partial(char *encdng) {
+   print_app(app_iso8859_partial, encdng);
+ }
+@@ -1282,6 +1314,15 @@
+   print_iface(mixed_iface_iso8859, encdng);
+ }
+ 
++static void mixed_iface_iso10646(bool is_user, bool is_bold) {
++  mixed_iface_iso8859(is_user, is_bold);
++  set_iso10646(iface_fal, IFACE_FAL_SIZE);
++}
++
++static void print_mixed_iface_iso10646_1(void) {
++  print_iface(mixed_iface_iso10646, "1");
++}
++
+ int main(int argc, char *argv[]) {
+   for (int i = 0; i < APP_FAL_SIZE; ++i) {
+     struct font_alias_t *pfa = &app_fal[i];
+@@ -1318,6 +1359,9 @@
+     else print_iface_iso8859(encdng);
+   }
+ 
++  if (argc > 1) print_mixed_iface_iso10646_1();
++  else print_iface_iso10646_1();
++
+   print_iface_iso8859_11();
+   print_iface_koi8_r();
+   print_iface_jisx0201_1976_0();
+@@ -1335,6 +1379,8 @@
+   for (int i = 0; i < sizeof(app_partial_encdng) / sizeof(char *); ++i)
+     print_app_iso8859_partial(app_partial_encdng[i]);
+ 
++  print_app_iso10646_1();
++
+   print_app_iso8859_11();
+   print_app_koi8_r();
+   print_app_jisx0201_1976_0();

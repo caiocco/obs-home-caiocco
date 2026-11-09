@@ -1,0 +1,44 @@
+Xsession: keep the X server from resetting before dtsession connects
+
+Started by a display manager other than dtlogin (lightdm, sddm, ...),
+Xsession may be the only thing talking to the X server. Each short
+lived client it runs (xset fp+, ...) is then the last one to close,
+the server resets, and the CDE font aliases are dropped from the font
+path before dthello and dtsession start: Motif falls back to fixed
+fonts. Hold one connection open until dtsession is up.
+
+--- a/programs/dtlogin/config/_common.ksh.src	2026-11-08 23:25:25.826978867 -0300
++++ b/programs/dtlogin/config/_common.ksh.src	2026-11-08 23:25:25.839979756 -0300
+@@ -42,6 +42,32 @@
+   pexec=$(LC_TIME=C /usr/bin/ps -p $PPID | awk 'NR==2 {print $4}')
+ #endif
+   Log "Xsession started by $pexec"
++
++  HASH
++  HASH Keep a connection to the X server open until dtsession is up.
++  HASH Display managers other than dtlogin may leave no client connected
++  HASH while this script runs, and every short lived client below (xset,
++  HASH xrdb, ...) then makes the server reset when it exits, which drops
++  HASH the font path set here. The keeper is released once dtsession has
++  HASH published _DT_SM_WINDOW_INFO on the root window, or after 120s.
++  HASH
++  if [ "${pexec##*/}" != "dtlogin" ] && [ -x $XDIR/xprop ]; then
++    $XDIR/xprop -root -spy _DT_SM_WINDOW_INFO 2>&1 |&
++    dtstart_keepalive=$!
++    read -p REPLY
++    exec 3<&p
++    exec 3<&-
++    $XDIR/xprop -root -remove _DT_SM_WINDOW_INFO >/dev/null 2>&1
++    (
++      i=0
++      while [ $i -lt 120 ]; do
++        sleep 1
++        $XDIR/xprop -root _DT_SM_WINDOW_INFO 2>/dev/null | grep -q " = " && break
++        i=$((i + 1))
++      done
++      kill $dtstart_keepalive
++    ) >/dev/null 2>&1 &
++  fi
+ #endif
+ 
+ XCOMM ##########################################################################

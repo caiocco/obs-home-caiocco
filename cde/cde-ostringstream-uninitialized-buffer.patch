@@ -1,0 +1,31 @@
+The ostringstream(const char*) constructor copies the string as initial
+content; these buffers are uninitialized, so with MALLOC_PERTURB_ (set
+by the openSUSE build) "dbdrv define" wrote garbage into the scrambled
+schema file and the dtinfo book build failed later in "dbdrv stdin_load".
+
+--- a/lib/DtMmdb/schema/object_dict.C
++++ b/lib/DtMmdb/schema/object_dict.C
+@@ -224,7 +224,7 @@
+ 
+    char* schema_buf = new char[sz*3];
+ 
+-   ostringstream* string_out = new ostringstream(schema_buf);
++   ostringstream* string_out = new ostringstream();
+    if ( !(*string_out) ) {
+        throw(streamException(string_out -> rdstate()));
+    } 
+--- a/programs/dtdocbook/infolib/NCFGen.C
++++ b/programs/dtdocbook/infolib/NCFGen.C
+@@ -253,10 +253,9 @@
+       
+       stylesheet_smart_ptr sheet(base_ptr, style);
+       char oid_buf[BUFSIZE];
+-      ostringstream strout(oid_buf);
++      ostringstream strout;
+       sheet.its_oid().asciiOut(strout);
+-      strout << ends;
+-      memcpy(oid_buf, strout.str().c_str(), BUFSIZE);
++      snprintf(oid_buf, BUFSIZE, "%s", strout.str().c_str());
+       
+       ncf->insert(STRING_CODE, nodeLocator,
+ 		  STRING_CODE, title,

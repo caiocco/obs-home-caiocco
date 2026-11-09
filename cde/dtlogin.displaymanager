@@ -1,0 +1,12 @@
+dtlogin_vars() {
+    case $1 in
+        dtlogin)
+            DISPLAYMANAGER=/usr/bin/dtlogin
+            PIDFILE=/var/dt/Xpid
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    return 0
+}

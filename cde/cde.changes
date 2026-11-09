@@ -1,0 +1,45 @@
+-------------------------------------------------------------------
+Mon Nov  9 01:34:42 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Do not run fdupes on appconfig/appmanager: the launchers are
+  identical placeholder files named after their action, and as
+  symlinks every one of them opened xpdf and showed its icon
+- Replace the CDE_*_TOP placeholders left in the installed action
+  files: tradcpp does not expand macros inside quoted strings, so the
+  sh -c '...' actions (Help Manager, Edit Dtwm Configuration, Reload
+  Actions, ...) ran CDE_INSTALLATION_TOP/bin/... and did nothing
+- cde-dtwm-sys-dtwmrc-data-dir.patch: dtwm looked for the factory
+  sys.dtwmrc in /usr/config/C instead of the data directory, so it
+  started without the CDE menus and key/button bindings
+- Require motif for the X11/bitmaps/xm_* cursors; without them
+  dtinfo (Information Manager) aborted on startup
+- cde-xsession-copyright-data-dir.patch: install the copyright text
+  in /usr/share/cde and point dthello at it; Xsession looked for
+  /usr/copyright, which the package does not ship
+- Describe the post-install steps in the package description: enable
+  rpcbind.socket and xinetd, and make the host name resolvable
+- cde-fontaliases-iso10646.patch: generate ISO10646-1 aliases for
+  the -dt-interface and -dt-application fonts; in UTF-8 locales the
+  Motif font sets had missing charsets and fell back to fixed fonts
+- cde-xsession-keep-x-connection.patch: under display managers other
+  than dtlogin the X server reset between the short-lived clients of
+  Xsession and dropped the CDE font path; hold a connection (xprop)
+  until dtsession is up. Require xprop.
+
+-------------------------------------------------------------------
+Sun Nov  8 22:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of CDE 2.5.3+git20261106.adb6cc6 (master snapshot),
+  based on the spec in home:AndnoVember:test/cde
+  * FHS layout (/usr/bin, /usr/libexec/cde, /usr/share/cde) using the
+    new --with-cde-*-dir options; /etc/dt and /var/dt unchanged
+  * Help volumes, dtinfo books and man pages are built
+  * cde-ostringstream-uninitialized-buffer.patch: "dbdrv define" wrote
+    uninitialized heap memory into the infolib schema, so the dtinfo
+    book build failed under the build system's MALLOC_PERTURB_
+  * dtappgather and dtterm are not setuid root;
+    /var/dt/appconfig/appmanager and /var/dt/tmp are sticky
+    world-writable instead (as in Debian)
+  * openSUSE PAM stacks for dtlogin and dtsession in /usr/lib/pam.d
+  * dtlogin is registered as a display-manager alternative
+  * Section 1m man pages moved to section 8

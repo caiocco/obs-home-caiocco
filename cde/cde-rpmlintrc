@@ -1,0 +1,18 @@
+# /var/dt holds the sticky world-writable session directories used by
+# dtappgather (not setuid here); world-writable-unauthorized-file
+# cannot be filtered and only adds badness 10 per directory
+addFilter("non-standard-dir-in-var dt")
+addFilter("filelist-forbidden-fhs23 /var/dt")
+# xinetd is only recommended
+addFilter("standard-dir-owned-by-package /etc/xinetd.d")
+# dtinfo looks for this helper in its infolib tree
+addFilter("arch-dependent-file-in-usr-share .*/infolib/etc/dtinfo_start")
+# palette and backdrop descriptions, not C sources
+addFilter("devel-file-in-non-devel-package .*/desc\.C")
+# sourced by the session scripts / dtaction, not executed
+addFilter("script-without-shebang .*/config/sys\.dtprofile")
+addFilter("script-without-shebang .*/appconfig/appmanager/")
+# 1990s code base; reported upstream-wide, not packaging issues
+addFilter("call-to-mktemp")
+addFilter("missing-call-to-setgroups-before-setuid")
+addFilter("binary-or-shlib-calls-gethostbyname")
