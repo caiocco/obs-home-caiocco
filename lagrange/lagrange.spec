@@ -1,0 +1,104 @@
+#
+# spec file for package lagrange
+#
+# Copyright (c) 2026 SUSE LLC and contributors
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+
+# Please submit bugfixes or comments via https://bugs.opensuse.org/
+#
+
+
+%define gui_app_id fi.skyjake.Lagrange
+%define tui_app_id fi.skyjake.clagrange
+
+Name:           lagrange
+Version:        2.0.2
+Release:        0
+Summary:        Desktop GUI client for browsing Geminispace
+License:        BSD-2-Clause
+URL:            https://gmi.skyjake.fi/lagrange
+Source0:        https://github.com/skyjake/lagrange/releases/download/v%{version}/%{name}-%{version}.tar.gz
+# PATCH-FIX-UPSTREAM SDL3 SDL_Init() returns true on success; fixes crash with a gamepad connected
+Patch0:         lagrange-sdl3-gamepad-init.patch
+BuildRequires:  cmake >= 3.15
+BuildRequires:  gcc-c++
+BuildRequires:  libunistring-devel
+BuildRequires:  pkgconfig
+BuildRequires:  update-desktop-files
+BuildRequires:  zip
+BuildRequires:  pkgconfig(freetype2)
+BuildRequires:  pkgconfig(fribidi)
+BuildRequires:  pkgconfig(harfbuzz)
+BuildRequires:  pkgconfig(libcurl)
+BuildRequires:  pkgconfig(libjxl)
+BuildRequires:  pkgconfig(libjxl_threads)
+BuildRequires:  pkgconfig(libmpg123)
+BuildRequires:  pkgconfig(libpcre2-8)
+BuildRequires:  pkgconfig(libwebp)
+BuildRequires:  pkgconfig(ncursesw) >= 6
+BuildRequires:  pkgconfig(openssl)
+BuildRequires:  pkgconfig(opusfile)
+BuildRequires:  pkgconfig(sdl3) >= 3.0.0
+BuildRequires:  pkgconfig(x11)
+BuildRequires:  pkgconfig(zlib)
+
+%description
+Lagrange is a desktop GUI client for browsing Geminispace. It offers modern
+conveniences familiar from web browsers, such as smooth scrolling, inline image
+viewing, multiple tabs, visual themes, Unicode fonts, bookmarks, history, and
+page outlines.
+
+%package -n clagrange
+Summary:        TUI client for browsing Geminispace
+# resources.lgr is shipped in the main package
+Requires:       %{name} = %{version}
+
+%description -n clagrange
+Clagrange is a TUI client for browsing Geminispace.
+
+%prep
+%autosetup -p1
+
+%build
+%cmake \
+    -DTFDN_ENABLE_SSE41=NO \
+    -DENABLE_TUI=YES
+%cmake_build
+
+%install
+%cmake_install
+%suse_update_desktop_file %{gui_app_id} WebBrowser
+%suse_update_desktop_file %{tui_app_id} WebBrowser
+
+%files
+%license LICENSE.md
+%doc README.md AUTHORS.md
+%{_bindir}/%{name}
+%{_bindir}/gmget
+%{_datadir}/applications/%{gui_app_id}.desktop
+%dir %{_datadir}/icons/hicolor
+%dir %{_datadir}/icons/hicolor/256x256
+%dir %{_datadir}/icons/hicolor/256x256/apps
+%{_datadir}/icons/hicolor/256x256/apps/%{gui_app_id}.png
+%{_datadir}/%{name}/
+%{_datadir}/metainfo/%{gui_app_id}.appdata.xml
+%{_mandir}/man1/%{name}.1%{ext_man}
+
+%files -n clagrange
+%license LICENSE.md
+%{_bindir}/clagrange
+%{_datadir}/applications/%{tui_app_id}.desktop
+%dir %{_datadir}/icons/hicolor
+%dir %{_datadir}/icons/hicolor/256x256
+%dir %{_datadir}/icons/hicolor/256x256/apps
+%{_datadir}/icons/hicolor/256x256/apps/%{tui_app_id}.png
+
+%changelog

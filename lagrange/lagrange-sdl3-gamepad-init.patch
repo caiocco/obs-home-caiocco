@@ -1,0 +1,20 @@
+--- a/app/src/ui/gamepad.c	2026-11-08 02:59:39.571534427 -0300
++++ b/app/src/ui/gamepad.c	2026-11-08 02:59:39.576534772 -0300
+@@ -247,7 +247,7 @@
+ 
+ static iBool sdlInit_(void) {
+     if (!wasInited_) {
+-        if (SDL_Init(SDL_INIT_GAMEPAD)) {
++        if (!SDL_Init(SDL_INIT_GAMEPAD)) { /* SDL3 returns true on success */
+             fprintf(stderr, "[Gamepad] failed to initialize: %s\n", SDL_GetError());
+             return iFalse;
+         }
+@@ -691,7 +691,7 @@
+ }
+ 
+ void draw_Gamepad(const iGamepad *d) {
+-    if (!isConnected_Gamepad(d)) {
++    if (!isConnected_Gamepad(d) || !d->pointerTexture) {
+         return;
+     }
+     /* Draw the pointer. */
