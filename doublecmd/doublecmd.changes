@@ -1,0 +1,25 @@
+-------------------------------------------------------------------
+Tue Nov 10 05:01:45 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Update to 1.2.11
+  * Fix wrong cursor position inside archives in Brief View (#3055)
+  * Fix cm_MarkPlus count in Search Results Duplicates (#3169)
+  * Fix opening files from archive in flat view subfolders (#3102)
+  * Qt: fix Down arrow scrolling up in Copy/Move dialog (#2197)
+  * Fix free space indicator drawing and highlighter default filters
+- doublecmd-lazarus3-thumbview-scroll.patch is still needed (Backports
+  still ships Lazarus 3.6)
+
+-------------------------------------------------------------------
+Sat Nov  7 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Double Commander 1.2.10 for openSUSE Leap 16.0
+  * Build against Lazarus 3.6 from openSUSE:Backports:SLE-16.0
+  * Ship two mutually exclusive packages, doublecmd-gtk (GTK 2)
+    and doublecmd-qt (Qt 6)
+  * Do not install the polkit policy; privileged operations use
+    the generic pkexec action
+  * Install /usr/bin/doublecmd as a wrapper script
+  * Add doublecmd-lazarus3-thumbview-scroll.patch:
+    TCustomGrid.TrySmoothScrollBy only exists in Lazarus 4, so fall
+    back to scrolling by one row through TopRow

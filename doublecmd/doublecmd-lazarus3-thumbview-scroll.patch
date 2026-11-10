@@ -1,0 +1,33 @@
+--- a/src/fileviews/uthumbfileview.pas	2026-11-07 09:59:01.693316073 -0300
++++ b/src/fileviews/uthumbfileview.pas	2026-11-07 09:59:01.706316974 -0300
+@@ -113,7 +113,7 @@
+ 
+ uses
+   LCLIntf, LCLType, LMessages, Graphics, Math, StdCtrls, uFileSourceProperty,
+-  uGlobs, uPixMapManager;
++  uGlobs, uPixMapManager, LCLVersion;
+ 
+ { TFileThumbnailsRetriever }
+ 
+@@ -666,12 +666,21 @@
+   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+ begin
+   // Always scroll by one row
++{$IF LCL_FULLVERSION >= 4000000}
+   if WheelDelta < 0 then
+     WheelDelta:= dgPanel.DefaultRowHeight
+   else begin
+     WheelDelta:= -dgPanel.DefaultRowHeight;
+   end;
+   Handled:= TThumbDrawGrid(dgPanel).TrySmoothScrollBy(0, WheelDelta);
++{$ELSE}
++  // TCustomGrid.TrySmoothScrollBy needs Lazarus 4
++  if WheelDelta < 0 then
++    dgPanel.TopRow:= dgPanel.TopRow + 1
++  else if dgPanel.TopRow > dgPanel.FixedRows then
++    dgPanel.TopRow:= dgPanel.TopRow - 1;
++  Handled:= True;
++{$ENDIF}
+ end;
+ 
+ procedure TThumbFileView.CreateDefault(AOwner: TWinControl);
