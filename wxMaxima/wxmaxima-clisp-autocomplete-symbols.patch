@@ -1,0 +1,36 @@
+--- a/src/wxMathML.lisp
++++ b/src/wxMathML.lisp
+@@ -2416,15 +2416,24 @@
+ ;; A function that determines all symbols for autocompletion
+ (defun wxPrint_autocompletesymbols ()
+   (format t "<wxxml-symbols>")
+-  (do-symbols
+-      (s (find-package 'maxima))
+-    (let ((str (format nil "~a" s)))
+-      (if (< 1 (length str))
+-          (if (string= (subseq str 0 1) "$")
+-              (format t "<value>~a</value>"
+-                      (wxxml-fix-string (format nil "~a"
+-                                                (stripdollar (maybe-invert-string-case str))))
+-                      )))))
++  ;; Collect the symbols first and only then work on them: the loop body
++  ;; calls Maxima functions, and changing the package while DO-SYMBOLS walks
++  ;; it is undefined behaviour. CLISP then visits each symbol hundreds of
++  ;; times, which floods wxMaxima with ~90000 entries and freezes its GUI.
++  ;; The hash table drops symbols DO-SYMBOLS legitimately reports twice.
++  (let ((syms (make-hash-table :test #'eq)))
++    (do-symbols (s (find-package 'maxima))
++      (setf (gethash s syms) t))
++    (maphash
++     (lambda (s v)
++       (declare (ignore v))
++       (let ((str (format nil "~a" s)))
++         (if (< 1 (length str))
++             (if (string= (subseq str 0 1) "$")
++                 (format t "<value>~a</value>"
++                         (wxxml-fix-string (format nil "~a"
++                                                   (stripdollar (maybe-invert-string-case str)))))))))
++     syms))
+   ;;ezunits publishes all known units in a function.
+   (if (boundp '$known_units)
+       (no-warning

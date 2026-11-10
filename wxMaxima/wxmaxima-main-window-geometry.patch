@@ -1,0 +1,55 @@
+--- a/src/wxMaxima.cpp
++++ b/src/wxMaxima.cpp
+@@ -121,6 +121,7 @@
+ #include <wx/wfstream.h>
+ #include <wx/zstream.h>
+ #include <wx/persist/toplevel.h>
++#include <wx/display.h>
+ #include <wx/sckstrm.h>
+ #include <wx/txtstrm.h>
+ #if wxUSE_WEBREQUEST
+@@ -1152,13 +1153,30 @@
+   if (!wxPersistenceManager::Get().RegisterAndRestore(this)) {
+     // We don't remember the window size from a previous wxMaxima run
+     // => Make sure the window is at least half-way big enough to make sense.
+-    wxSize winSize = wxSize(wxSystemSettings::GetMetric(wxSYS_SCREEN_X) * .75,
+-                            wxSystemSettings::GetMetric(wxSYS_SCREEN_Y) * .75);
++    // Size it from one monitor's work area: wxSYS_SCREEN_X spans the whole
++    // virtual screen, so with two monitors side by side 75% of it covers
++    // both of them.
++    int displayIdx = wxDisplay::GetFromWindow(this);
++    if (displayIdx == wxNOT_FOUND)
++      displayIdx = 0;
++    const wxRect workArea = wxDisplay(displayIdx).GetClientArea();
++    wxSize winSize = wxSize(workArea.width * .75, workArea.height * .75);
+     if (winSize.x < 800)
+       winSize.x = 800;
+     if (winSize.y < 600)
+       winSize.y = 600;
+     SetSize(winSize);
++  } else {
++    // wxWidgets 3.2 never restores a size below GetBestSize(), and the
++    // frame's best width (main toolbar plus docked sidebars) is wider than
++    // most sizes the user picks, so the window always came back too wide.
++    // Re-apply the saved size as it was stored.
++    long w = 0, h = 0;
++    wxConfigBase *config = wxConfig::Get();
++    if (config->Read(wxS("Persistent_Options/Window/wxMaxima/w"), &w) &&
++        config->Read(wxS("Persistent_Options/Window/wxMaxima/h"), &h) &&
++        (w > 0) && (h > 0) && !IsMaximized())
++      SetSize(wxSize(w, h));
+   }
+ 
+   if(GetWorksheet())
+@@ -3107,6 +3125,11 @@
+     return;
+   }
+   wxConfig::Get()->Write(wxS("lastPath"), m_lastPath);
++  // The persistence manager only saves the geometry from the wxEVT_DESTROY
++  // handler, i.e. after ~wxMaximaFrame() has flushed the config for the last
++  // time, so the window size and position were never written to disk.
++  // Save it now; ~wxMaximaFrame()'s Flush() writes it.
++  wxPersistenceManager::Get().Save(this);
+   Destroy();
+ }
+ 

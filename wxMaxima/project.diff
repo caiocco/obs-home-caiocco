@@ -1,0 +1,29 @@
+--- wxMaxima.spec.orig
++++ wxMaxima.spec
+@@ -30,6 +30,16 @@
+ Group:          Productivity/Scientific/Math
+ URL:            https://wxmaxima-developers.github.io/wxmaxima/
+ Source0:        https://github.com/wxmaxima-developers/wxmaxima/archive/Version-%{version}.tar.gz#/%{tarname}-Version-%{version}.tar.gz
++# PATCH-FIX-OPENSUSE wxmaxima-clisp-autocomplete-symbols.patch -- collect symbols before
++# processing them; under clisp DO-SYMBOLS repeated each one ~360 times and froze the GUI
++Patch0:         wxmaxima-clisp-autocomplete-symbols.patch
++# PATCH-FIX-OPENSUSE wxmaxima-main-window-geometry.patch -- save the main window geometry
++# before the last config flush, restore it below the frame's best size, size a first
++# window from one monitor instead of the whole multi-monitor screen
++Patch1:         wxmaxima-main-window-geometry.patch
++# PATCH-FIX-OPENSUSE wxmaxima-config-dialog-icons.patch -- 32px instead of 64px icons in
++# the configuration dialog; printer device icon instead of the theme action glyph
++Patch2:         wxmaxima-config-dialog-icons.patch
+ BuildRequires:  cmake >= 3.10
+ BuildRequires:  doxygen
+ BuildRequires:  fdupes
+@@ -37,7 +47,8 @@
+ BuildRequires:  graphviz
+ BuildRequires:  hicolor-icon-theme
+ BuildRequires:  maxima >= 5.30.0
+-BuildRequires:  maxima-exec-sbcl
++# Leap 16 has no sbcl; maxima there is built with the clisp backend only
++BuildRequires:  maxima-exec-clisp
+ BuildRequires:  ninja
+ BuildRequires:  po4a
+ BuildRequires:  wxGTK3-devel >= 3.1.5
