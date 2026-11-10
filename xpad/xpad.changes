@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Tue Nov 10 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of xpad 6.0.0 for openSUSE Leap 16.0
+  * GTK 3 + GtkSourceView 4, tray icon via Ayatana AppIndicator
+  * No Requires on hicolor-icon-theme (rpmlint branding-requires-unversioned)
+  * 6.0: respect hidden pads on startup
+  * 5.9: pad transparency; pad size and colors kept across restarts
