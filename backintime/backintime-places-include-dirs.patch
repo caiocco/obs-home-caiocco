@@ -1,0 +1,75 @@
+--- a/qt/placeswidget.py	2026-10-13 16:40:36.000000000 -0300
++++ b/qt/placeswidget.py	2026-11-11 11:58:36.805460661 -0300
+@@ -76,21 +76,20 @@
+             include_entries = self.config.include()
+ 
+         else:
+-            # Determine folders from the snapshot itself
+-            base = os.path.expanduser('~')
+-            if not os.path.isdir(self.parent.sid.pathBackup(base)):
+-                # Folder not mounted. We can skip for the next updatePlaces()
+-                return
+-
+-            folders = [
+-                i.name
+-                for i
+-                in os.scandir(self.parent.sid.pathBackup(base))
+-                if i.is_dir()
++            # Use the include list stored with the snapshot itself (or the
++            # current profile's list as fallback), keeping only the entries
++            # that exist inside the snapshot. 1.6.x listed only the
++            # sub-folders of ~ found in the snapshot, hiding every include
++            # outside $HOME (fixed upstream in 2.0, commit 609a54a).
++            include_entries = self._snapshot_include_entries()
++            if include_entries is None:
++                include_entries = self.config.include()
++
++            include_entries = [
++                entry for entry in include_entries
++                if os.path.isdir(self.parent.sid.pathBackup(entry[0]))
+             ]
+ 
+-            include_entries = [(os.path.join(base, f), 0) for f in folders]
+-
+         # Use folders only (if 2nd tuple entry is 0)
+         only_folders = filter(lambda entry: entry[1] == 0, include_entries)
+         include_folders = [item[0] for item in only_folders]
+@@ -108,6 +107,38 @@
+         for folder in include_folders:
+             self._add_place(folder, folder, 'document-save')
+ 
++    def _snapshot_include_entries(self):
++        """Read the include list of the current profile from the config
++        file archived in the selected snapshot. Return None if it can't be
++        read."""
++        prefix = 'profile{}.snapshots.include.'.format(
++            self.config.currentProfile())
++        values = {}
++        types = {}
++
++        try:
++            with open(self.parent.sid.path('config'), encoding='utf-8') as fh:
++                for line in fh:
++                    key, sep, value = line.rstrip('\n').partition('=')
++                    if not sep or not key.startswith(prefix):
++                        continue
++                    idx, _sep, field = key[len(prefix):].partition('.')
++                    if field == 'value':
++                        values[idx] = value
++                    elif field == 'type':
++                        types[idx] = value
++
++        except OSError:
++            return None
++
++        if not values:
++            return None
++
++        return [
++            (values[idx], int(types.get(idx, 0)))
++            for idx in sorted(values, key=lambda i: int(i) if i.isdigit() else 0)
++        ]
++
+     def _add_place(self, name, path, icon):
+         """
+         Dev note (buhtz, 2024-01-14): Parts of that code are redundant with
