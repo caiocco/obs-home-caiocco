@@ -1,0 +1,446 @@
+-------------------------------------------------------------------
+Tue Aug  1 16:14:09 UTC 2023 - Adam Majer <adam.majer@suse.de>
+
+- Update to 8.95.6. From debian changelog:
+  * Alien/Package/Deb.pm: Do not fail when dh_usrlocal returns
+    with nonzero value. A warning (shown in --veryverbose)
+    is generated instead. (Closes: #992188)
+  * Alien/Package/Deb.pm: Fix incorrect debian/rules template by
+    properly escaping special characters (dh \$\@ instead of dh $@).
+    Closes: #983492.
+  * Alien/Package/Deb.pm: Fix incorrect file installation path.
+    This fixes the bug in manual override_dh_auto_install that files
+    are placed under / instead of /usr/ (default prefix).
+    Closes: #985835.
+  * Alien/Package/Rpm.pm: Also map aarch64 in rpm to arm64 in deb.
+    This fixes conversion of aarch64 rpm packages.
+    Closes: #985808.
+  * alien.pl:
+      + Fixed some misspelled words.
+  * Alien/Package.pm:
+      + Fixed misspelled word.
+  * Alien/Package/Rpm.pm:
+      + Fixed misspeled word.
+  * Rpm.pm: Do not ship conflicting dirs. (Closes: #759533)
+  * Deb.pm:
+    + Use dh sequencer when generating deb packages.
+    + Bump supported debhelper compatibility level to v10.
+
+
+-------------------------------------------------------------------
+Wed Dec 16 22:28:42 UTC 2020 - dmulder@suse.com
+
+- Update to 8.95
+
+-------------------------------------------------------------------
+Thu Dec 27 14:48:49 UTC 2012 - lazy.kent@opensuse.org
+
+- Fix in Requires: rpmbuild -> rpm-build (for openSUSE >= 12.2).
+
+-------------------------------------------------------------------
+Sat Nov  3 11:42:38 UTC 2012 - puzel@suse.com
+
+- Update to 8.88.
+  * Ensure that version numbers begin with well, a number, when building a
+    deb, otherwise dpkg-deb will refuse to build it.
+- Changes in 8.87.
+  * Use lsb-rpmbuild, not lsb-rpm.
+  * Fix adding of postinst script to deb, containing rpm permissions
+    fixups code.
+- fix failed build because of missing dh_testdir: BuildRequire
+  debhelper 
+- Requires: rpmbuild (bnc#787896)
+
+-------------------------------------------------------------------
+Tue Apr  3 15:17:06 UTC 2012 - lazy.kent@opensuse.org
+
+- Update to 8.86.
+  * Filter out illegal characters in version number when building a
+    deb.
+- Changes in 8.85.
+  * Avoid breaking on spaces in filenames.
+- Changes in 8.84.
+  * Silence error message when deleting build tree after making an
+    rpm, if rpmbuild has already deleted it.
+  * Squash an uninitialized value when creating a deb.
+- Changes in 8.83.
+  * Correct handling of arch all packages in deb arch check.
+- Changes in 8.82.
+  * Use debhelper compat level v7 when building packages. All
+    changes since v4 seem safe for alien's generated rules files.
+  * Use dh_prep instead of deprecated dh_clean -k.
+  * Print a nice error message when attempting to build a deb from
+    a package of an unsupported architecture.
+- Corrected License tag.
+- Use full URL as a source.
+- Corrected Summary style.
+- Removed redundant "clean" section.
+
+-------------------------------------------------------------------
+Wed Aug 18 10:34:27 UTC 2010 - puzel@novell.com
+
+- update to alien 8.81 
+  * Avoid uninitialized value warning when debian/rules fails to run
+    due to alien being run in a noexec directory.
+  * Prevent DESTROY stomping on alien's exit code sometimes.
+  * Support extracting lzma compressed RPMs. 
+  * Suggest lzma. If not installed, alien will still fail to decompress
+    RPMs using it, but will support most rpms, which are not.
+  * Fix precedence problem that prevented alien from preserving permissions
+    of suid/sgid binaries that are not owned by root.
+  * Support RPMs containing ghost files.
+
+-------------------------------------------------------------------
+Fri May 28 12:21:04 UTC 2010 - puzel@novell.com
+
+- do not build as noarch
+
+-------------------------------------------------------------------
+Fri May  7 08:55:14 UTC 2010 - puzel@novell.com
+
+- update to alien 8.80 
+  * Support querying rpm LICENSE field. (Alexey Khoroshilov)
+
+-------------------------------------------------------------------
+Thu Mar 25 13:19:28 UTC 2010 - puzel@novell.com
+
+- add alien-strip-tilde-from-version.patch (bnc#590986) 
+
+-------------------------------------------------------------------
+Thu Mar 25 11:43:07 UTC 2010 - puzel@novell.com
+
+- update to alien-8.79
+  * Modify -g and -s to support running on multiple packages at once.
+  * Removed all built-in patches for converting specific packages
+    (j2sdk, jdk, lgtoclnt, motif) with alien. These were out of date,
+    and not maintained. Alien will not include such patches going forward.
+
+-------------------------------------------------------------------
+Fri Aug 28 09:56:02 UTC 2009 - puzel@novell.com
+
+- update to alien 8.78
+  * Add support for rpm 4.7.0, which ignores the buildroot setting in the
+    spec file, by passing --buildroot. (Thanks, Pavel Roskin)
+- cleanup specfile
+
+-------------------------------------------------------------------
+Tue Jul  7 14:54:17 CEST 2009 - puzel@novell.com
+
+- update to alien 8.77 
+  * Don't allow whitespace in package version when parsing debian/changelog.
+  * In rpm permission fixup code, avoid processing symlinks since that
+    would result in the file the link points to being "fixed".
+
+-------------------------------------------------------------------
+Tue Jun  9 10:38:27 CEST 2009 - puzel@suse.cz
+
+- update to 8.76 
+  * Avoid using hostname -f for portability to unix systems,
+    such as Solaris, where any options _set_ the hostname.
+  * Fix bash shebang and recognise bash scripts as editable
+    shell scripts when converting to deb.
+-------------------------------------------------------------------
+Thu May  7 14:08:23 CEST 2009 - puzel@suse.cz
+
+- update to 8.75
+  * Simplified rules file.
+  * Modify maintainer scripts from rpm files to use /bin/bash rather
+    than /bin/sh. Many such scripts are only tested on systems where /bin/sh
+    is bash, and contain bashisms, which can cause trouble when converting
+    the rpm to be used on eg, the Debian family of distributions, where
+    /bin/sh can legitimatly be dash.
+
+-------------------------------------------------------------------
+Mon Feb 16 16:46:31 CET 2009 - puzel@suse.cz
+
+- update to 8.74
+  * support bzipped and uncompressed tar files, using tar's auto-compression detection
+  * pod fixes
+
+-------------------------------------------------------------------
+Tue Jan 13 13:00:09 CET 2009 - puzel@suse.cz
+
+- update to 8.73
+  * (8.73) fix pkg generation to not include /prototype in all packages
+  * (8.72) improve parsing of tgz filenames, to avoid confusion when the filename
+    includes the package type (ie, "noarch")
+  * (8.71) deal with rpms that relocate ie, /usr into /usr/local, and don't
+    try to move /usr into /usr/local in this case
+  * (8.70) extract prefixes field before extracting scripts so that
+    RPM_INSTALL_PREFIX gets set
+  * (8.69) minor improvement to debian/rules clean.
+
+-------------------------------------------------------------------
+Wed Jan  7 18:21:26 CET 2009 - puzel@suse.cz
+
+- fix rpmlint warning - package is noarch 
+
+-------------------------------------------------------------------
+Thu Jul 26 12:08:12 CEST 2007 - prusnak@suse.cz
+
+- update to 8.68
+  * (8.66) use date -R as 822-date will soon be deprecated
+  * (8.67) correct a bug that caused alien to ignore failing commands
+  * (8.68) show output of installation of package with -i, since
+    some packages install scripts may have important output or even
+    be interactive
+
+-------------------------------------------------------------------
+Wed Jan  3 14:00:29 CET 2007 - prusnak@suse.cz
+
+- update to 8.65
+  * Fix alien's own spec file, s/Copyright/License/.
+  * Add support for rpm scripts that use RPM_INSTALL_PREFIX, by
+    setting RPM_INSTALL_PREFIX as part of the converted script.
+    Closes: #400863
+  * When converting LSB packages, do not increment the release number.
+  * Use rpmbuild to build lsb packages, not rpm, if lsb-rpm is not
+    available.
+
+-------------------------------------------------------------------
+Thu Jul 27 15:28:42 CEST 2006 - mjancar@suse.cz
+
+- update to 8.64
+  * Minor improvement to usage message
+  * Correct code to properly use RPMBUILDOPT (not RPMBUILDOPTS)
+  * Look at and chmod the right directories.
+  * Fix a bug in conffile script extraction from tgz files (caused by
+    return from runpipe not defaulting to a scalar).
+
+-------------------------------------------------------------------
+Wed Jan 25 21:34:10 CET 2006 - mls@suse.de
+
+- converted neededforbuild to BuildRequires
+
+-------------------------------------------------------------------
+Thu Jan 12 14:30:36 CET 2006 - mjancar@suse.cz
+
+- update to 8.61
+
+-------------------------------------------------------------------
+Mon Aug  1 17:07:49 CEST 2005 - mjancar@suse.cz
+
+- update to 8.56
+
+-------------------------------------------------------------------
+Tue Dec 21 16:55:56 CET 2004 - mcihar@suse.cz
+
+- update to 8.50
+
+-------------------------------------------------------------------
+Tue Aug 03 20:07:02 CEST 2004 - mcihar@suse.cz
+
+- update to 8.46
+
+-------------------------------------------------------------------
+Mon May 31 12:03:56 CEST 2004 - mcihar@suse.cz
+
+- update to 8.44
+
+-------------------------------------------------------------------
+Mon Jan 26 13:02:00 CET 2004 - mcihar@suse.cz
+
+- updated to 8.43
+
+-------------------------------------------------------------------
+Sun Jan 11 12:37:19 CET 2004 - adrian@suse.de
+
+- build as user
+
+-------------------------------------------------------------------
+Wed Aug 20 15:09:09 CEST 2003 - mjancar@suse.cz
+
+- require the perl version we build with
+
+-------------------------------------------------------------------
+Thu Aug 07 15:46:10 CEST 2003 - mcihar@suse.cz
+
+- updated to 8.34:
+    * Fixed changelog parsing regexp.
+    * Updated j2sdk patch.
+
+-------------------------------------------------------------------
+Mon Jul 28 13:06:28 CEST 2003 - ro@suse.de
+
+- install perl stuff to vendor location 
+
+-------------------------------------------------------------------
+Tue May 27 12:11:33 CEST 2003 - mcihar@suse.cz
+
+- updated to 8.30, changes:
+  * Added -v to enable verbose mode, which lists each shell command
+    as it is run. Also added --veryverbose for verbose with command
+    output too.
+  * Use -V for version. (-v used to be documented, but never worked)
+  * alien.spec: pass PREFIX to Makefile.PL so it works on systems
+    (such as red hat 8) where the generated Makefile does not use
+    $PREFIX in all paths.
+  * Support rpms that contain no files. Closes: #184714
+  * Corrected precidence problem that made alien not catch mkdir of the work
+    directory failing if the directory already existed (and let it delete the
+    existing directory). Closes: #181061
+  * Fixed several other instances of the same precidence problem in the code.
+  * Use rpmbuild -bb instead of rpm -bb, as it seems that rpm -bb has stopped
+    working in recent versions of rpm, as shipped by red hat (Debian's rpm,
+    confusingly, continues to support rpm -bb, possibly because of how I hack
+    its popt stuff up for debian.) This may fail with older, pre-rpmbuild
+    rpm's; if so you should upgrade to a more current version I guess.
+  * Updated js2k patch from Gerald Turner.
+
+-------------------------------------------------------------------
+Wed Nov 13 12:37:10 CET 2002 - mcihar@suse.cz
+
+- updated to 8.20, major changes:
+  * Pach from Erwan MAS <erwan@mas.nom.fr> that allows specification of the
+    version of a tgz file, for files that don't have a parseable version
+    number.
+  * Added support inspired by aj for converted rpm packages that create
+    users/groups in their preinst, and which alien therefore cannot ship the
+    files with proper ownerships in the .deb. In this case alien will now
+    insert appropriate chown commands into the postinst script of the
+    converted package.
+  * perl 5.8 fixes.
+
+-------------------------------------------------------------------
+Wed Aug 28 12:37:07 MEST 2002 - mcihar@suse.cz
+
+- corrected requires, now requires deb because most users will want
+  to use this for deb<=>rpm conversion
+
+-------------------------------------------------------------------
+Tue Aug  6 11:13:06 CEST 2002 - mcihar@suse.cz
+
+- fixed filelist and build script to work with perl thread-multi
+
+-------------------------------------------------------------------
+Tue Jul 30 13:45:44 CEST 2002 - ro@suse.de
+
+- update to 8.16 (fixes rpm unpacking with owners/perms) 
+- fix build with perl-5.8.0
+
+-------------------------------------------------------------------
+Fri Jun  7 10:10:58 CEST 2002 - mcihar@suse.cz
+
+- updated to version 8.10:
+  * Build alien with debhelper v4.
+  * Deal with packages with strange characters in their filenames.
+  * Support rpms with a description consisting of just blank lines.
+  * Made more robust in the face of empty rpms.
+  * The "vmware and dpkg on drugs" release.
+  * LSB package support. It can generate LSB packages
+  * Support ancient (bo-era) debs with upper-case field names.
+
+-------------------------------------------------------------------
+Tue Jan 15 12:38:11 CET 2002 - cihlar@suse.cz
+
+- updated to version 7.31:
+  * Use --target noarch instead of --target=noarch when
+    building rpms
+  * Trap stderr of rpm and debian/rules building packages
+    and only display if the build fails
+
+-------------------------------------------------------------------
+Fri Nov 23 12:38:17 CET 2001 - cihlar@suse.cz
+
+- updated to version 7.30:
+  * supports converting to and from Solaris "pkg" packages
+  * moves files for better FHS compliance
+  * several minor fixes
+
+-------------------------------------------------------------------
+Thu Jul 26 07:46:13 CEST 2001 - cihlar@suse.cz
+
+- removed .Rpm.pm.swp
+
+-------------------------------------------------------------------
+Tue Jul 24 14:53:11 CEST 2001 - cihlar@suse.cz
+
+- updated to version 7.27
+
+-------------------------------------------------------------------
+Mon Apr  9 13:44:39 CEST 2001 - cihlar@suse.cz
+
+- updated to version 7.21
+
+-------------------------------------------------------------------
+Mon Mar  5 15:11:24 CET 2001 - cihlar@suse.cz
+
+- updated to version 7.20
+
+-------------------------------------------------------------------
+Wed Nov 22 10:18:14 CET 2000 - cihlar@suse.cz
+
+- update to version 7.10
+- bzipped sources
+
+-------------------------------------------------------------------
+Tue Aug 22 23:30:12 CEST 2000 - ro@suse.de
+
+- fixed perl path 
+
+-------------------------------------------------------------------
+Thu Jul 13 14:53:51 CEST 2000 - cihlar@suse.cz
+
+- fixed creating of rpm package
+
+-------------------------------------------------------------------
+Wed May 24 08:42:39 CEST 2000 - cihlar@suse.cz
+
+- upgrade to version 7.4 
+
+-------------------------------------------------------------------
+Mon May 15 08:12:28 CEST 2000 - cihlar@suse.cz
+
+- Group sorted 
+
+-------------------------------------------------------------------
+Tue May  2 17:23:35 CEST 2000 - cihlar@suse.cz
+
+- fixed obtaining of $control in Fromdeb.pm 
+
+-------------------------------------------------------------------
+Mon Apr  3 08:44:03 CEST 2000 - cihlar@suse.cz
+
+- upgrade to version 6.59
+- added BuildRoot 
+
+-------------------------------------------------------------------
+Fri Jan 14 12:41:40 CET 2000 - ro@suse.de
+
+- update to 6.54 
+
+-------------------------------------------------------------------
+Mon Sep 13 17:23:57 CEST 1999 - bs@suse.de
+
+- ran old prepare_spec on spec file to switch to new prepare_spec.
+
+-------------------------------------------------------------------
+Mon Jun 28 19:48:41 MEST 1999 - uli@suse.de
+
+- update 6.18 -> 6.41
+- removed patch
+
+-------------------------------------------------------------------
+Thu Oct  8 10:55:49 MEST 1998 - ro@suse.de
+
+- update to version 6.18
+- removed change from 6.15 to 6.16 since we don't have dir RPMS/noarch (yet)
+
+-------------------------------------------------------------------
+Tue Nov 25 13:05:32 MET 1997 - ro@suse.de
+
+- update to version 5.19
+
+-------------------------------------------------------------------
+Sun Sep 14 18:35:40 1997  - ke@suse.de
+
+	* Update: version 5.17.  Should handle doinst.sh etc. scripts.
+
+Wed Jun 25 10:05:05 1997  - Karl Eichwalder  <ke@suse.de>
+
+	* repack to fix perms.
+
+Tue Jun 24 13:50:56 1997  - Karl Eichwalder  <ke@suse.de>
+
+	* initial package: version 5.9
+

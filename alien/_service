@@ -1,0 +1,7 @@
+<services>
+  <service name="download_url" mode="manual">
+    <param name="host">ftp.de.debian.org</param>
+    <param name="protocol">http</param>
+    <param name="path">/debian/pool/main/a/alien/alien_8.95.8.tar.xz</param>
+  </service>
+</services>

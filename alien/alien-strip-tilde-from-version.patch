@@ -1,0 +1,12 @@
+Index: alien/Alien/Package/Rpm.pm
+===================================================================
+--- alien.orig/Alien/Package/Rpm.pm	2009-10-19 22:34:17.000000000 +0200
++++ alien/Alien/Package/Rpm.pm	2010-03-25 14:11:32.000000000 +0100
+@@ -448,6 +448,7 @@ sub version {
+ 	return unless defined wantarray; # optimization
+ 	$_=$this->{version};
+ 	tr/-/_/;
++	$_ =~ s/(^[^~]*)~.*/$1/;
+ 	return $_;
+ }
+ 
