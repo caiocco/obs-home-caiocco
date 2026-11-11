@@ -1,0 +1,9 @@
+<services>
+  <service name="download_url">
+    <param name="host">github.com</param>
+    <param name="protocol">https</param>
+    <param name="path">/x42/harvid/archive/refs/tags/v0.9.1.tar.gz</param>
+    <param name="filename">harvid-0.9.1.tar.gz</param>
+  </service>
+  <service name="set_version" mode="buildtime" />
+</services>

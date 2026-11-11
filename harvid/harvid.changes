@@ -1,0 +1,22 @@
+-------------------------------------------------------------------
+Sun Jan  1 17:32:20 UTC 2023 - Edgar Aichinger <edogawa@aon.at>
+
+- updated to version 0.9.1, use GH release tarball again
+
+-------------------------------------------------------------------
+Sat Dec 31 12:21:31 UTC 2022 - Edgar Aichinger <edogawa@aon.at>
+
+- updated to use service obs_scm for current github version (0.9.0+git)
+- removed fix-build.patch (obsoleted by new version)
+
+-------------------------------------------------------------------
+Thu May 28 22:08:49 UTC 2020 - Giordano Boschetti <geekosdaw@gmail.com>
+
+- Fix build on tumbleweed by skipping check of jpeg library (fail on check)
+- Added explicit VIM Build Requires
+
+-------------------------------------------------------------------
+Thu May 28 10:45:04 UTC 2020 - Fabio Pesari <fpesari@tuxfamily.org>
+
+- First upload, version 0.8.3
+
