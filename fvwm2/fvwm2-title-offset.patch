@@ -1,0 +1,19 @@
+Center the title text also when TitleStyle Height (or MinHeight) makes
+the title bar smaller than the font's natural height. Before, the text
+offset was adjusted only when the bar grew, so a smaller bar cut off the
+bottom of the text. Negative values are rounded down like positive ones
+(the odd pixel goes below the text in both cases).
+
+--- fvwm/geometry.c.orig
++++ fvwm/geometry.c
+@@ -302,6 +302,10 @@
+ 	{
+ 		*offset += extra_size / 2;
+ 	}
++	else if (extra_size < 0)
++	{
++		*offset -= (1 - extra_size) / 2;
++	}
+ 	*size = font_size + extra_size;
+ 
+ 	return;

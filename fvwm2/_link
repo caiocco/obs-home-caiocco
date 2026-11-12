@@ -1,0 +1,5 @@
+<link project="openSUSE:Backports:SLE-16.0" package="fvwm2">
+  <patches>
+    <apply name="project.diff"/>
+  </patches>
+</link>

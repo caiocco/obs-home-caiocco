@@ -1,0 +1,25 @@
+Convert STRING (ISO 8859-1) window and icon names to the locale's
+encoding like the other encodings. fvwm used STRING names as they are,
+so in a UTF-8 locale a title such as "Título" set by xterm or other
+Xt/Motif clients was shown as "T?tulo".
+
+--- libs/Flocale.c.orig
++++ libs/Flocale.c
+@@ -2317,14 +2317,9 @@
+ 	{
+ 		return;
+ 	}
+-	if (text_prop.encoding == XA_STRING)
+-	{
+-		/* STRING encoding, use this as it is */
+-		ret_name->name = (char *)text_prop.value;
+-		ret_name->name_list = NULL;
+-		return;
+-	}
+-	/* not STRING encoding, try to convert XA_COMPOUND_TEXT */
++	/* convert STRING (ISO 8859-1), COMPOUND_TEXT, UTF8_STRING... to the
++	 * locale's encoding; STRING used to be taken as it is, which shows
++	 * Latin-1 titles as invalid text in a UTF-8 locale */
+ 	if (XmbTextPropertyToTextList(dpy, &text_prop, &list, &num) >= Success
+ 	    && num > 0 && *list)
+ 	{
