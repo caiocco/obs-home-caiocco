@@ -1,0 +1,41 @@
+TheNextLevel on openSUSE
+========================
+
+This is the original 1996 configuration (not Red Hat's 1997 variant with
+Windows 95 style buttons), ported to fvwm 2.7. Pick "TheNextLevel" in the
+display manager's session list.
+
+Files
+-----
+/etc/X11/TheNextLevel/.fvwm2rc.m4   main m4 source, run through FvwmM4
+/etc/X11/TheNextLevel/.fvwm2rc.*    the files it reads
+/etc/X11/TheNextLevel/.Xdefaults    X resources merged at session start
+/usr/share/thenextlevel/pixmaps     icons and title bar buttons
+
+Each .fvwm2rc.* file is read from your home directory if you have a copy
+there, so to change the user options:
+
+  cp /etc/X11/TheNextLevel/.fvwm2rc.defines ~/
+  $EDITOR ~/.fvwm2rc.defines
+
+and pick "Restart Fvwm2" from the System Utilities menu. Personal icons can
+go in ~/.fvwm/icons.
+
+The user documentation is docs/index.html in this directory ("Help Fvwm" in
+the root menu).
+
+Changes from the original
+-------------------------
+- Installed system wide (the per-file $HOME override is Red Hat's idea).
+- fvwm 2.7 syntax: ImagePath, ButtonStyle Pixmap, Style * Font,
+  new MenuStyle and EdgeResistance, TitleStyle "-- Raised".
+- Fonts use a fixed pixel size, and the title bar is FONT_SIZE+6 pixels
+  high (TITLE_HEIGHT) to fit the 18 pixel buttons. Text centering in a
+  title bar this size needs the fvwm2 package from home:caiocco.
+- The xlock menus list the original modes that the installed xlockmore
+  still has (AUTO_XLOCK_OPTIONS would add ~140 modes).
+- Menu entries for modules removed from fvwm (FvwmConfig, FvwmSave,
+  FvwmScroll, FvwmClean) are gone; Window List uses FvwmIconMan.
+- Msgs runs journalctl, Help opens with xdg-open, Root shell uses "su -".
+- The zsh, emacs, xdm, console keymap and control-panel parts of the
+  original Install.sh are not installed.

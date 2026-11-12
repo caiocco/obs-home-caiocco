@@ -1,0 +1,185 @@
+Port to fvwm 2.7: ButtonStyle FullPixmap -> Pixmap ... -- Flat, WindowFont
+-> Style * Font, new MenuStyle syntax, EdgeResistance with one argument
+plus EdgeMove* styles, TitleStyle flags after "--". Fonts get a fixed
+pixel size (TNLFont), since *helvetica*bold-r*12* now also matches the
+17 pixel 100dpi fonts, and the title bar is FONT_SIZE+6 pixels high to
+fit the 18 pixel title button pixmaps, as in fvwm 2.0.
+
+diff --git a/.fvwm2rc.defines b/.fvwm2rc.defines
+index 386592e..a71ee96 100644
+--- a/.fvwm2rc.defines
++++ b/.fvwm2rc.defines
+@@ -148,16 +148,18 @@ define(`MINI_ICONS')
+ 
+ # Uncomment this if you want to use Win95-like buttons
+ # you don't need to uncomment this if you're using Fvwm95
+-# I'd suggest switching TITLE_STYLE to `LeftJustified Flat' if you use
++# I'd suggest switching TITLE_STYLE to `LeftJustified -- Flat' if you use
+ # WIN95_BUTTONS, as they themselves are flat
+ #define(`WIN95_BUTTONS')
+ 
+ # TITLE_STYLE should be a {justification,appearance} pair from fvwm's TitleStyle option
+ # justification is one of Centered, RightJustified, or LeftJustified
+-# appearance is one of Raised, Sunk, or Flat
++# appearance is one of Raised, Sunk, or Flat, after "--" (fvwm 2.2 and later)
+ # This does nothing in Fvwm95
+-# eg. `Centered Flat'
+-define(`TITLE_STYLE',`LeftJustified Raised')
++# eg. `Centered -- Flat'
++# The title bar height can be set with TITLE_HEIGHT (default FONT_SIZE+6,
++# which fits the 18 pixel title buttons)
++define(`TITLE_STYLE',`LeftJustified -- Raised')
+ 
+ # Uncomment this to use pixmap buttons, instead of button style drawings.
+ # The advantage of pixmap buttons is that they always stay in the multi-tone dark grey.
+diff --git a/.fvwm2rc.forms b/.fvwm2rc.forms
+index 587bdfc..d1ab6ee 100644
+--- a/.fvwm2rc.forms
++++ b/.fvwm2rc.forms
+@@ -35,8 +35,8 @@ define(`FormInput',`ifelse($2,,,`*$1Line $2')
+ 
+ *LogoutVerifyGrabServer
+ *LogoutVerifyWarpPointer
+-*LogoutVerifyFont          BASIC_FONT-bold-r*FONT_SIZE_X_2*
+-*LogoutVerifyButtonFont    BASIC_FONT*FONT_STYLE*FONT_SIZE*
++*LogoutVerifyFont          TNLFont(`bold-r',FONT_SIZE_X_2)
++*LogoutVerifyButtonFont    TNLFont(FONT_STYLE,FONT_SIZE)
+ *LogoutVerifyFore          WINFORE_COLOR
+ *LogoutVerifyBack          MENUBACK_COLOR
+ *LogoutVerifyItemFore      WINFORE_COLOR
+@@ -64,7 +64,7 @@ Style "LogoutVerify" NoHandles, StickyOnTop
+ *AboutBack		MENUBACK_COLOR
+ *AboutItemFore      WINFORE_COLOR
+ *AboutItemBack      WINBACK_COLOR
+-*AboutFont		BASIC_FONT-bold-r-*-*-FONT_SIZE-*-*-*-*-*-*-*
++*AboutFont		TNLFont(`bold-r',FONT_SIZE)
+ 
+ *AboutLine		center
+ *AboutText		"Fvwm Configuration"
+@@ -91,7 +91,7 @@ Style "About" NoButton 2, NoButton 4, NoButton 6, StickyOnTop
+ # FvwmForm Xrsh -- Start a program on a remote machine
+ #
+ 
+-*XrshFont         BASIC_FONT*FONT_STYLE*FONT_SIZE*
++*XrshFont         TNLFont(FONT_STYLE,FONT_SIZE)
+ *XrshButtonFont   MEDIUM_FONT
+ *XrshFore         WINFORE_COLOR
+ *XrshBack         MENUBACK_COLOR
+@@ -100,7 +100,7 @@ Style "About" NoButton 2, NoButton 4, NoButton 6, StickyOnTop
+ # begin items
+ *XrshLine         center
+ *XrshText         "Xrsh"
+-*XrshFont         BASIC_FONT*FONT_STYLE*n*FONT_SIZE*
++*XrshFont         TNLFont(FONT_STYLE,FONT_SIZE)
+ *XrshLine         expand
+ *XrshSelection    Host single
+ foreach(`HOST',USER_HOST_LIST,`*XrshChoice HOST HOST off "capitalize(HOST)"
+@@ -120,9 +120,9 @@ foreach(APPLICATION,`(emacs,athena,xload,netscape,COLOR_XTERM)',`
+ #
+ 
+ *RloginWarpPointer
+-*RloginFont         BASIC_FONT*FONT_STYLE*FONT_SIZE*
++*RloginFont         TNLFont(FONT_STYLE,FONT_SIZE)
+ *RloginButtonFont   MEDIUM_FONT
+-*RloginInputFont    BASIC_FONT*FONT_STYLE*FONT_SIZE*
++*RloginInputFont    TNLFont(FONT_STYLE,FONT_SIZE)
+ *RloginFore         WINFORE_COLOR
+ *RloginBack         MENUBACK_COLOR
+ *RloginItemFore     WINFORE_COLOR
+@@ -151,9 +151,9 @@ FormInput(Rlogin,center,`Host:',HostName,20,)
+ #
+ 
+ *TalkFormWarpPointer
+-*TalkFormFont BASIC_FONT*FONT_STYLE*FONT_SIZE*
+-*TalkFormButtonFont BASIC_FONT*FONT_STYLE*FONT_SIZE*
+-*TalkFormInputFont BASIC-FONT*FONT_STYLE*FONT_SIZE*
++*TalkFormFont TNLFont(FONT_STYLE,FONT_SIZE)
++*TalkFormButtonFont TNLFont(FONT_STYLE,FONT_SIZE)
++*TalkFormInputFont TNLFont(FONT_STYLE,FONT_SIZE)
+ *TalkFormFore WINFORE_COLOR
+ *TalkFormBack MENUBACK_COLOR
+ *TalkFormItemFore WINFORE_COLOR
+@@ -173,9 +173,9 @@ FormInput(Rlogin,center,`Host:',HostName,20,)
+ # Capture Window (from man page)
+ #
+ 
+-*CaptureFont         BASIC_FONT*FONT_STYLE*FONT_SIZE*
++*CaptureFont         TNLFont(FONT_STYLE,FONT_SIZE)
+ *CaptureButtonFont   MEDIUM_FONT
+-*CaptureInputFont    BASIC_FONT*FONT_STYLE*FONT_SIZE*
++*CaptureInputFont    TNLFont(FONT_STYLE,FONT_SIZE)
+ *CaptureLine        center
+ *CaptureText        "Capture Window"
+ *CaptureLine        left
+diff --git a/.fvwm2rc.init b/.fvwm2rc.init
+index 83ef31e..7d5665b 100644
+--- a/.fvwm2rc.init
++++ b/.fvwm2rc.init
+@@ -37,7 +37,7 @@ AddToFunc "EndSetupFunction"
+ AddToFunc "StartupFunction"
+ + "I" Exec COLOR_XTERM +ut -cr blue -T "HOSTNAME-Main" -n "Main" -geometry 80x31+1+1
+ ifdef(`FVWMTASKBAR',,`
+-+ "I" Exec xclock -digital -bg WINBACK_COLOR -font BASIC_FONT*medium-r*8* -padding 4 -geometry -FVWM_BUTTONS_WIDTH-BOTTOM_EDGE
+++ "I" Exec xclock -digital -bg WINBACK_COLOR -font TNLFont(`medium-r',8) -padding 4 -geometry -FVWM_BUTTONS_WIDTH-BOTTOM_EDGE
+ ')
+ ifelse(SCREEN_SIZE,`Huge',`
+ + "I" Exec emacs -geometry 104x60-1+1
+diff --git a/.fvwm2rc.m4 b/.fvwm2rc.m4
+index e19007c..6e60aaa 100644
+--- a/.fvwm2rc.m4
++++ b/.fvwm2rc.m4
+@@ -149,7 +149,7 @@ FvwmAlias(`WindowListIcons',`WindowList 1 -1')
+ # DefineButton(ButNum,BtnOrPixmap,ActionForMouse0AnyModifiers)
+ define(`DefineButton',`ButtonStyle $1 'dnl
+ `ifelse(index($2,`full'),-1,`define(`m4_FULL')',`define(`m4_FULL',`Full')')`'dnl
+-ifelse(index($2,`.xpm'),-1,`$2',m4_FULL`Pixmap $2')
++ifelse(index($2,`.xpm'),-1,`$2',`Pixmap $2'ifelse(m4_FULL,`Full',` -- Flat'))
+ ifelse($3,,`',`Mouse 0 $1 A $3')')
+ 
+ define(`m4_LeftButtonNumber',`1')
+@@ -195,6 +195,16 @@ ifelse(SCREEN_SIZE,`Small',
+ `define(`FONT_SIZE',BASIC_FONT_SIZE)')
+ 
+ define(`FONT_SIZE_X_2',eval(FONT_SIZE*2))
++
++# TNLFont(weight-slant,pixels): BASIC_FONT as an XLFD with a fixed pixel
++# size. Patterns like BASIC_FONT*bold-r*12* also match the 12 point fonts
++# of the 100dpi directory (17 pixels), which made everything too big.
++define(`TNLFont',`-'BASIC_FONT`-$1-normal--$2-*-*-*-*-*-iso8859-1')
++
++# The title button pixmaps are 18 pixels high; fvwm 2.0 made the title bar
++# FONT_SIZE+6 pixels high for the default font, newer versions make it
++# taller when the locale uses a font set.
++ifdef(`TITLE_HEIGHT',`',`define(`TITLE_HEIGHT',eval(FONT_SIZE+6))')
+ ifdef(`USE_CLOSE_FOR_DECORATIONS',`define(`DECORATIONS_CLOSE',`Close')',dnl
+ `define(`DECORATIONS_CLOSE',`Delete')')
+ 
+@@ -307,9 +317,9 @@ changecom(#)
+ # Fonts - one for window titles, another for icons, and another for the menus
+ #
+ 
+-WindowFont	BASIC_FONT*bold-r*FONT_SIZE*
+-IconFont	ICON_FONT
+-MenuStyle	MENUFORE_COLOR MENUBACK_COLOR MENUSHADE_COLOR BASIC_FONT*medium-r*FONT_SIZE* mwm
++Style "*" Font TNLFont(`bold-r',FONT_SIZE)
++Style "*" IconFont ICON_FONT
++MenuStyle * mwm, Foreground MENUFORE_COLOR, Background MENUBACK_COLOR, Greyed MENUSHADE_COLOR, Font "TNLFont(`medium-r',FONT_SIZE)", AnimationOff
+ 
+ ###########################################################################
+ #
+@@ -318,11 +328,13 @@ MenuStyle	MENUFORE_COLOR MENUBACK_COLOR MENUSHADE_COLOR BASIC_FONT*medium-r*FONT
+ 
+ ClickTime CLICK_MS
+ ifdef(`FVWM95',`',
+-`TitleStyle TITLE_STYLE')
++`TitleStyle TITLE_STYLE
++TitleStyle Height TITLE_HEIGHT')
+ ColorMapFocus COLOR_MAP_FOCUS
+ DeskTopSize DESKTOP_SIZE
+ OpaqueMoveSize OPAQUE_MOVE_SIZE
+-EdgeResistance EDGE_SCROLL_RESISTANCE EDGE_MOVE_RESISTANCE
++EdgeResistance EDGE_SCROLL_RESISTANCE
++Style "*" EdgeMoveDelay EDGE_SCROLL_RESISTANCE, EdgeMoveResistance EDGE_MOVE_RESISTANCE
+ EdgeScroll 100 100
+ 
+ ###########################################################################

@@ -1,0 +1,173 @@
+Adapt to a current system: the xlock menus list the original modes that
+the installed xlockmore still has (the old maketemp(`TMPDIR/...') never
+expanded TMPDIR, and current xlock -help lists ~140 modes with their
+options); the pointer is centered with WarpToWindow (absolute CursorMove
+is gone); Restart reuses fvwm's arguments (the bootstrap); menu entries
+for removed modules are dropped, Window List uses FvwmIconMan; Msgs runs
+journalctl, Help opens with xdg-open, Root shell uses su -; SeaMonkey
+and Firefox next to Netscape.
+
+diff --git a/.fvwm2rc.defines b/.fvwm2rc.defines
+index a71ee96..815dffe 100644
+--- a/.fvwm2rc.defines
++++ b/.fvwm2rc.defines
+@@ -55,7 +55,9 @@ define(`XRELEASE',`6')
+ # Uncomment for auto generation of xlock/screensaver options-- useful if your
+ # xlock produces a standard usage message for the -h option.
+ # Comment it to use either the R5 or R6 standard choices (depends on XRELEASE, above)
+-define(`AUTO_XLOCK_OPTIONS')
++# Current xlockmore has well over 100 modes, too many for one menu, so this
++# is off; the standard choices only list the modes the installed xlock has.
++#define(`AUTO_XLOCK_OPTIONS')
+ 
+ # Uncomment for auto generation of host menu-- uses /etc/hosts.
+ # Comment if you're using NIS, yp, or if you just have a big /etc/hosts file
+@@ -83,8 +85,8 @@ define(`MIDI_SOUND_PATH',`/E/sound/midi')
+ # BROSWER_HELP_COMMAND is what to run to show the help for the configuration
+ # (You may want to use netscape or mosaic instead of arena, at least until
+ # arena matures a bit)
+-define(`WWW_BROWSER',`arena')
+-define(`HELP_FILE',`/usr/local/lib/fvwm-config/docs/index.html')
++define(`WWW_BROWSER',`xdg-open')
++define(`HELP_FILE',`/usr/share/doc/packages/thenextlevel/docs/index.html')
+ define(`BROSWER_HELP_COMMAND',WWW_BROWSER HELP_FILE)
+ 
+ # Comment the define directly above, and use this instead if you're want
+@@ -179,7 +181,10 @@ define(`USE_CLOSE_FOR_DECORATIONS')
+ # Comment below if you don't want to be able to start a tail -f 
+ # of a message log in an rxvt from SystemUtils menu
+ # Change it to the most appropriate general log on your system
+-define(`MESSAGE_LOG',`/var/log/messages')
++#define(`MESSAGE_LOG',`/var/log/messages')
++# Command for the Msgs entry; it wins over MESSAGE_LOG. Systems with
++# systemd have no /var/log/messages.
++define(`MESSAGES_COMMAND',`journalctl -f -n 8')
+ 
+ 
+ # Change the BORDER_WIDTH to be the number of pixels in a window frame.
+diff --git a/.fvwm2rc.init b/.fvwm2rc.init
+index 7d5665b..568ff8a 100644
+--- a/.fvwm2rc.init
++++ b/.fvwm2rc.init
+@@ -30,7 +30,7 @@ ifdef(`USE_AUTO_RAISE',`+ "I" Module FvwmAuto AUTO_RAISE_SPEED')
+ 
+ AddToFunc "EndSetupFunction"
+ #+ "I" Next [!iconic CurrentScreen COLOR_XTERM] Focus
+-+ "I" CursorMove PctOfScreen(50,50)
+++ "I" WindowId root WarpToWindow 50 50
+ 
+ # StartupFunction only gets run at Init, not at Restart.
+ # It is run after SetupFunction, but before EndSetupFunction
+diff --git a/.fvwm2rc.menus b/.fvwm2rc.menus
+index f980da9..47b7dea 100644
+--- a/.fvwm2rc.menus
++++ b/.fvwm2rc.menus
+@@ -53,7 +53,7 @@ BasicStartMenu
+ 
+ #
+ AddToMenu "Quit-Verify" "Really Quit Fvwm?" Title
+-+ "&Restart MiniTitleIcon(turn)"		Restart FVWM_BIN_NAME
+++ "&Restart MiniTitleIcon(turn)"		Restart
+ + "" 					Nop
+ + "&No, Don't Quit MiniTitleIcon(cross)" 	Nop
+ + "&Yes, Really Quit MiniTitleIcon(exclam)"	ifdef(`NO_VERIFY_QUIT',`Quit',`FvwmForm LogoutVerify')
+@@ -164,7 +164,6 @@ TraceForErrors(`Preferences menu...')
+ 
+ AddNewMenuAndButtonBar(Preferences)
+ 
+-MenuAndButtonEntryLM(&FvwmConfig,hammer,hammer_3d,Module FvwmConfig)
+ MenuAndButtonEntryLM(&Root Cursor,cross,,Popup RootCursor)
+ MenuAndButtonEntryLM(&Mouse,mouse,,Popup MouseSettings)
+ MenuAndButtonEntryLM(&Colours,colors,,Popup Colours)
+@@ -175,13 +174,14 @@ MenuAndButtonEntryLM(&X Resources,x2,,Popup XResources)
+ IfProgramExists(`xkeycaps',`
+ MenuAndButtonEntryLM(&Keyboard layout,keys,,Exec xkeycaps)
+ ')
+-MenuAndButtonEntryLM(Save &Desktop to new.xinitrc,floppy,disk_3d,Module FvwmSave)
+ 
+ AddNewMenuAndButtonBar(SystemUtilities)
+-DefineProgramLM(&Root shell,hat,,StartProgramInColorXterm(zsh -c su,Root_Window))
+-ifdef(`MESSAGE_LOG',`
++DefineProgramLM(&Root shell,hat,,StartProgramInColorXterm(su -,Root_Window))
++ifdef(`MESSAGES_COMMAND',`
++MenuAndButtonEntryLM(&Msgs,doc,,Exec nice NICELEVEL RXVT -geometry 80x8+520-2 -T Msgs -font SMALL_FONT -e nice NICELEVEL MESSAGES_COMMAND)
++',`ifdef(`MESSAGE_LOG',`
+ MenuAndButtonEntryLM(&Msgs,doc,,Exec nice NICELEVEL RXVT -geometry 80x8+520-2 -T Msgs -font SMALL_FONT -e nice NICELEVEL tail -8 -f MESSAGE_LOG)
+-')
++')')
+ MenuAndButtonEntryLM(T&op,run,,Exec RXVT -font SMALL_FONT -geometry 100x80 -T Top -n Top -e top)
+ MenuAndButtonEntryLM(&Identify Window,question,question,Module FvwmIdent)
+ DefineProgramLM(&Window Info,windows,,StartNonInteractiveProgramInRxvt(`xwininfo',WindowInfo))
+@@ -191,7 +191,7 @@ ifdef(`FVWM95',`MenuAndButtonEntry(SystemUtilities,Task &Bar,exp,,Module FvwmTas
+ MenuSeparatorLM
+ MenuAndButtonEntryLM(Fvwm &Command,talk,,FvwmForm TalkForm)
+ MenuAndButtonEntryLM(Reread .&Xdefaults,exclam,,Exec xrdb -merge .Xdefaults)
+-MenuAndButtonEntryLM(Restart &Fvwm2,turn,,Restart fvwm2)
++MenuAndButtonEntryLM(Restart &Fvwm2,turn,,Restart)
+ MenuSeparatorLM
+ MenuAndButtonEntryLM(Re&fresh Screen,ray,,Refresh)
+ MenuAndButtonEntryLM(Re&capture All Windows,recapture,,Recapture)
+@@ -214,19 +214,30 @@ AddToMenu "Screenlock" "m4_current_title MiniTitleIcon(lock)" Exec xlock -nice N
+ 
+ #foreach(`y',`(bat,blot,bounce,clock,flame,forest,galaxy,geometry,grav,helix,hop,hyper,bob,kaleid,laser,life,life3d,mountain,maze,pyro,qix,rect,rock,rotor,sphere,spiral,spline,swarm,wator,world,worm,swirl,blank,random)',`AddXLockOption(y)')
+ 
++syscmd(`type xlock >/dev/null 2>&1')ifelse(sysval,0,`
++  # The modes the installed xlock knows: the words after "one of:" in its
++  # usage message (lines starting with "-" are the per-mode options)
++  define(`m4_xlock_modes_file',mkstemp(TMPDIR`/xlockmodesXXXXXX'))
++  syscmd(`xlock -help 2>&1 | awk "/one of:/ {ok=1; next} ok==1 && \$1 !~ /^-/ {print \$1}" > 'm4_xlock_modes_file)
++  define(`AddXLockOptionIfKnown',`syscmd(`grep -qx $1' m4_xlock_modes_file)ifelse(sysval,0,`AddXLockOption($1)')')
+ ifdef(`AUTO_XLOCK_OPTIONS',`
+   #Auto generate the list
+-  define(`m4_xlock_opts_file',maketemp(`TMPDIR/xlockoptsXXXXXX'))
+-  syscmd(`xlock -help 2>&1 | awk "/^$/ {next} /one of:/ {ok=1; next} ok==1 {print \"AddXLockOption(\"\$1\")\" }"  > 'm4_xlock_opts_file)
++  define(`m4_xlock_opts_file',mkstemp(TMPDIR`/xlockoptsXXXXXX'))
++  syscmd(`sed "s/.*/AddXLockOption(&)/" 'm4_xlock_modes_file` > 'm4_xlock_opts_file)
+   include(m4_xlock_opts_file)
+-  syscmd(rm m4_xlock_opts_file)
++  syscmd(rm -f m4_xlock_opts_file)
+ ',`ifelse(XRELEASE,6,`
+     #R6 XLock
+-    foreach(x,`(bat,blot,bounce,clock,flame,forest,galaxy,geometry,grav,helix,hop,hyper,bob,kaleid,laser,life,life3d,mountain,maze,pyro,qix,rect,rock,rotor,sphere,spiral,spline,swarm,wator,world,worm,swirl,blank,random)',`AddXLockOption(x)')
++    foreach(x,`(bat,blot,bounce,clock,flame,forest,galaxy,geometry,grav,helix,hop,hyper,bob,kaleid,laser,life,life3d,mountain,maze,pyro,qix,rect,rock,rotor,sphere,spiral,spline,swarm,wator,world,worm,swirl,blank,random)',`AddXLockOptionIfKnown(x)')
+     ',`
+     #Not R6 XLock (this list is from R5, but does anyone use R4 anymore?)
+-    foreach(x,`(blank,flame,hop,image,life,pyro,qix,random,rotor,swarm)',`AddXLockOption(x)')
++    foreach(x,`(blank,flame,hop,image,life,pyro,qix,random,rotor,swarm)',`AddXLockOptionIfKnown(x)')
+     ')')
++  syscmd(rm -f m4_xlock_modes_file)
++',`
++AddToMenu "Screensaver" "xlock is not installed" Nop
++AddToMenu "Screenlock" "xlock is not installed" Nop
++')
+ 
+ TraceForErrors(`Window-Ops menu...')
+ 
+@@ -249,13 +260,11 @@ MenuAndButtonEntryLM(&Delete,,,Delete)
+ MenuAndButtonEntryLM(&Close,cross,,Close)
+ MenuAndButtonEntryLM(&Kill,bomb,bomb_3d,Destroy)
+ MenuSeparatorLM
+-MenuAndButtonEntryLM(Scroll&Bar,scroll-arrows,,Module FvwmScroll 2 2)
+ IfProgramExists(ProgramName(PRINT_FUNCTION),`
+ MenuAndButtonEntryLM(&Print,,,PrintFunction)
+ ')
+ MenuAndButtonEntryLM(Capture &Windows,,,FvwmForm Capture)
+-MenuAndButtonEntryLM(Clean-&Up Module,pencil,pencil2_3d,Module FvwmClean)
+-MenuAndButtonEntryLM(Window &List Module,windows,window3d,Module FvwmWinList)
++MenuAndButtonEntryLM(Window &List Module,windows,window3d,Module FvwmIconMan)
+ MenuSeparatorLM
+ MenuAndButtonEntryLM(Switch to...,,,WindowList)
+ MenuAndButtonEntryLM(Re&fresh Screen,ray,,Refresh)
+diff --git a/.fvwm2rc.programs b/.fvwm2rc.programs
+index d4c1226..24aada9 100644
+--- a/.fvwm2rc.programs
++++ b/.fvwm2rc.programs
+@@ -144,6 +144,8 @@ DefineProgramLM(&Pine,letter,Mail,StartProgramInXterm(pine,Pine,pinexterm))
+ DefineProgramLM(&Emacs,edit,emacs_3d,emacs)
+ DefineProgramLM(&Answerbook,book2,book_3d,answerbook)
+ DefineProgramLM(&Netscape,nscape,netscape_3d,netscape 2>/dev/null)
++DefineProgramLM(SeaMonkey,nscape,netscape_3d,seamonkey)
++DefineProgramLM(Firefox,nscape,netscape_3d,firefox)
+ DefineProgramLM(&Ghostview,gv,view_3d,ghostview)
+ DefineProgramLM(X&Dvi,doc,xdvi.next,xdvi)
+ DefineProgramLM(X&view,xv,xv.color,xv)

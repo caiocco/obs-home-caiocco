@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=XSession
+Name=TheNextLevel
+Comment=Greg J. Badros' fvwm2 desktop from Red Hat Linux 4.x (1996)
+Exec=thenextlevel-session
+TryExec=thenextlevel-session
+DesktopNames=TheNextLevel

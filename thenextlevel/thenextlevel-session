@@ -1,0 +1,14 @@
+#!/bin/sh
+# Start the TheNextLevel desktop: fvwm2 with Greg J. Badros' m4 configuration.
+
+# fvwm does not run InitFunction when it joins a session manager
+unset SESSION_MANAGER
+
+# The desktop's X resources (xterm colors and font menu, etc.), then the
+# user's own again so that they win
+xrdb -merge @TNL_DIR@/.Xdefaults
+for f in "$HOME/.Xresources" "$HOME/.Xdefaults"; do
+	[ -f "$f" ] && xrdb -merge "$f"
+done
+
+exec fvwm2 -f @TNL_DIR@/fvwm2rc

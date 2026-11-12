@@ -1,0 +1,13 @@
+-------------------------------------------------------------------
+Thu Nov 12 19:16:28 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of TheNextLevel 0.1 (Red Hat Linux 4.2's
+  TheNextLevel-1.1), the original configuration without Red Hat's
+  Windows 95 style patch
+  * Installed system wide in /etc/X11/TheNextLevel, per-file overrides
+    from $HOME; started by thenextlevel-session through FvwmM4
+  * Ported to fvwm 2.7 (needs home:caiocco's fvwm2 for the title text)
+  * xlock menus, removed modules, Restart, journalctl and xdg-open
+    adapted to a current system
+  * zsh, emacs, xdm, keymap and control-panel extras not installed
+  * Identical icons are symlinked with %fdupes

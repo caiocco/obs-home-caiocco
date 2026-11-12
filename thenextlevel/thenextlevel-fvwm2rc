@@ -1,0 +1,9 @@
+# TheNextLevel desktop for fvwm2 (Greg J. Badros, 1996).
+#
+# The real configuration is the m4 source @TNL_DIR@/.fvwm2rc.m4 and the
+# .fvwm2rc.* files it reads. Copy any of them to your home directory to
+# override it; ~/.fvwm2rc.defines holds the user options.
+#
+# ModuleSynchronous + -lock make fvwm wait until FvwmM4 has run m4 and the
+# result has been read, so InitFunction exists before fvwm runs it.
+PipeRead 'f="$HOME/.fvwm2rc.m4"; [ -f "$f" ] || f="@TNL_DIR@/.fvwm2rc.m4"; echo "ModuleSynchronous FvwmM4 -lock -DTNL_DIR=@TNL_DIR@ -DTNL_PIXMAPS=@TNL_PIXMAPS@ $f"'

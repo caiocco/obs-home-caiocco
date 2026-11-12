@@ -1,0 +1,198 @@
+Install the configuration system wide (Red Hat did the same in 1997):
+readFile() includes each .fvwm2rc.* file from $HOME when the user has a
+copy there, otherwise from TNL_DIR (passed to FvwmM4 by the bootstrap).
+FvwmM4 in fvwm 2.6+ defines FVWM_MODULEDIR instead of FVWMDIR, and
+PixmapPath/IconPath became ImagePath. TraceForErrors prints to stderr
+instead of issuing invalid commands on purpose.
+
+diff --git a/.fvwm2rc.buttons b/.fvwm2rc.buttons
+index 8d21fd5..a0617e5 100644
+--- a/.fvwm2rc.buttons
++++ b/.fvwm2rc.buttons
+@@ -41,7 +41,7 @@ DefineRightButton(mini-shrink-windows-full.xpm,`Iconify')
+ # visual appearance of numerous buttons, many not used
+ # I only choose to include it when we-re not using WIN95_BUTTONS, or
+ # PIXMAP_BUTTONS, since it-d just be a waste of time
+-include(`.fvwm2rc.buttondefs')
++readFile(`.fvwm2rc.buttondefs')
+ 
+ # Leftmost three, left to right
+ DefineLeftButton(btn_LittleBox,`Function DECORATIONS_CLOSE-or-Popup')
+diff --git a/.fvwm2rc.defines b/.fvwm2rc.defines
+index d82e5ea..386592e 100644
+--- a/.fvwm2rc.defines
++++ b/.fvwm2rc.defines
+@@ -28,13 +28,14 @@
+ # System options
+ #
+ 
+-# Pixmap Path will always include /usr/X11/include/pixmaps after the below
+-define(`USER_PIXMAP_PATH',`/usr/local/lib/icons/:/usr/local/lib/icons/mini:/usr/local/lib/buttons:/usr/local/lib/icons/3d')
++# Image path: this comes first, then the TheNextLevel pixmaps and fvwm's
++# default image path
++define(`USER_PIXMAP_PATH',HOME`/.fvwm/icons')
+ 
+-# Icon (bitmap) path will always include /usr/X11/include/bitmaps after the below
++# Extra icon (bitmap) directories, appended to the image path
+ define(`USER_ICON_PATH',`')
+ 
+-# USER_MODULE_PATH will always include FVWMDIR (compile time option passed in to FvwmM4)
++# USER_MODULE_PATH will always include FVWM_MODULEDIR (passed in by FvwmM4)
+ define(`USER_MODULE_PATH',`')
+ 
+ # MAIL_SPOOL_DIR is used by Fvwm95's FvwmTaskBarMailBox option.
+diff --git a/.fvwm2rc.forms b/.fvwm2rc.forms
+index 53e7d8b..587bdfc 100644
+--- a/.fvwm2rc.forms
++++ b/.fvwm2rc.forms
+@@ -79,7 +79,7 @@ FormText(About,left,`Width=WIDTH, Height=HEIGHT')
+ FormText(About,left,`X_Resolution=X_RESOLUTION, Y_Resolution=Y_RESOLUTION')
+ FormText(About,left,`Planes=PLANES, Class=CLASS, Color=COLOR')
+ FormText(About,left,`Fvwm_Version=FVWM_VERSION, Options=OPTIONS')
+-FormText(About,left,`Fvwmdir=FVWMDIR')
++FormText(About,left,`Fvwmdir=FVWM_MODULEDIR')
+ 
+ *AboutLine		center
+ *AboutButton		quit	"Dismiss"
+diff --git a/.fvwm2rc.m4 b/.fvwm2rc.m4
+index a4d851b..e19007c 100644
+--- a/.fvwm2rc.m4
++++ b/.fvwm2rc.m4
+@@ -35,7 +35,17 @@
+ 
+ # Get the user options.  This is the only file the casual user needs
+ # to worry about.
+-include(`.fvwm2rc.defines')
++# System-wide install: each .fvwm2rc.* file is read from $HOME when the
++# user has a copy there, otherwise from TNL_DIR (passed by FvwmM4 with -D,
++# see the thenextlevel fvwm2rc bootstrap).
++ifdef(`TNL_DIR',`',`define(`TNL_DIR',`/etc/X11/TheNextLevel')')
++ifdef(`TNL_PIXMAPS',`',`define(`TNL_PIXMAPS',`/usr/share/thenextlevel/pixmaps')')
++define(`readFile',`syscmd(`test -f' HOME/$1)ifelse(sysval,0,`include(HOME/$1)',`include(TNL_DIR/$1)')')
++
++# Defined early so that .fvwm2rc.defines can use it
++define(`IfProgramExists',`syscmd(type $1 >/dev/null 2>&1)ifelse(sysval,0,`$2',`#$1 not found')')
++
++readFile(`.fvwm2rc.defines')
+ 
+ #****************************************************************************#
+ #* Beware changing anything beyond here:                                    *#
+@@ -74,16 +84,15 @@ define(`capitalize', `patsubst(`$1', `\w+', ``'capitalize1(`\&')')')
+ define(`spaceto_', `translit(`$*', ` ', `_')')
+ define(`m4_basename',`regexp($1,`.*/\([^/]+\)',`\1')')
+ 
+-define(`IfProgramExists',`syscmd(type $1 >/dev/null 2>&1)ifelse(sysval,0,`$2',`#$1 not found')')
+-
+ define(`IfProgramExistsOrError',`syscmd(type $1 >/dev/null 2>&1)ifelse(sysval,0,`$2',`$1_in_an_xterm not found')')
+ 
+ # A ProgramName is just the first word (delimited by whitespace) in the argument
+ define(`ProgramName',`regexp($1,`[^ ]+',`\&')')
+ 
+-define(`TraceForErrors',`errprint(`$1'
+-)
+-ForcedErrorForTracePurposes_$1')
++# Progress messages go to stderr (fvwm's log) instead of deliberately
++# invalid fvwm commands
++define(`TraceForErrors',`errprint(`TheNextLevel: $1'
++)')
+ 
+ ifdef(`NO_TRACE_FVWM_PARSE',
+ `define(`TraceForErrors',`')')
+@@ -192,7 +201,7 @@ ifdef(`USE_CLOSE_FOR_DECORATIONS',`define(`DECORATIONS_CLOSE',`Close')',dnl
+ # This makes the assumption that our binary name is the basename of the directory
+ # in which the modules are stored
+ ifdef(`FVWM_BIN_NAME',`',
+-`define(`FVWM_BIN_NAME',m4_basename(FVWMDIR))')
++`define(`FVWM_BIN_NAME',m4_basename(FVWM_MODULEDIR))')
+ 
+ # Check if Fvwm95 is sourcing this file
+ ifelse(FVWM_BIN_NAME,fvwm95,`define(FVWM95)',
+@@ -256,9 +265,9 @@ AddToFunc XTermOtherHost
+ # set by .xinitrc or .xsession, which hopefully sources some environment
+ # settings files like /etc/env, /etc/profile, ~/.env, ~/.profile, etc.
+ #
+-ModulePath FVWM_USER_MODULE_PATH:FVWMDIR
+-PixmapPath USER_PIXMAP_PATH:/usr/include/X11/pixmaps/
+-IconPath   USER_ICON_PATH:/usr/include/X11/bitmaps/
++ifelse(USER_MODULE_PATH,`',`ModulePath FVWM_MODULEDIR',`ModulePath USER_MODULE_PATH:FVWM_MODULEDIR')
++# PixmapPath and IconPath were merged into ImagePath in fvwm 2.3
++ImagePath USER_PIXMAP_PATH:TNL_PIXMAPS:ifelse(USER_ICON_PATH,`',`',`USER_ICON_PATH:')+
+ 
+ 
+ ###########################################################################
+@@ -288,7 +297,7 @@ changecom(%%%)
+ #`COLOR'=COLOR
+ #`FVWM_VERSION'=FVWM_VERSION
+ #`OPTIONS'=OPTIONS
+-#`FVWMDIR'=FVWMDIR
++#`FVWM_MODULEDIR'=FVWM_MODULEDIR
+ #
+ #`XRELEASE'=RELEASE
+ changecom(#)
+@@ -542,31 +551,31 @@ AddToFunc RestartFunction
+ 
+ # Title button decorations and bindings
+ TraceForErrors(`Including_buttons...')
+-include(`.fvwm2rc.buttons')
++readFile(`.fvwm2rc.buttons')
+ 
+ # Various complex functions
+ TraceForErrors(`Including_complex functions...')
+-include(`.fvwm2rc.functions')
++readFile(`.fvwm2rc.functions')
+ 
+ # Various mouse bindings
+ TraceForErrors(`Including_mouse bindings...')
+-include(`.fvwm2rc.mouse')
++readFile(`.fvwm2rc.mouse')
+ 
+ # Various key bindings
+ TraceForErrors(`Including_key bindings...')
+-include(`.fvwm2rc.keys')
++readFile(`.fvwm2rc.keys')
+ 
+ # Creation of the menus
+ TraceForErrors(`Including_menus...')
+-include(`.fvwm2rc.menus')
++readFile(`.fvwm2rc.menus')
+ 
+ # Module settings
+ TraceForErrors(`Including_modules...')
+-include(`.fvwm2rc.modules')
++readFile(`.fvwm2rc.modules')
+ 
+ # User initialization
+ TraceForErrors(`Including_init...')
+-include(`.fvwm2rc.init')
++readFile(`.fvwm2rc.init')
+  
+ 
+ TraceForErrors(`Completed_read of .fvwm2rc.m4')
+diff --git a/.fvwm2rc.menus b/.fvwm2rc.menus
+index 3a8b06e..f980da9 100644
+--- a/.fvwm2rc.menus
++++ b/.fvwm2rc.menus
+@@ -278,11 +278,11 @@ AddToMenu "Window-Ops-Basic"
+ 
+ TraceForErrors(`Including_fvwm_programs...')
+ # .fvwm2rc.programs sets up the user's menus for applications, etc.
+-include(`.fvwm2rc.programs')
++readFile(`.fvwm2rc.programs')
+ 
+ TraceForErrors(`Including_fvwm_hostmenus...')
+ # .fvwm2rc.hostmenus sets up the various menus for working w/ hosts
+-include(`.fvwm2rc.hostmenus')
++readFile(`.fvwm2rc.hostmenus')
+ 
+ ###########################################################################
+ # Local Variables:
+diff --git a/.fvwm2rc.modules b/.fvwm2rc.modules
+index 4d7258d..c53ac1a 100644
+--- a/.fvwm2rc.modules
++++ b/.fvwm2rc.modules
+@@ -203,4 +203,4 @@ Style "FvwmTaskBar" NoTitle,BorderWidth 2,HandleWidth 2,Sticky,StaysOnTop,Window
+ 
+ Style "FvwmBanner"   	StickyOnTop, WinCircSkip, BorderWidth 0, ClickToFocus
+ 
+-include(`.fvwm2rc.forms')
++readFile(`.fvwm2rc.forms')
