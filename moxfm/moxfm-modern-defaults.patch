@@ -1,0 +1,275 @@
+From 277d27fc9c1d3035071ba5e98446029143171fe1 Mon Sep 17 00:00:00 2001
+From: caiocco <caiocco@yahoo.com.br>
+Date: Thu, 12 Nov 2026 17:43:22 -0300
+Subject: [PATCH] Modernize the default configuration
+
+Replace programs that no longer exist (netscape, xv, xless, ghostview,
+pixmap, xmailtool, fmclient, Mosaic, xanim, mpeg_play, xli, usermount)
+with current ones: NEdit, Firefox, XImaging, gv, mupdf, mtpaint, mpv,
+xterm+less. Use the freedesktop trash through gio. Drop the floppy and
+CD-ROM entries, whose usermount helper and fixed mount points are gone.
+Teach the magic file Exif JPEG, PNG, PDF and lower-case/doctype HTML.
+
+---
+ lib/Desktop       |  4 +---
+ lib/Main          | 12 ++++------
+ lib/Moxfm.cpp     |  4 ++--
+ lib/magic         |  8 +++++--
+ lib/moxfmdev      | 10 ++++++--
+ lib/xfmmon        |  8 +++----
+ lib/xfmrc         | 31 +++++++++++++------------
+ lib/xfmrc.nomagic | 58 ++++++++++++++++++++++++-----------------------
+ 8 files changed, 72 insertions(+), 63 deletions(-)
+
+diff --git a/lib/Desktop b/lib/Desktop
+index 61e2c3f..a01161c 100644
+--- a/lib/Desktop
++++ b/lib/Desktop
+@@ -4,6 +4,4 @@
+ #
+ ##########################################
+ 
+-Floppy:/:floppy:floppy.xpm:OPEN:COPY:10:120
+-CD-ROM:/:cdrom:cdrom.xpm:OPEN::2:180
+-Trash:~/.trash::trash_empty.xpm:OPEN:mv -f --backup=numbered $* ~/.trash:8:240
++Trash:~/.local/share/Trash/files::trash_empty.xpm:OPEN:gio trash $*:8:120
+diff --git a/lib/Main b/lib/Main
+index 1497104..17fbb2f 100644
+--- a/lib/Main
++++ b/lib/Main
+@@ -4,12 +4,10 @@
+ #
+ ##########################################
+ 
+-Floppy:/:floppy:floppy.xpm:OPEN:COPY
+-CD-ROM:/:cdrom:cdrom.xpm:OPEN:
+-Trash:/root/.trash::trash_empty.xpm:OPEN:mv -f --backup=numbered $* ~/.trash
+-Printer:::printer.xpm:exec /usr/bin/lpq | /usr/bin/X11/xless:exec lpr -#%Number of copies\:--1% $*
++Trash:~/.local/share/Trash/files::trash_empty.xpm:OPEN:gio trash $*
++Printer:::printer.xpm:exec xterm -T 'Print queue' -e sh -c 'lpq | less':exec lpr -#%Number of copies\:--1% $*
+ Xterm:::xterm.xpm:exec xterm -sb -sl 500 -j:exec xterm -sb -j -e $1 %Arguments\:%
+-Emacs:::emacs.xpm:exec emacs:exec emacs $*
+-Netscape:::netscape.xpm:exec netscape:exec netscape $*
++NEdit:::edit.xpm:exec nedit:exec nedit $*
++Firefox:::netscape.xpm:exec firefox:exec firefox $*
+ Gimp:::paint.xpm:exec gimp:exec gimp $*
+-XV:/usr/X11/bin::xv.xpm:exec xv:exec xv $*
++XImaging:::pictures.xpm:exec ximaging -browse:exec ximaging $1
+diff --git a/lib/Moxfm.cpp b/lib/Moxfm.cpp
+index c1c475a..1ad37e9 100644
+--- a/lib/Moxfm.cpp
++++ b/lib/Moxfm.cpp
+@@ -221,10 +221,10 @@
+ !*passedNamePolicy:		RelativePath
+ 
+ ! The default editor to use
+-*defaultEditor: 		exec emacs
++*defaultEditor: 		exec nedit
+ 
+ ! The default viewer to use
+-*defaultViewer:			exec xless
++*defaultViewer:			exec xterm -e less
+ 
+ ! The xterm to call
+ *xterm:				exec xterm -sb -sl 500 -j
+diff --git a/lib/magic b/lib/magic
+index 964c435..665f44c 100644
+--- a/lib/magic
++++ b/lib/magic
+@@ -24,14 +24,18 @@
+ 0	short		0x4949			TIFF
+ 0	string		GIF87a			GIF
+ 0	string		GIF89a			GIF
+-0	long		0xFFD8FFE0		JPG
+-0	long		0xFFD8FFEE		JPG
++0	string		\377\330\377		JPG
++0	string		\211PNG\r\n		PNG
++0	string		%PDF-			PDF
+ 0	long		0x01666370		PCF
+ 0	string		STARTFONT\ 2.1		BDF
+ 0	string		From			MAIL
+ 0	string		#FIG			FIG
+ 0	string		#XFM			XFM
+ 0	string		<HTML>			HTML
++0	regexp&512	\
++^[\ \t\r\n]*<![Dd][Oo][Cc][Tt][Yy][Pp][Ee][\ \t]+[Hh][Tt][Mm][Ll]	HTML
++0	regexp&512	^[\ \t\r\n]*<[Hh][Tt][Mm][Ll][\ \t>]	HTML
+ 0	string		/*\ XPM\ */		XPM
+ 0	regexp		\
+ ^#define[\ \t]+[^\ \t]+_width[\ \t]+[0-9]+	XBM
+diff --git a/lib/moxfmdev b/lib/moxfmdev
+index 264802f..7f7f0f9 100644
+--- a/lib/moxfmdev
++++ b/lib/moxfmdev
+@@ -4,5 +4,11 @@
+ #
+ ##########################################################################
+ 
+-Floppy:/dev/fd0:/floppy:usermount /dev/fd0:userumount /dev/fd0:SLOW
+-CDROM:/dev/cdrom:/cdrom:usermount /dev/cdrom:userumount /dev/cdrom:SLOW
++# Format: name:device:mount point:mount command:unmount command:SLOW
++# The mount point must be a fixed directory. Removable media mounted by
++# udisks land under /run/media/$USER/<label>, so either give the device a
++# "user,noauto" entry in /etc/fstab, e.g.
++#   /dev/sr0  /media/cdrom  auto  user,noauto,ro  0 0
++# and use it here:
++#CD-ROM:/dev/sr0:/media/cdrom:mount /media/cdrom:umount /media/cdrom:SLOW
++# or point the mount point at a symlink kept up to date by a script.
+diff --git a/lib/xfmmon b/lib/xfmmon
+index 4d32229..b431b9d 100644
+--- a/lib/xfmmon
++++ b/lib/xfmmon
+@@ -13,11 +13,11 @@
+ # Here's my favourite one: the sensitive trashcan icon. It assumes that
+ # you use the trash_empty and trash_full icons and that the Trash application
+ # is on the desktop.
+-~/.trash:EMPTY::sed -e "s/trash_full.xpm/trash_empty.xpm/" ~/.moxfm/Desktop > ~/.moxfm/Desktop.new; mv ~/.moxfm/Desktop.new ~/.moxfm/Desktop
+-~/.trash:NONEMPTY::sed -e "s/trash_empty.xpm/trash_full.xpm/" ~/.moxfm/Desktop > ~/.moxfm/Desktop.new; mv ~/.moxfm/Desktop.new ~/.moxfm/Desktop
++~/.local/share/Trash/files:EMPTY::sed -e "s/trash_full.xpm/trash_empty.xpm/" ~/.moxfm/Desktop > ~/.moxfm/Desktop.new; mv ~/.moxfm/Desktop.new ~/.moxfm/Desktop
++~/.local/share/Trash/files:NONEMPTY::sed -e "s/trash_empty.xpm/trash_full.xpm/" ~/.moxfm/Desktop > ~/.moxfm/Desktop.new; mv ~/.moxfm/Desktop.new ~/.moxfm/Desktop
+ 
+-~/.trash:EMPTY::sed -e "s/trash_full.xpm/trash_empty.xpm/" ~/.moxfm/Main > ~/.moxfm/Main.new; mv ~/.moxfm/Main.new ~/.moxfm/Main
+-~/.trash:NONEMPTY::sed -e "s/trash_empty.xpm/trash_full.xpm/" ~/.moxfm/Main > ~/.moxfm/Main.new; mv ~/.moxfm/Main.new ~/.moxfm/Main
++~/.local/share/Trash/files:EMPTY::sed -e "s/trash_full.xpm/trash_empty.xpm/" ~/.moxfm/Main > ~/.moxfm/Main.new; mv ~/.moxfm/Main.new ~/.moxfm/Main
++~/.local/share/Trash/files:NONEMPTY::sed -e "s/trash_empty.xpm/trash_full.xpm/" ~/.moxfm/Main > ~/.moxfm/Main.new; mv ~/.moxfm/Main.new ~/.moxfm/Main
+ 
+ # Here's another one which checks for incoming mail (see the checkmail
+ # shell script). (Make sure you edit this entry to include your user name.)
+diff --git a/lib/xfmrc b/lib/xfmrc
+index c3adc30..e927738 100644
+--- a/lib/xfmrc
++++ b/lib/xfmrc
+@@ -62,33 +62,34 @@
+ 
+ # core dumps
+ <data>core:core.xpm:exec ddd $1:
++<PDF>:pdf.xpm:exec mupdf $1:
+ 
+ # image formats
+ 
+-<PS>:ps.xpm:exec ghostview $1:
+-<GIF>:gif.xpm:exec xv $1:
+-<JPG>:jpeg.xpm:exec xv $1:
+-<TIFF>:tiff.xpm:exec xv $1:
++<PS>:ps.xpm:exec gv $1:
++<GIF>:gif.xpm:exec display $1:
++<JPG>:jpeg.xpm:exec ximaging -f jpg $1:
++<PNG>:pictures.xpm:exec ximaging -f png $1:
++<TIFF>:tiff.xpm:exec ximaging -f tif $1:
+ <FIG>:fig.xpm:exec xfig $1:
+-<RAS>:raster.xpm:exec xv $1:
+-<PBM>:pbm.xpm:exec xv $1:
+-<PGM>:pgm.xpm:exec xv $1:
+-<PPM>:ppm.xpm:exec xv $1:
++<RAS>:raster.xpm:exec ximaging -f ras $1:
++<PBM>:pbm.xpm:exec ximaging -f pbm $1:
++<PGM>:pgm.xpm:exec ximaging -f pgm $1:
++<PPM>:ppm.xpm:exec ximaging -f ppm $1:
+ <XBM>:xbm.xpm:exec bitmap $1:
+-<XPM>:teddy.xpm:exec pixmap -f $1:
++<XPM>:teddy.xpm:exec mtpaint $1:
+ 
+ # audio files, assumes the sox/play program (still rather preliminary)
+ 
+-<SND>:sound.xpm:exec play -t .auto $1:
+-<RIFF WAVE>:sound.xpm:exec play -t .auto $1:
++<SND>:sound.xpm:exec play $1:
++<RIFF WAVE>:sound.xpm:exec play $1:
+ 
+ # common file types
+ 
+-<FRAME>:framemaker.xpm:fmclient -f $1:
+-<MAIL>:mail.xpm:exec xmailtool -file $1:
++<MAIL>:mail.xpm:EDIT:
+ <BDF>:font.xpm:EDIT:
+-<MAN>:manpage.xpm:groff -TX100 -man -mX -P-geometry -P655x860 $1:
+-<HTML>:html.xpm:netscape $1:
++<MAN>:manpage.xpm:exec groff -TX100 -man $1:
++<HTML>:html.xpm:exec firefox $1:
+ 
+ <data>*.a:dot_a.xpm:EDIT:
+ <ascii>*.c:dot_c.xpm:EDIT:
+diff --git a/lib/xfmrc.nomagic b/lib/xfmrc.nomagic
+index 22738a1..a83e65f 100644
+--- a/lib/xfmrc.nomagic
++++ b/lib/xfmrc.nomagic
+@@ -3,49 +3,51 @@
+ #
+ ##########################################################
+ 
+-*.ps.gz:postscript2.xpm:exec gunzip -c $1 | ghostview -:
+-*.eps.gz:eps.xpm:exec gunzip -c $1 | ghostview -:
+-*.a:dot_a.xpm:exec nm $1 | xless:
+-*.sa:dot_a.xpm:exec nm $1 | xless:
++*.ps.gz:postscript2.xpm:exec gv $1:
++*.eps.gz:eps.xpm:exec gv $1:
++*.a:dot_a.xpm:exec xterm -e sh -c 'nm "$0" | less' "$1":
++*.sa:dot_a.xpm:exec xterm -e sh -c 'nm "$0" | less' "$1":
+ *.bm:xbm.xpm:exec bitmap $1:
+ *.c:dot_c.xpm:EDIT:
+ *.cc:dot_cc.xpm:EDIT:
+ *.cxx:dot_cc.xpm:EDIT:
+ *.C:dot_cc.xpm:EDIT:
+ *.f:dot_f.xpm:exec nedit $1:
+-*.fli:mpg.xpm:exec xanim $1:
++*.fli:mpg.xpm:exec mpv $1:
+ *.dvi:binary.xpm:exec xdvi $1:
+-*.ez:wordprocess.xpm:exec ez $1:
+-*.gif:gif.xpm:exec xv $1:
+-*.html:html.xpm:exec Mosaic $1:
+-*.jpg:gif.xpm:exec xv $1:
+-*.man:manpage.xpm:exec groff -Tps -mandoc -X $1:
+-*.mov:mpg.xpm:exec xanim $1:
+-*.mpg:mpg.xpm:exec mpeg_play $1 >/dev/console:
+-*.tga:gif.xpm:exec xli $1:
+-*.tiff:tiff.xpm:execxv $1:
+-*.tar.gz:tar_z.xpm:exec tar tfz $1| xless:
++*.ez:wordprocess.xpm:EDIT:
++*.gif:gif.xpm:exec display $1:
++*.html:html.xpm:exec firefox $1:
++*.jpg:gif.xpm:exec ximaging -f jpg $1:
++*.man:manpage.xpm:exec groff -TX100 -man $1:
++*.mov:mpg.xpm:exec mpv $1:
++*.mpg:mpg.xpm:exec mpv $1:
++*.tga:gif.xpm:exec ximaging -f tga $1:
++*.tiff:tiff.xpm:exec ximaging -f tif $1:
++*.tar.gz:tar_z.xpm:exec xterm -e sh -c 'tar tf "$0" | less' "$1":
+ *.fig:fig.xpm:exec xfig -me -P $1:
+-*.gz:compressed.xpm:exec gunzip -c $1 | xless:
++*.gz:compressed.xpm:exec xterm -e sh -c 'gunzip -c "$0" | less' "$1":
+ *.h:dot_h.xpm:EDIT:
+ *.H:dot_h.xpm:EDIT:
+-*.o:dot_o.xpm:exec nm $1 | xless:
+-*.eps:eps.xpm:exec ghostview $1:
+-*.ps:postscript2.xpm:exec ghostview $1:
+-*.tar:tar.xpm:exec tar tf $1| xless:exec tar rfv $*| xless
+-*.taz:tar_z.xpm:exec tar tfz $1| xless:
++*.o:dot_o.xpm:exec xterm -e sh -c 'nm "$0" | less' "$1":
++*.eps:eps.xpm:exec gv $1:
++*.pdf:pdf.xpm:exec mupdf $1:
++*.png:pictures.xpm:exec ximaging -f png $1:
++*.ps:postscript2.xpm:exec gv $1:
++*.tar:tar.xpm:exec xterm -e sh -c 'tar tf "$0" | less' "$1":exec xterm -e sh -c 'tar rfv "$@" | less' sh $*
++*.taz:tar_z.xpm:exec xterm -e sh -c 'tar tf "$0" | less' "$1":
+ *.tex:xfm_tex.xpm:EDIT:
+ *.txi:xfm_tex.xpm:EDIT:
+ *.texi:xfm_tex.xpm:EDIT:
+ <ascii>*.texinfo:xfm_tex.xpm:EDIT:
+-*.tgz:tar_z.xpm:exec tar tfz $1:
++*.tgz:tar_z.xpm:exec xterm -e sh -c 'tar tf "$0" | less' "$1":
+ *.xbm:xbm.xpm:exec bitmap $1:
+-*.xpm:teddy.xpm:exec sxpm $1:
+-*.tar.Z:tar_z.xpm:exec tar tfz $1| xless:
+-*.Z:compressed.xpm:exec gunzip -c $1| xless:
+-*.tar.z:tar_z.xpm:exec tar tfz $1| xless:
+-*.z:compressed.xpm:exec gunzip -c $1| xless:
+-*.zip:xfm_zip.xpm:exec unzip -l $1| xless:exec zip -r $*
++*.xpm:teddy.xpm:exec mtpaint $1:
++*.tar.Z:tar_z.xpm:exec xterm -e sh -c 'tar tf "$0" | less' "$1":
++*.Z:compressed.xpm:exec xterm -e sh -c 'gunzip -c "$0" | less' "$1":
++*.tar.z:tar_z.xpm:exec xterm -e sh -c 'tar tf "$0" | less' "$1":
++*.z:compressed.xpm:exec xterm -e sh -c 'gunzip -c "$0" | less' "$1":
++*.zip:xfm_zip.xpm:exec xterm -e sh -c 'unzip -l "$0" | less' "$1":exec zip -r $*
+ 
+ xfm-*:system.xpm:LOAD:
+ core:core.xpm:exec ddd -c $1:

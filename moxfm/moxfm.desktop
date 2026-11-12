@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Moxfm
+GenericName=File Manager
+Comment=Manage files and applications with the Motif port of xfm
+Exec=moxfm
+Icon=moxfm
+Terminal=false
+Categories=System;FileTools;FileManager;Motif;

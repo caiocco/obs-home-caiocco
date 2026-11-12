@@ -1,0 +1,187 @@
+From 6aeb04ca0eca58ea1e8eb5f80367b3644b58a6b6 Mon Sep 17 00:00:00 2001
+From: caiocco <caiocco@yahoo.com.br>
+Date: Thu, 12 Nov 2026 16:12:52 -0300
+Subject: [PATCH] Render all text with Xft
+
+Convert the font resources to render tables and define Xft renditions
+in the app-defaults. Keep CDE's global *Font resource from overriding
+the Xft renditions.
+---
+ lib/Moxfm.cpp | 59 ++++++++++++++++++++++++++++++-----------------
+ src/FmMain.c  | 64 +++++++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 93 insertions(+), 30 deletions(-)
+
+diff --git a/lib/Moxfm.cpp b/lib/Moxfm.cpp
+index d15fddc..c1c475a 100644
+--- a/lib/Moxfm.cpp
++++ b/lib/Moxfm.cpp
+@@ -122,27 +122,44 @@
+ *XmScrolledWindow.scrolledWindowMarginWidth:	3
+ *XmScrolledWindow.scrolledWindowMarginHeight:	3
+ #endif
+-! Use these only if you  have the 75dpi fonts. (recommended)
+-*boldFont:			-adobe-helvetica-bold-r-*-*-12-*
+-*iconFont:			-adobe-helvetica-medium-r-*-*-10-*
+-*buttonFont:			-adobe-helvetica-medium-r-*-*-12-*
+-*menuFont:			-adobe-helvetica-medium-r-*-*-12-*
+-*labelFont:			-adobe-helvetica-medium-r-*-*-12-*
+-*statusFont:			-adobe-helvetica-medium-r-*-*-12-*
+-*ttyFont:			-adobe-courier-medium-r-*-*-12-*
+-
+-! This is for file names in text display mode:
+-*filenameFont:			-adobe-courier-medium-r-*-*-12-*
+-
+-! This must be a fixed width font
+-*cellFont:			fixed
+-
+-*XmMessageBox*fontList:		-adobe-helvetica-medium-r-*-*-12-*
+-*XmSelectionBox*fontList:	-adobe-helvetica-medium-r-*-*-12-*
+-*XmPushButtonGadget*fontList:	-adobe-helvetica-medium-r-*-*-12-*
+-*Popup*fontList:		-adobe-helvetica-medium-r-*-*-12-*
+-*menubar*fontList:		-adobe-helvetica-bold-r-*-*-14-*
+-*menubar*Pulldown*fontList:	-adobe-helvetica-bold-r-*-*-12-*
++! Fonts are rendered with Xft. Each font resource below names a
++! rendition tag; Motif looks the tag's attributes up under
++! *renderTable.<tag>, e.g. *renderTable.icon.fontSize: 9
++! (fontName is a fontconfig family, fontSize is in points).
++*boldFont:		bold
++*iconFont:		icon
++*buttonFont:		variable
++*menuFont:		variable
++*labelFont:		variable
++*statusFont:		variable
++*ttyFont:		fixed
++! File names in text display mode
++*filenameFont:		fixed
++! Not used by moxfm
++*cellFont:		fixed
++
++! Fonts of the standard Motif widgets
++*renderTable:		variable
++*menubar*renderTable:	menubar
++*XmTextField.renderTable:	fixed
++
++*renderTable.variable.fontType:	FONT_IS_XFT
++*renderTable.variable.fontName:	Sans
++*renderTable.variable.fontSize:	9
++*renderTable.bold.fontType:	FONT_IS_XFT
++*renderTable.bold.fontName:	Sans
++*renderTable.bold.fontSize:	9
++*renderTable.bold.fontStyle:	Bold
++*renderTable.icon.fontType:	FONT_IS_XFT
++*renderTable.icon.fontName:	Sans
++*renderTable.icon.fontSize:	8
++*renderTable.menubar.fontType:	FONT_IS_XFT
++*renderTable.menubar.fontName:	Sans
++*renderTable.menubar.fontSize:	9
++*renderTable.menubar.fontStyle:	Bold
++*renderTable.fixed.fontType:	FONT_IS_XFT
++*renderTable.fixed.fontName:	Monospace
++*renderTable.fixed.fontSize:	9
+ 
+ ! Specify the sizes of the different icon toggles. The following values
+ ! are appropriate for the icons supplied with xfm.
+diff --git a/src/FmMain.c b/src/FmMain.c
+index 92ed22e..11f8ae8 100644
+--- a/src/FmMain.c
++++ b/src/FmMain.c
+@@ -13,6 +13,7 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <signal.h>
+ #include <errno.h>
+ #include <fcntl.h>
+@@ -116,23 +117,23 @@ static XtResource resource_list[] = {
+   { "fileGeometry", "FileGeometry", XmRString, sizeof(String),
+       XtOffsetOf(Resources, file_geometry), XmRString, "500x400" },
+   { "firstIconPos", "FirstIconPos", XmRString, sizeof(String),    XtOffsetOf(Resources, icon_pos), XmRString, "+0+0" },
+-  { "iconFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "iconFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, icon_font), XmRString, XtDefaultFont },
+-  { "filenameFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "filenameFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, filename_font), XmRString, XtDefaultFont },
+-  { "buttonFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "buttonFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, button_font), XmRString, XtDefaultFont },
+-  { "menuFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "menuFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, menu_font), XmRString, XtDefaultFont },
+-  { "labelFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "labelFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, label_font), XmRString, XtDefaultFont },
+-  { "statusFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "statusFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, status_font), XmRString, XtDefaultFont },
+-  { "boldFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "boldFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, bold_font), XmRString, XtDefaultFont },
+-  { "cellFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "cellFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, cell_font), XmRString, XtDefaultFont },
+-  { "ttyFont", XmCFontList, XmRFontList, sizeof(XmFontList *), 
++  { "ttyFont", XmCRenderTable, XmRRenderTable, sizeof(XmRenderTable), 
+       XtOffsetOf(Resources, tty_font), XmRString, XtDefaultFont },
+   { "appIconWidth", "Width", XmRInt, sizeof(int),
+       XtOffsetOf(Resources, app_icon_width), XmRImmediate, (XtPointer) 48 },
+@@ -596,6 +597,50 @@ Boolean startup(void)
+   Main function
+ ---------------------------------------------------------------------------*/
+ 
++/*
++ * CDE's dtsession (sys.resources) sets a global "*Font" resource.
++ * Motif applies it to the "font" attribute of every rendition, the
++ * FONT_IS_XFT ones included: the rendition gets a core font, its
++ * fontName is overwritten with the font string, and its Xft font is
++ * never opened, so all text falls back to the core font.
++ * Motif leaves a rendition alone only when converting "font" fails,
++ * which Xt's String to FontStruct converter never does (it falls back
++ * to XtDefaultFont). Wrap that converter so that the value "unset"
++ * fails quietly, and store "*Rendition.font: unset", which is more
++ * specific than "*Font"; an explicit *renderTable.<tag>.font in the
++ * user's resources still wins over it.
++ */
++#define RENDITION_FONT_UNSET "unset"
++
++static void fetchDisplayArg(Widget w, Cardinal *size, XrmValue *value)
++{
++  value->size = sizeof(Display *);
++  value->addr = (XPointer) &DisplayOfScreen(XtScreenOfObject(w));
++}
++
++static XtConvertArgRec displayConvertArg[] = {
++  { XtProcedureArg, (XtPointer) fetchDisplayArg, 0 }
++};
++
++static Boolean CvtStringToFontStructOrUnset(Display *dpy, XrmValue *args,
++					    Cardinal *num_args, XrmValue *from,
++					    XrmValue *to, XtPointer *data)
++{
++  if (from->addr && strcmp((char *) from->addr, RENDITION_FONT_UNSET) == 0)
++    return False;
++  return XtCvtStringToFontStruct(dpy, args, num_args, from, to, data);
++}
++
++static void protectXftRenditions(Widget w)
++{
++  XrmDatabase db = XtScreenDatabase(XtScreen(w));
++
++  XtSetTypeConverter(XtRString, XtRFontStruct, CvtStringToFontStructOrUnset,
++		     displayConvertArg, XtNumber(displayConvertArg),
++		     XtCacheByDisplay, NULL);
++  XrmPutStringResource(&db, "*Rendition.font", RENDITION_FONT_UNSET);
++}
++
+ void main(int argc, char *argv[])
+ {
+   Widget fwShell;
+@@ -673,6 +718,7 @@ void main(int argc, char *argv[])
+   XtAppAddConverter(app_context, XmRString, XmRDirectionType, CvtStringToDirection, NULL, ZERO);
+   XtAppAddConverter(app_context, XmRString, XmRNamePolicyType, CvtStringToNamePolicy, NULL, ZERO);
+   XmRepTypeInstallTearOffModelConverter();
++  protectXftRenditions(topShell);
+ 
+   /* get the application resources */
+   XtGetApplicationResources(topShell, &resources, resource_list, XtNumber(resource_list), NULL, ZERO);

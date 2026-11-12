@@ -1,0 +1,36 @@
+-------------------------------------------------------------------
+Thu Nov 12 21:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add moxfm-modern-defaults.patch, modernizing the default
+  configuration copied to ~/.moxfm:
+  * Replace programs that no longer exist: NEdit as editor,
+    xterm+less as viewer, Firefox for HTML, XImaging for JPEG, PNG,
+    TIFF, PNM and Sun raster images, ImageMagick display for GIF,
+    gv for PostScript, mupdf for PDF, mtpaint for XPM, mpv for
+    video; drop FrameMaker and xmailtool
+  * Use the freedesktop trash (gio trash, monitored at
+    ~/.local/share/Trash/files); fix the Trash button that pointed
+    at /root/.trash
+  * Drop the floppy and CD-ROM entries (usermount and the fixed
+    mount points are gone); moxfmdev explains how to add devices
+  * magic: recognize Exif JPEG, PNG, PDF and lower-case or
+    doctype HTML
+- Require glib2-tools and xterm; suggest gv, mupdf, nedit and
+  ximaging
+
+-------------------------------------------------------------------
+Thu Nov 12 19:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of moxfm 1.0.1+git20260915.e81d6c2 from Thomas
+  Adam's repository
+  * Build with imake, %optflags and the distribution linker flags
+  * Add moxfm-install-destdir.patch: the top-level install rule
+    wrote the data files outside DESTDIR
+  * Add moxfm-xft-fonts.patch: render all text with Xft (Sans and
+    Monospace, set per rendition tag in the app-defaults) instead of
+    the Adobe 75dpi core fonts; keep CDE's global *Font resource
+    from turning the Xft renditions back into core fonts
+  * Install the data files (copied to ~/.moxfm on first start) and
+    pixmaps into /usr/share/moxfm
+  * Install the sample checkmail script into /usr/libexec/moxfm
+  * Add a desktop entry and icon
