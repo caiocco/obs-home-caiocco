@@ -1,0 +1,20 @@
+Fix heap overflow added by t1lib-5.1.2-segfault.patch: intT1_GetFileSearchPath()
+unconditionally wrote a NUL at offset 900 of the malloc'ed search path string,
+past the end of any path shorter than that. It is called once per entry of a
+FontDataBase, so a database with ~25 fonts corrupts the heap at T1_InitLib()
+("malloc(): unsorted double linked list corrupted"). Only truncate long paths.
+
+Index: t1lib-5.1.2/lib/t1lib/t1env.c
+===================================================================
+--- t1lib-5.1.2.orig/lib/t1lib/t1env.c
++++ t1lib-5.1.2/lib/t1lib/t1env.c
+@@ -824,7 +824,8 @@ char *T1_GetFileSearchPath( int type)
+ char *intT1_GetFileSearchPath( int type)
+ {
+    char  *res = T1_GetFileSearchPath(type);
+-   res[900] = 0;
++   if (res != NULL && strlen(res) > 900)
++      res[900] = 0;
+    return res;
+ }
+ 

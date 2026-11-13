@@ -1,0 +1,111 @@
+diff -ru t1lib-5.1.0.orig/Makefile.in t1lib-5.1.0/Makefile.in
+--- t1lib-5.1.0.orig/Makefile.in	2005-05-01 23:39:27.000000000 +0200
++++ t1lib-5.1.0/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -48,6 +48,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/configure.in t1lib-5.1.0/configure.in
+--- t1lib-5.1.0.orig/configure.in	2005-05-18 05:15:38.000000000 +0200
++++ t1lib-5.1.0/configure.in	2007-01-17 01:04:12.000000000 +0100
+@@ -75,10 +75,6 @@
+ T1LIB_VERSIONSTRING=\"MACRO_T1LIB_IDENTIFIER\"
+ 
+ 
+-dnl We use this file by Andreas Zeller to check for libXaw
+-builtin(include, ac-tools/ice_find_athena.m4)
+-builtin(include, ac-tools/aclocal.m4)
+-
+ dnl We want these before the checks, so the checks can modify their values.
+ test -z "$LDLIBS" && LDLIBS=-lm   AC_SUBST(LDLIBS)
+ test -z "$PROGEXT" && PROGEXT=""  AC_SUBST(PROGEXT)
+@@ -177,7 +173,7 @@
+ LIBS=$saved_libs])
+ if test "$ac_cv_c_extern_prefix" = "yes"
+ then
+-  AC_DEFINE(NEED_UNDERSCORE_PREFIX)
++  AC_DEFINE([NEED_UNDERSCORE_PREFIX],1,[does underscore need a prefix])
+ fi
+ 
+ dnl **** Check which ANSI integer type is 16 bit 
+diff -ru t1lib-5.1.0.orig/doc/Makefile.in t1lib-5.1.0/doc/Makefile.in
+--- t1lib-5.1.0.orig/doc/Makefile.in	2004-12-13 03:35:16.000000000 +0100
++++ t1lib-5.1.0/doc/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -47,6 +47,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/examples/Makefile.in t1lib-5.1.0/examples/Makefile.in
+--- t1lib-5.1.0.orig/examples/Makefile.in	2001-01-15 23:11:47.000000000 +0100
++++ t1lib-5.1.0/examples/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -44,6 +44,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/lib/Makefile.in t1lib-5.1.0/lib/Makefile.in
+--- t1lib-5.1.0.orig/lib/Makefile.in	2005-05-02 00:01:57.000000000 +0200
++++ t1lib-5.1.0/lib/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -44,6 +44,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/lib/t1lib/Makefile.in t1lib-5.1.0/lib/t1lib/Makefile.in
+--- t1lib-5.1.0.orig/lib/t1lib/Makefile.in	2001-01-15 23:34:03.000000000 +0100
++++ t1lib-5.1.0/lib/t1lib/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -43,6 +43,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/lib/type1/Makefile.in t1lib-5.1.0/lib/type1/Makefile.in
+--- t1lib-5.1.0.orig/lib/type1/Makefile.in	2002-06-25 04:15:45.000000000 +0200
++++ t1lib-5.1.0/lib/type1/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -45,6 +45,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/type1afm/Makefile.in t1lib-5.1.0/type1afm/Makefile.in
+--- t1lib-5.1.0.orig/type1afm/Makefile.in	2004-12-13 03:45:12.000000000 +0100
++++ t1lib-5.1.0/type1afm/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -46,6 +46,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1
+diff -ru t1lib-5.1.0.orig/xglyph/Makefile.in t1lib-5.1.0/xglyph/Makefile.in
+--- t1lib-5.1.0.orig/xglyph/Makefile.in	2004-12-13 03:48:11.000000000 +0100
++++ t1lib-5.1.0/xglyph/Makefile.in	2007-01-17 01:04:12.000000000 +0100
+@@ -46,6 +46,7 @@
+ exec_prefix     = @exec_prefix@
+ includedir      = @includedir@
+ bindir          = @bindir@
++datarootdir     = @datarootdir@
+ datadir         = @datadir@
+ libdir          = @libdir@
+ mandir          = @mandir@/man1

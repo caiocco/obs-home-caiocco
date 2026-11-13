@@ -1,0 +1,146 @@
+-------------------------------------------------------------------
+Fri Nov 13 14:25:57 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add t1lib-5.1.2-searchpath-overflow.patch: intT1_GetFileSearchPath()
+  from t1lib-5.1.2-segfault.patch always wrote a NUL at offset 900 of
+  the search path string, overflowing the heap once per FontDataBase
+  entry; with ~25 fonts T1_InitLib() aborts (Mowitz/Siag Office)
+- Build with -std=gnu17 on Leap 16.0 too (suse_version 1600 has
+  GCC 15, whose C23 default rejects the K&R code)
+
+-------------------------------------------------------------------
+Thu Jun 26 13:04:54 UTC 2025 - Marguerite Su <i@marguerite.su>
+
+- fix gcc15 build
+
+-------------------------------------------------------------------
+Fri Jan  5 12:15:42 UTC 2024 - Marguerite Su <i@marguerite.su>
+
+- add patches from Debian and Fedora
+  * t1lib-5.1.2-format-securtiy.patch
+  * lib-cleanup.diff
+  * no-config.diff
+  * t1lib-5.1.2-segfault.patch
+  * t1lib-5.1.2-aarch64.patch
+  * t1lib-5.1.2-t1.patch
+  * t1lib-c99.patch
+  * t1lib-configure-c99.patch
+- fix build
+
+-------------------------------------------------------------------
+Wed Apr 28 14:00:26 UTC 2021 - Ferdinand Thiessen <rpm@fthiessen.de>
+
+- Added t1lib-5.1.2-CVE-2010-2642_2011-0433_2011-5244.patch from
+  Gentoo to fix CVE-2010-2642, CVE-2011-0433 and CVE-2011-5244
+- Added t1lib-5.1.2-CVE-2011-0764.patch from Gentoo to fix
+  CVE-2011-0764
+- Added t1lib-5.1.2-CVE-2011-1552_1553_1554.patch from Gentoo
+  to fix CVE-2011-1552, CVE-2011-1553 and CVE-2011-1554
+- Added t1lib-do-not-install-t1lib_doc-r1.patch from Gentoo
+- Use configure macro
+
+-------------------------------------------------------------------
+Mon Mar 26 22:24:58 UTC+8 2012 - hillwood@linuxfans.org
+
+- license update: LGPL-2.0 and LGPL-2.1
+- Fix build for openSUSE 12.2
+
+-------------------------------------------------------------------
+Sun Sep 26 19:31:14 UTC 2010 - mrdocs@opensuse.org
+
+- update 5.1.2
+  + minor bug fixes and some memory out of bounds issues corrected
+- split out static libs in to subpackage
+- branched to prepare new version for Factory
+- bugzilla-240159-array-subscript-out-of-bounds.patch dropped no longer
+  needed - careful check of source includes the same fix
+- major spec file cleanup to remove rpmlint warnings
+
+-------------------------------------------------------------------
+Wed Jan 31 12:01:42 CET 2007 - mfabian@suse.de
+
+- Bugzilla #240159: array subscript out of bounds.
+
+-------------------------------------------------------------------
+Wed Jan 17 01:11:21 CET 2007 - mfabian@suse.de
+
+- Bugzilla #137002: update to 5.1.0.
+
+-------------------------------------------------------------------
+Wed Aug 16 19:56:58 CEST 2006 - aj@suse.de
+
+- Replace xorg-x11-devel BuildRequires with really needed libs.
+
+-------------------------------------------------------------------
+Fri Jun 16 15:50:49 CEST 2006 - schwab@suse.de
+
+- Handle reference to datarootdir variable.
+
+-------------------------------------------------------------------
+Wed Jan 25 21:41:59 CET 2006 - mls@suse.de
+
+- converted neededforbuild to BuildRequires
+
+-------------------------------------------------------------------
+Mon Feb 14 17:48:30 CET 2005 - ro@suse.de
+
+- fix build with current tetex 
+- remove tetex from neededforbuild and use prebuilt docu
+  to break cycle between tetex and t1lib 
+
+-------------------------------------------------------------------
+Thu Feb 10 02:41:02 CET 2005 - ro@suse.de
+
+- added libpng to neededforbuild (for tetex)
+
+-------------------------------------------------------------------
+Sat Jan 10 14:33:02 CET 2004 - adrian@suse.de
+
+- add %run_ldconfig
+
+-------------------------------------------------------------------
+Fri Jun 13 09:33:45 CEST 2003 - kukuk@suse.de
+
+- Add missing directory to filelist
+
+-------------------------------------------------------------------
+Fri May 16 21:12:43 CEST 2003 - mfabian@suse.de
+
+- remove stuff from buildroot which is not in the file list.
+- add execute permissions to shared libraries.
+
+-------------------------------------------------------------------
+Sat Aug 10 01:59:14 CEST 2002 - mfabian@suse.de
+
+- t1lib-devel should require t1lib
+
+-------------------------------------------------------------------
+Mon Jun 17 10:26:01 CEST 2002 - meissner@suse.de
+
+- rerun auto* tools so we support newer platforms.
+
+-------------------------------------------------------------------
+Tue May 21 14:41:26 CEST 2002 - freitag@suse.de
+
+- update to t1lib-1.3.1 
+
+-------------------------------------------------------------------
+Thu Jan 31 18:02:52 CET 2002 - mfabian@suse.de
+
+- use %{_libdir}
+
+-------------------------------------------------------------------
+Sat Aug 11 02:33:03 CEST 2001 - mfabian@suse.de
+
+- update to t1lib-1.1.1
+
+-------------------------------------------------------------------
+Mon May  7 17:13:11 CEST 2001 - mfabian@suse.de
+
+- bzip2 sources
+
+-------------------------------------------------------------------
+Fri Feb 16 13:18:54 CET 2001 - mfabian@suse.de
+
+- new package: t1lib version 1.1.0
+

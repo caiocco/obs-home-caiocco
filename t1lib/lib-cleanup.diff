@@ -1,0 +1,57 @@
+Index: t1lib-5.1.2/lib/Makefile.in
+===================================================================
+--- t1lib-5.1.2.orig/lib/Makefile.in
++++ t1lib-5.1.2/lib/Makefile.in
+@@ -24,7 +24,7 @@ OPTIONS   = @OPTIONS@
+ X_LIBS    = @X_LIBS@
+ TOPSRC    = @top_srcdir@
+ XPM_LIB   = -lXpm
+-XLIB      = @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@
++XLIB      = -lX11
+ LDFLAGS   = @LDFLAGS@
+ LDLIBS    = @LDLIBS@
+ AR        = ar rc
+@@ -138,7 +138,7 @@ libt1x.la: $(T1LIBX_OBJS)
+ 	$(LIBTOOL) --mode=link \
+ 		$(CC) $(LDFLAGS) -o $@ $(T1LIBX_OBJS) \
+ 	         -version-info @T1LIB_LT_CURRENT@:@T1LIB_LT_REVISION@:@T1LIB_LT_AGE@ \
+-	         libt1.la $(X_LIBS) $(XPM_LIB) $(XLIB)  -no-undefined -rpath $(libdir) 
++	         libt1.la $(X_LIBS) $(XLIB)  -no-undefined -rpath $(libdir) 
+ 	cp t1lib/t1libx.h .
+ 
+ 
+Index: t1lib-5.1.2/type1afm/Makefile.in
+===================================================================
+--- t1lib-5.1.2.orig/type1afm/Makefile.in
++++ t1lib-5.1.2/type1afm/Makefile.in
+@@ -71,7 +71,7 @@ all: type1afm
+ 
+ type1afm: $(OBJS) ../lib/t1lib.h
+ 	$(LIBTOOL) --mode=link \
+-		$(CC) -o type1afm $(LDFLAGS) $(OBJS) $(T1LIB) $(LDLIBS)
++		$(CC) -o type1afm $(LDFLAGS) $(OBJS) $(T1LIB)
+ 
+ .SUFFIXES: .lo
+ .c.lo:
+Index: t1lib-5.1.2/xglyph/Makefile.in
+===================================================================
+--- t1lib-5.1.2.orig/xglyph/Makefile.in
++++ t1lib-5.1.2/xglyph/Makefile.in
+@@ -24,7 +24,7 @@ OPTIONS   = @OPTIONS@
+ X_LIBS    = @X_LIBS@
+ TOPSRC    = @top_srcdir@
+ XPM_LIB   = -lXpm
+-XLIB      = @X_PRE_LIBS@ -lXext -lX11 @X_EXTRA_LIBS@
++XLIB      = -lX11 @X_EXTRA_LIBS@
+ LDFLAGS   = @LDFLAGS@
+ LDLIBS    = @LDLIBS@ 
+ AR        = ar rc
+@@ -66,7 +66,7 @@ SRCS = \
+ 
+ T1LIB  = ../lib/libt1.la
+ T1LIBX = ../lib/libt1x.la
+-XAWLIB = -lXaw -lXt -lXmu
++XAWLIB = -lXaw -lXt
+ 
+ 
+ all: xglyph

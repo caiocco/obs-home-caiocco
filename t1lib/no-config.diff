@@ -1,0 +1,55 @@
+Index: t1lib-5.1.2/lib/Makefile.in
+===================================================================
+--- t1lib-5.1.2.orig/lib/Makefile.in
++++ t1lib-5.1.2/lib/Makefile.in
+@@ -162,17 +162,17 @@ clean: dummy
+ install: dummy
+ 	$(MKINSTALLDIRS) $(DESTDIR)$(libdir)
+ 	$(MKINSTALLDIRS) $(DESTDIR)$(includedir)
+-	$(MKINSTALLDIRS) $(DESTDIR)@T1LIB_DATA_DIR@
++#	$(MKINSTALLDIRS) $(DESTDIR)@T1LIB_DATA_DIR@
+ 	$(LIBTOOL) --mode=install \
+ 		$(INSTALL_DATA) $(MAIN_TARGET) $(DESTDIR)$(libdir)
+ 	$(LIBTOOL) --mode=install \
+ 		$(INSTALL_DATA) $(MAIN_HEADER) $(DESTDIR)$(includedir)
+-	if (test -f $(DESTDIR)@T1LIB_DATA_DIR@/t1lib.config) \
+-	then \
+-	  echo "Alert: Global configuration file exists, installation skipped!"; \
+-	else \
+-	  $(LIBTOOL) --mode=install $(INSTALL_DATA) t1lib.config $(DESTDIR)@T1LIB_DATA_DIR@; \
+-	fi;
++#	if (test -f $(DESTDIR)@T1LIB_DATA_DIR@/t1lib.config) \
++#	then \
++#	  echo "Alert: Global configuration file exists, installation skipped!"; \
++#	else \
++#	  $(LIBTOOL) --mode=install $(INSTALL_DATA) t1lib.config $(DESTDIR)@T1LIB_DATA_DIR@; \
++#	fi;
+ 
+ 
+ uninstall: dummy
+@@ -180,7 +180,7 @@ uninstall: dummy
+ 	-$(LIBTOOL) --mode=uninstall $(RM) $(DESTDIR)$(libdir)/libt1x.la
+ 	-$(LIBTOOL) --mode=uninstall $(RM) $(DESTDIR)$(includedir)/t1lib.h
+ 	-$(LIBTOOL) --mode=uninstall $(RM) $(DESTDIR)$(includedir)/t1libx.h
+-	-$(LIBTOOL) --mode=uninstall $(RM) $(DESTDIR)@T1LIB_DATA_DIR@/t1lib.config
++#	-$(LIBTOOL) --mode=uninstall $(RM) $(DESTDIR)@T1LIB_DATA_DIR@/t1lib.config
+ 
+ 
+ dummy:
+Index: t1lib-5.1.2/xglyph/xglyph.c
+===================================================================
+--- t1lib-5.1.2.orig/xglyph/xglyph.c
++++ t1lib-5.1.2/xglyph/xglyph.c
+@@ -526,10 +526,11 @@ int main( int argc, char **argv)
+   
+   /* Check for environment entry. If not set, set it to current
+      directory so that configuration file is found there */
++#if 0  
+   if (getenv("T1LIB_CONFIG")==NULL){
+     putenv( "T1LIB_CONFIG=./t1lib.config");
+   }
+-
++#endif
+   
+   /* Set log-level: */
+   T1_SetLogLevel( loglevel & (~(0x01<<8)));
