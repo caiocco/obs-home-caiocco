@@ -1,0 +1,640 @@
+Description: Debian fixes made before the 3.0 (quilt) conversion, minus
+ the Debian-specific changes to tcldesk/configs (dpkg menus, pon/poff).
+Origin: Debian tkdesk 2.0-14, debian/patches/before_quilt.patch
+
+diff -uprN tkdesk-2.0/blt/Makefile.in tkdesk-2.0-debian/blt/Makefile.in
+--- tkdesk-2.0/blt/Makefile.in	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/blt/Makefile.in	2017-09-28 19:09:17.261570038 +0200
+@@ -8,11 +8,8 @@
+ # the configuration script).
+ #----------------------------------------------------------------
+ 
+-# Location of Tcl header files:
+-TCL_INCLUDE_DIR =	@TCL_INCLUDE_PATH@
+-
+-# Location of Tk header files:
+-TK_INCLUDE_DIR =	@TK_INCLUDE_PATH@
++# Location of Tcl/Tk header files:
++TCL_INCLUDE_FLAG =	@TCL_INCLUDE_SPEC@
+ 
+ # Location of X11 header files:
+ X_INCLUDE_FLAG =	@TK_XINCLUDES@
+@@ -32,7 +29,7 @@ RM =			rm -f
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. -I. -I${TCL_INCLUDE_DIR} -I${TK_INCLUDE_DIR} ${X_INCLUDE_FLAG}
++CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. -I. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ BLT_LIBRARY =	$(LIB_DIR)
+ 
+ libname	=	libBLT.a
+diff -uprN tkdesk-2.0/configure.in tkdesk-2.0-debian/configure.in
+--- tkdesk-2.0/configure.in	2004-04-14 05:39:12.000000000 +0200
++++ tkdesk-2.0-debian/configure.in	2017-09-28 19:09:17.273570038 +0200
+@@ -19,6 +19,14 @@ AC_ARG_WITH(itcl,
+    [AC_HELP_STRING([--with-itcl=DIR],[read itcl configuration from DIR])],
+    ITCLCONF_PATH=$withval)
+ 
++AC_ARG_WITH(itcl-lib,
++   [AC_HELP_STRING([--with-itcl-lib=DIR],[link to itcl library using the given flags])],
++   ITCL_LIB_SPEC=$withval)
++
++AC_ARG_WITH(itcl-version,
++   [AC_HELP_STRING([--with-itcl-version=VERSION],[itcl version number])],
++   ITCL_VERSION=$withval)
++
+ AC_ARG_WITH(tclconfig,
+    [AC_HELP_STRING([--with-tclconfig=FILE],
+                   [use specific tcl config file [tclConfig.sh]])],
+@@ -147,6 +155,7 @@ fi
+ 
+ # First look for an itclConfig.sh...
+ 
++if test -z "$ITCL_LIB_SPEC"; then
+ AC_MSG_CHECKING(for $ITCLCONF_FILE)
+ if test -z "$ITCLCONF_PATH" ; then
+   ITCLCONF_PATH="$TCLCONF_PATH $HOME/lib /usr/local/lib /usr/lib /usr/X11/lib /usr/share/lib"
+@@ -180,7 +189,7 @@ else
+    ITCL_MAJOR_VERSION=0
+    AC_MSG_WARN([could not find $ITCLCONF_FILE - going to keep going, but I am not making any promises.])
+ fi
+-
++fi
+ if test "$ITCL_VERSION" != "no" ; then
+   # ITCL_LIB_SPEC already set in itclConfig.sh
+   ITCL_LIB_STATIC=${TCLCONF_PATH}/libitcl${ITCL_VERSION}.a
+@@ -241,20 +250,12 @@ else
+ fi
+ 
+ #
+-# Determine include directories
+-#
+-
+-TCL_INCLUDE_PATH=$TCL_EXEC_PREFIX/include
+-TK_INCLUDE_PATH=$TCL_INCLUDE_PATH
+-
+-#
+ # Perform substitutions
+ #
+ AC_SUBST(TCL_LD_SEARCH_FLAGS)
+ AC_SUBST(TCL_EXEC_PREFIX)
+ AC_SUBST(TK_EXEC_PREFIX)
+-AC_SUBST(TCL_INCLUDE_PATH)
+-AC_SUBST(TK_INCLUDE_PATH)
++AC_SUBST(TCL_INCLUDE_SPEC)
+ AC_SUBST(TK_XINCLUDES)
+ AC_SUBST(TCL_LIB_SPEC)
+ AC_SUBST(TK_LIB_SPEC)
+@@ -338,8 +339,7 @@ eval echo Override Version Checks.......
+ eval echo Use TkStep.................... : $ENABLE_TKSTEP
+ eval echo Tcl Config Path............... : $TCLCONF_PATH/$TCLCONF_FILE
+ eval echo Tk Config Path................ : $TKCONF_PATH/$TKCONF_FILE
+-eval echo Tcl Include Path.............. : $TCL_INCLUDE_PATH
+-eval echo Tk Include Path............... : $TK_INCLUDE_PATH
++eval echo Tcl/Tk Include Path........... : $TCL_INCLUDE_SPEC
+ eval echo Tcl Library Spec.............. : $TCL_LIB_SPEC
+ eval echo Tcl Static Library Spec....... : $TCL_LIB_STATIC
+ eval echo Tk Library Spec............... : $TK_LIB_SPEC
+diff -uprN tkdesk-2.0/libdesk/dsk_ls.c tkdesk-2.0-debian/libdesk/dsk_ls.c
+--- tkdesk-2.0/libdesk/dsk_ls.c	2004-04-14 04:20:01.000000000 +0200
++++ tkdesk-2.0-debian/libdesk/dsk_ls.c	2017-09-28 19:09:17.273570038 +0200
+@@ -109,8 +109,8 @@
+ #define dsk_malloc(a, b) my_malloc((a), (b))
+ #define dsk_free(a, b)   my_free((a), (b))
+ #else
+-#define dsk_malloc(a, b) malloc((a))
+-#define dsk_free(a, b)   free((a))
++#define dsk_malloc(a, b) ckalloc((size_t)(a))
++#define dsk_free(a, b)   ckfree((char *)(a))
+ #endif
+ 
+ /* === Typedefs ============================================================ */
+@@ -132,7 +132,7 @@ typedef struct _file_list {
+ } FILE_LIST;
+ 
+ 
+-void dsk_ls_init ();
++int dsk_ls_init ();
+ int process_cmdline _ANSI_ARGS_((int argc, char *argv[]));
+ int read_file_lists ();
+ int process_file_lists ();
+@@ -212,7 +212,7 @@ int argc;
+ char **argv;
+ char *path;
+ {
+-    dsk_ls_init ();
++    if (dsk_ls_init() != TCL_OK) return TCL_ERROR;
+ 
+ #ifdef MEM_DEBUG
+     {
+@@ -226,7 +226,7 @@ char *path;
+ #endif
+     
+     strncpy (par_path, path, MAXPATHLEN);
+-    par_path[MAXPATHLEN] = (char) NULL;
++    par_path[MAXPATHLEN-1] = (char) NULL;
+     if (process_cmdline (argc, argv) != TCL_OK)
+ 	return (TCL_ERROR);
+ 
+@@ -730,6 +730,9 @@ int free_file_lists ()
+ 	    dsk_free (fe, "free_file_lists 3");
+ 	    fe = nfe;
+ 	}
++	fl->next = NULL;
++	fl->first = NULL;
++	fl->fe_array = NULL;
+ 	if (fl != &root_of_lists)
+ 	    dsk_free (fl, "free_file_lists 4"); 
+ 
+@@ -1463,8 +1466,15 @@ char *argv[];
+  * Out : 
+  * ------------------------------------------------------------------------- */
+ 
+-void dsk_ls_init ()
++int dsk_ls_init ()
+ {
++    if (root_of_lists.next != NULL || root_of_lists.fe_array != NULL) {
++	sprintf (dsk_interp->result, 
++	"dsk_ls_init called inconsistently! (%p : %p)",
++	root_of_lists.next, root_of_lists.fe_array);
++      return TCL_ERROR;
++    }
++
+     par_every_dir = 0;		/* read files for every dir in path? */
+     par_sort_type = BY_NAME;	/* how to sort the file-lists */
+     par_sort_by_type = 0;	/* sort by type? (only distincts dir/other) */
+@@ -1497,6 +1507,8 @@ void dsk_ls_init ()
+ 
+     num_mallocs = 0;
+     num_frees   = 0;
++
++    return TCL_OK;
+     
+ } /* dsk_ls_init */
+ 
+@@ -1526,7 +1538,7 @@ char *argv[];
+     }
+ #endif
+ 
+-    dsk_ls_init ();
++    if (dsk_ls_init() != TCL_OK) return (TCL_ERROR);
+ 
+     if (process_cmdline (argc, argv) != TCL_OK)
+ 	return (TCL_ERROR);
+diff -uprN tkdesk-2.0/libdesk/Makefile.in tkdesk-2.0-debian/libdesk/Makefile.in
+--- tkdesk-2.0/libdesk/Makefile.in	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/libdesk/Makefile.in	2017-09-28 19:09:17.273570038 +0200
+@@ -9,10 +9,7 @@
+ #----------------------------------------------------------------
+ 
+ # Location of Tcl header files:
+-TCL_INCLUDE_DIR =	@TCL_INCLUDE_PATH@
+-
+-# Location of Tk header files:
+-TK_INCLUDE_DIR =	@TK_INCLUDE_PATH@
++TCL_INCLUDE_FLAG =	@TCL_INCLUDE_SPEC@
+ 
+ # Location of X11 header files:
+ X_INCLUDE_FLAG =	@TK_XINCLUDES@
+@@ -32,7 +29,7 @@ RM =			rm -f
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. -I${TCL_INCLUDE_DIR} -I${TK_INCLUDE_DIR} ${X_INCLUDE_FLAG}
++CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ 
+ libname	=	libdesk.a
+ 
+diff -uprN tkdesk-2.0/libdesk/misc.c tkdesk-2.0-debian/libdesk/misc.c
+--- tkdesk-2.0/libdesk/misc.c	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/libdesk/misc.c	2017-09-28 19:09:17.273570038 +0200
+@@ -149,7 +149,7 @@ int dsk_esc_Cmd (clientData, interp, arg
+     }
+ 
+     /* assume every char needs to be backslashed, for safety reasons */
+-    buf = (char *) malloc (strlen (argv[1]) * 2);
++    buf = (char *) ckalloc (strlen (argv[1]) * 2);
+     if (buf == NULL) {
+ 	fprintf (stderr, "out of memory in dsk_esc_Cmd\n");
+ 	exit (1);
+@@ -157,7 +157,7 @@ int dsk_esc_Cmd (clientData, interp, arg
+ 
+     escape_chars (argv[1], argv[2], buf);
+     Tcl_SetResult (interp, buf, TCL_VOLATILE);
+-    free (buf);
++    ckfree (buf);
+     
+     return TCL_OK;
+ } /* dsk_esc_Cmd */
+@@ -181,7 +181,7 @@ int dsk_unesc_Cmd (clientData, interp, a
+     }
+ 
+     /* assume every char needs to be backslashed, for safety reasons */
+-    buf = (char *) malloc (strlen (argv[1]) * 2);
++    buf = (char *) ckalloc (strlen (argv[1]) * 2);
+     if (buf == NULL) {
+ 	fprintf (stderr, "out of memory in dsk_esc_Cmd\n");
+ 	exit (1);
+@@ -189,7 +189,7 @@ int dsk_unesc_Cmd (clientData, interp, a
+ 
+     unescape_chars (argv[1], buf);
+     Tcl_SetResult (interp, buf, TCL_VOLATILE);
+-    free (buf);
++    ckfree (buf);
+     
+     return TCL_OK;
+ } /* dsk_esc_Cmd */
+diff -uprN tkdesk-2.0/libdesk/o_FileListbox.c tkdesk-2.0-debian/libdesk/o_FileListbox.c
+--- tkdesk-2.0/libdesk/o_FileListbox.c	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/libdesk/o_FileListbox.c	2017-09-28 19:09:17.277570039 +0200
+@@ -69,7 +69,7 @@ int dsk_init_ftags_Cmd (clientData, inte
+ 
+     /* get and split the taglist */
+     if (targv != NULL)
+-	free ((char *)targv);
++	ckfree ((char *)targv);
+     if (argc > 1) {
+ 	if (Tcl_SplitList (interp, argv[1], &targc, &targv) == TCL_ERROR)
+ 	    return TCL_ERROR;
+@@ -81,7 +81,7 @@ int dsk_init_ftags_Cmd (clientData, inte
+ 
+     /* get and split tag masks */
+     if (pargv != NULL)
+-	free ((char *)pargv);
++	ckfree ((char *)pargv);
+     if (argc > 2) {
+ 	if (Tcl_SplitList (interp, argv[2], &pargc, &pargv) == TCL_ERROR)
+ 	    return TCL_ERROR;
+@@ -93,7 +93,7 @@ int dsk_init_ftags_Cmd (clientData, inte
+     
+     /* get and split ignore masks */
+     if (iargv != NULL)
+-	free ((char *)iargv);
++	ckfree ((char *)iargv);
+     if (argc > 3) {
+ 	if (Tcl_SplitList (interp, argv[3], &iargc, &iargv) == TCL_ERROR)
+ 	    return TCL_ERROR;
+@@ -170,7 +170,7 @@ int dsk_ls_and_tag_Cmd (clientData, inte
+     if (Tcl_SplitList (interp, lscmd, &lsargc, &lsargv) == TCL_ERROR)
+ 	return TCL_ERROR;
+     dsk_ls_init_and_parse_options (lsargc, lsargv, argv[1]);
+-    free (lsargv);
++    ckfree ((char *)lsargv);
+     
+     /* now read and sort the file list */
+     fargc = dsk_ls_read_and_sort (iargc, (showall ? NULL : iargv),
+@@ -301,7 +301,7 @@ int dsk_ls_and_tag_Cmd (clientData, inte
+     /* free memory allocated by dsk_ls */
+     dsk_ls_cleanup();
+     if (!mask_matches_all)
+-	free (maskv);
++	ckfree ((char *)maskv);
+ 
+     /*
+      * And now the tagging:
+@@ -343,7 +343,7 @@ int dsk_ls_and_tag_Cmd (clientData, inte
+ 	}
+ 	Tcl_DStringFree (&dbigcmd);
+ 
+-	free (mtargv);
++	ckfree ((char *)mtargv);
+     }
+     
+     if (add_images && notmatch_set) {
+diff -uprN tkdesk-2.0/libdesk/ot.c tkdesk-2.0-debian/libdesk/ot.c
+--- tkdesk-2.0/libdesk/ot.c	2004-04-14 04:34:37.000000000 +0200
++++ tkdesk-2.0-debian/libdesk/ot.c	2017-09-28 19:09:17.277570039 +0200
+@@ -23,6 +23,7 @@
+  *
+  * ========================================================================= */
+ 
++#include "libdesk.h"
+ #include "ot.h"
+ 
+ #ifdef OTTIMER
+@@ -160,7 +161,7 @@ char *argv[];
+ 
+     for (i = 0; i < largc; i++) {
+ 	if (!Tcl_SetVar (interp, argv[i + 2], largv[i], TCL_LEAVE_ERR_MSG)) {
+-	    free (largv);
++	    ckfree ((char *)largv);
+ 	    return TCL_ERROR;
+ 	}
+ 
+@@ -169,7 +170,7 @@ char *argv[];
+ 	    for (j = i + 1; j < largc; j++) {
+ 		if (!Tcl_SetVar (interp, argv[i + 2], largv[j],
+ 		       TCL_LEAVE_ERR_MSG|TCL_LIST_ELEMENT|TCL_APPEND_VALUE)) {
+-		    free (largv);
++		    ckfree ((char *)largv);
+ 		    return TCL_ERROR;
+ 		}
+ 	    }
+@@ -177,7 +178,7 @@ char *argv[];
+ 	}
+     }
+ 
+-    free (largv);
++    ckfree ((char *)largv);
+     return TCL_OK;
+ } /* ot_maplist_Cmd */
+ 
+@@ -263,13 +264,13 @@ char *cmd;
+ 
+     if (Tcl_GetCommandInfo (interp, argv[0], &cmdInfo) == 0) {
+         sprintf (interp->result, "invalid command name \"%s\"", argv[0]);
+-	free (argv);
++	ckfree ((char *)argv);
+         return TCL_ERROR;
+     }
+ 
+     Tcl_ResetResult (interp);
+     retval = (*cmdInfo.proc) (cmdInfo.clientData, interp, argc, argv);
+-    free (argv);
++    ckfree ((char *)argv);
+     return retval;
+ } /* Ot_TclInvoke */
+ 
+diff -uprN tkdesk-2.0/libdesk/tixImgXpm.c tkdesk-2.0-debian/libdesk/tixImgXpm.c
+--- tkdesk-2.0/libdesk/tixImgXpm.c	2017-09-28 19:09:33.369570766 +0200
++++ tkdesk-2.0-debian/libdesk/tixImgXpm.c	2017-09-28 19:09:17.277570039 +0200
+@@ -58,7 +58,8 @@
+ #include "tkPort.h"*/
+ /*#include <tix.h>*/
+ 
+-EXTERN void		panic();
++/* This prototype causes compile errors with gcc-3.4 */
++/* EXTERN void		panic(); */
+ 
+ /* constants used only in this file */
+ 
+diff -uprN tkdesk-2.0/Makefile.in tkdesk-2.0-debian/Makefile.in
+--- tkdesk-2.0/Makefile.in	2004-04-15 00:31:17.000000000 +0200
++++ tkdesk-2.0-debian/Makefile.in	2017-09-28 19:09:17.261570038 +0200
+@@ -34,13 +34,19 @@ TKDESK_LIBRARY =	@libdir@/TkDesk
+ SCRIPT_INSTALL_DIR =	$(INSTALL_ROOT)$(TKDESK_LIBRARY)
+ 
+ # Directory where tkdesksh will look for its library scripts:
+-SCRIPT_SEARCH_DIR =	$(SCRIPT_INSTALL_DIR)
++SCRIPT_SEARCH_DIR =	$(TKDESK_LIBRARY)
++
++# Directory in which to install the tkdesksh binary:
++TKDESKSH_INSTALL_DIR =	$(INSTALL_ROOT)$(TKDESK_LIBRARY)
++
++# Directory where tkdesk will look for the tkdesksh binary:
++TKDESKSH_SEARCH_DIR =	$(TKDESK_LIBRARY)
+ 
+ # Directory in which to install the program tkdesksh:
+ BIN_INSTALL_DIR =	$(INSTALL_ROOT)@bindir@
+ 
+ # Directory where tkdesksh will look for the tkdesk script:
+-BIN_SEARCH_DIR =	$(BIN_INSTALL_DIR)
++BIN_SEARCH_DIR =	@bindir@
+ 
+ # Top-level directory in which to install manual entries:
+ MAN_INSTALL_DIR =	$(INSTALL_ROOT)@mandir@
+@@ -50,7 +56,8 @@ MAN1_INSTALL_DIR =	$(MAN_INSTALL_DIR)/ma
+ 
+ # To change the compiler switches, for example to change from -O
+ # to -g, change the following line:
+-CC_OPTS = -O -DUSE_OLD_IMAGE -DUSE_NON_CONST
++CC_EXTRA_OPTS = -O
++CC_OPTS = $(CC_EXTRA_OPTS) -DUSE_OLD_IMAGE -DUSE_NON_CONST
+ 
+ # To change the linker switches, for example to add -s,
+ # change the following line:
+@@ -71,11 +78,8 @@ INSTALL_DATA =		${INSTALL} -m 644
+ # modify any of this stuff by hand.
+ #----------------------------------------------------------------
+ 
+-# Location of Tcl header files:
+-TCL_INCLUDE_DIR =	@TCL_INCLUDE_PATH@
+-
+-# Location of Tk header files:
+-TK_INCLUDE_DIR =	@TK_INCLUDE_PATH@
++# Location of Tcl/Tk header files:
++TCL_INCLUDE_FLAG =	@TCL_INCLUDE_SPEC@
+ 
+ # Location of X11 header files:
+ X_INCLUDE_FLAG =	@TK_XINCLUDES@
+@@ -117,7 +121,7 @@ MKDIR =                 mkdir -p
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I. -I${TCL_INCLUDE_DIR} -I${TK_INCLUDE_DIR} ${X_INCLUDE_FLAG}
++CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ LDFLAGS =	${LD_OPTS}
+ 
+ PKGNAME =	tkdesk
+@@ -162,7 +166,7 @@ tkdesk_script:
+ 	@echo '#!/bin/sh' >tkdesk
+ 	@echo '#-*- tcl -*- \' >>tkdesk
+ 	@echo "PATH=$(BIN_SEARCH_DIR):"'$$PATH ;#\' >>tkdesk
+-	@echo "exec tkdesksh \"\$$0\" \"\$$@\"" >>tkdesk
++	@echo "exec $(TKDESKSH_SEARCH_DIR)/tkdesksh \"\$$0\" \"\$$@\"" >>tkdesk
+ 	@echo "" >>tkdesk
+ 	@echo "set tkdesk(library) \"$(SCRIPT_SEARCH_DIR)\"" >>tkdesk
+ 	@echo "set tkdesk(in_development) 0" >>tkdesk
+@@ -176,7 +180,12 @@ rm_tkdesk_script:
+ install: tkdesksh client rm_tkdesk_script tkdesk_script dirs
+ 	@chmod +x install-sh
+ 	@echo "=== Installing the executables..."
+-	@for f in tkdesksh tkdesk tkdeskclient/tkdeskclient tools/pauseme tools/ed-tkdesk tools/cd-tkdesk tools/od-tkdesk tools/op-tkdesk tools/pop-tkdesk; do \
++	@for f in tkdesksh; do \
++	    echo "installing $$f" ;\
++	    rm -f $(TKDESKSH_INSTALL_DIR)/`basename $$f` ;\
++	    $(INSTALL_PROGRAM) $$f $(TKDESKSH_INSTALL_DIR) ;\
++	done
++	@for f in tkdesk tkdeskclient/tkdeskclient tools/pauseme tools/ed-tkdesk tools/cd-tkdesk tools/od-tkdesk tools/op-tkdesk tools/pop-tkdesk; do \
+ 	    echo "installing $$f" ;\
+ 	    rm -f $(BIN_INSTALL_DIR)/`basename $$f` ;\
+ 	    $(INSTALL_PROGRAM) $$f $(BIN_INSTALL_DIR) ;\
+@@ -189,7 +198,7 @@ install: tkdesksh client rm_tkdesk_scrip
+ 	find $(SCRIPT_INSTALL_DIR) -type f -exec chmod a+r {} \;
+ 	find $(SCRIPT_INSTALL_DIR) -type d -exec chmod a+rx {} \;
+ 	@echo "=== Creating index..."
+-	cd $(SCRIPT_INSTALL_DIR); $(BIN_INSTALL_DIR)/tkdesksh mkindex
++	cd $(SCRIPT_INSTALL_DIR); DISPLAY=fake $(TKDESKSH_INSTALL_DIR)/tkdesksh mkindex
+ 	@echo "=== Installing the manual pages..."
+ 	@for f in tkdesk.1 cd-tkdesk.1 ed-tkdesk.1 od-tkdesk.1; do \
+ 	    echo "installing $$f" ;\
+@@ -202,7 +211,7 @@ uninstall:
+ 	@echo "=== Uninstalling TkDesk's library..."
+ 	-rm -r $(SCRIPT_INSTALL_DIR)
+ 	@echo "=== Uninstalling TkDesk's executables..."
+-	-rm $(BIN_INSTALL_DIR)/tkdesksh $(BIN_INSTALL_DIR)/tkdesk $(BIN_INSTALL_DIR)/pauseme $(BIN_INSTALL_DIR)/ed-tkdesk $(BIN_INSTALL_DIR)/cd-tkdesk $(BIN_INSTALL_DIR)/od-tkdesk $(BIN_INSTALL_DIR)/op-tkdesk $(BIN_INSTALL_DIR)/pop-tkdesk $(BIN_INSTALL_DIR)/tkdeskclient
++	-rm $(TKDESKSH_INSTALL_DIR)/tkdesksh $(BIN_INSTALL_DIR)/tkdesk $(BIN_INSTALL_DIR)/pauseme $(BIN_INSTALL_DIR)/ed-tkdesk $(BIN_INSTALL_DIR)/cd-tkdesk $(BIN_INSTALL_DIR)/od-tkdesk $(BIN_INSTALL_DIR)/op-tkdesk $(BIN_INSTALL_DIR)/pop-tkdesk $(BIN_INSTALL_DIR)/tkdeskclient
+ 	@echo "=== Done."
+ 
+ dirs:
+diff -uprN tkdesk-2.0/netscape-remote/Makefile.in tkdesk-2.0-debian/netscape-remote/Makefile.in
+--- tkdesk-2.0/netscape-remote/Makefile.in	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/netscape-remote/Makefile.in	2017-09-28 19:09:17.277570039 +0200
+@@ -8,11 +8,8 @@
+ # the configuration script).
+ #----------------------------------------------------------------
+ 
+-# Location of Tcl header files:
+-TCL_INCLUDE_DIR =	@TCL_INCLUDE_PATH@
+-
+-# Location of Tk header files:
+-TK_INCLUDE_DIR =	@TK_INCLUDE_PATH@
++# Location of Tcl/Tk header files:
++TCL_INCLUDE_FLAG =	@TCL_INCLUDE_SPEC@
+ 
+ # Location of X11 header files:
+ X_INCLUDE_FLAG =	@TK_XINCLUDES@
+@@ -32,7 +29,7 @@ RM =			rm -f
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. -I${TCL_INCLUDE_DIR} -I${TK_INCLUDE_DIR} ${X_INCLUDE_FLAG}
++CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ 
+ libname	=	libnetscape.a
+ 
+diff -uprN tkdesk-2.0/netscape-remote/netscape_remote.c tkdesk-2.0-debian/netscape-remote/netscape_remote.c
+--- tkdesk-2.0/netscape-remote/netscape_remote.c	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/netscape-remote/netscape_remote.c	2017-09-28 19:09:17.277570039 +0200
+@@ -39,6 +39,7 @@ static char rcsid[]=
+ #endif
+ #include <X11/Xatom.h>
+ #include <X11/Xproto.h>
++#include <string.h>
+ 
+ /*
+  * Just include a prototype for XmuClientWindow here, since we bring
+diff -uprN tkdesk-2.0/tcldesk/appbar-dialup.tcl tkdesk-2.0-debian/tcldesk/appbar-dialup.tcl
+--- tkdesk-2.0/tcldesk/appbar-dialup.tcl	2017-09-28 19:09:35.809570876 +0200
++++ tkdesk-2.0-debian/tcldesk/appbar-dialup.tcl	2017-09-28 19:09:17.281570039 +0200
+@@ -79,7 +79,7 @@ proc dsk_dialup {{phonenr {}}} {
+ 	if {$phonenr == {}} {
+ 	    dsk_HistEntry .he[dsk_HistEntry::id] \
+ 		    -title "Connect to ISP" \
+-		    -label "Phone number to dial:" \
++		    -label "Provider name: (default 'provider')" \
+ 		    -history dialup_history \
+ 		    -callback dsk_dialup_ok
+ 	} else {
+@@ -103,10 +103,10 @@ proc dsk_dialup_ok {entry val} {
+     
+     set nr $entry
+     
+-    if {[string length $nr] == 0} {
+-	dsk_bell
+-	return
+-    }
++#    if {[string length $nr] == 0} {
++#	dsk_bell
++#	return
++#    }
+     
+     dialup_history add $nr
+ 
+diff -uprN tkdesk-2.0/tcldesk/cb_tools/help.tcl tkdesk-2.0-debian/tcldesk/cb_tools/help.tcl
+--- tkdesk-2.0/tcldesk/cb_tools/help.tcl	2017-09-28 19:09:35.813570877 +0200
++++ tkdesk-2.0-debian/tcldesk/cb_tools/help.tcl	2017-09-28 19:09:17.281570039 +0200
+@@ -321,6 +321,15 @@ proc _cb_help_load {this {file ""}} {
+         # $file is a pipe
+         set err [catch "set fd \[open \{$file\}\]"]
+     } else {
++	if {![file exists $file]} {
++            foreach auto_ext {.gz .z .Z} {
++		if {[file exists "$file$auto_ext"]} {
++		    set file "$file$auto_ext"
++		    set cb_help($this,public,file) $file
++		    break
++		}
++	    }
++	}
+         #foreach fake_ext {"" .gz .z .Z} {
+             set ext [file extension $file];#$fake_ext
+     	if {$ext == ".gz" || $ext == ".z"} {
+diff -uprN tkdesk-2.0/tcldesk/cb_tools/tools.tcl tkdesk-2.0-debian/tcldesk/cb_tools/tools.tcl
+--- tkdesk-2.0/tcldesk/cb_tools/tools.tcl	2017-09-28 19:09:35.813570877 +0200
++++ tkdesk-2.0-debian/tcldesk/cb_tools/tools.tcl	2017-09-28 19:09:17.281570039 +0200
+@@ -577,21 +577,21 @@ proc cb_image {file args} {
+ 	    set img [image create photo -file $file]
+ 	}
+ 	bmp {
+-	    if [auto_execok bmptoppm] {
++	    if {"" ne [auto_execok bmptoppm]} {
+ 		set img [image create photo -data [exec bmptoppm $file]]
+ 	    } else {
+ 		error "couldn't find bmptoppm"
+ 	    }
+ 	}
+ 	pcx {
+-	    if [auto_execok pcxtoppm] {
++	    if {"" ne [auto_execok pcxtoppm]} {
+ 		set img [image create photo -data [exec pcxtoppm $file]]
+ 	    } else {
+ 		error "couldn't find pcxtoppm"
+ 	    }
+ 	}
+ 	pict {
+-	    if [auto_execok picttoppm] {
++	    if {"" ne [auto_execok picttoppm]} {
+ 		set img [image create photo -data [exec picttoppm $file]]
+ 	    } else {
+ 		error "couldn't find picttoppm"
+@@ -604,9 +604,22 @@ proc cb_image {file args} {
+ 	    if {[lsearch [image types] "pixmap"] > -1} {
+ 		set img [image create pixmap -file $file]
+ 	    } else {
+-		if [auto_execok xpmtoppm] {
+-		    exec xpmtoppm $file >/tmp/[pid].ppm 2>/dev/null
+-		    set img [image create photo -file /tmp/[pid].ppm]
++		if {"" ne [auto_execok xpmtoppm]} {
++                   set err 1
++                   set fd ""
++                   for {set i 0} {$err != 0} {incr i} {
++                       set err [catch {
++                               set fd [open /tmp/[expr [pid] + $i].ppm 
++                                       {WRONLY CREAT EXCL} 0600]}]
++                       if {$err == 0} {
++                           set fname /tmp/[expr [pid] + $i].ppm
++                           close $fd
++                       }
++                   }
++                   
++                   exec xpmtoppm $file > $fname 2>/dev/null
++                   set img [image create photo -file $fname]
++                   exec rm -f $fname
+ 		} else {
+ 		    error "couldn't find xpmtoppm"
+ 		}
+@@ -797,4 +810,4 @@ proc cb_random {args} {
+     }
+     set RNG_seed [expr ($RNG_seed*7141+54773) % $max]
+     return [expr int(double($RNG_seed)*[lindex $args 0]/$max)]
+-}
+\ No newline at end of file
++}
+diff -uprN tkdesk-2.0/tcldesk/server.tcl tkdesk-2.0-debian/tcldesk/server.tcl
+--- tkdesk-2.0/tcldesk/server.tcl	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/tcldesk/server.tcl	2017-09-28 19:09:17.285570039 +0200
+@@ -71,7 +71,8 @@ proc dsk_setup_server {} {
+     fconfigure $dsk_server(s_channel) -buffering none -blocking off
+     set err 1
+     for {set i 0} {$err != 0} {incr i} {
+-	set err [catch {set fd [open /tmp/tkdesks[expr [pid] + $i] w 0600]}]
++	set err [catch {set fd [open /tmp/tkdesks[expr [pid] + $i] {WRONLY CREAT
++ EXCL} 0600]}]
+     }
+     puts $fd [expr $port -1]
+ 
+diff -uprN tkdesk-2.0/tools/pauseme tkdesk-2.0-debian/tools/pauseme
+--- tkdesk-2.0/tools/pauseme	2004-02-29 22:52:24.000000000 +0100
++++ tkdesk-2.0-debian/tools/pauseme	2017-09-28 19:09:17.285570039 +0200
+@@ -2,7 +2,9 @@
+ 
+ PROG=$1
+ shift
+-$PROG "$@"
++"$PROG" "$@"
++exitstat=$?
+ 
+ echo "Press return ..."
+ read dummy
++exit $exitstat

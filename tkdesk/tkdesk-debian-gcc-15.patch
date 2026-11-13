@@ -1,0 +1,41 @@
+From: Sergei Golovan <sgolovan@debian.org>
+Subject: Patch fixes a few function prototypes to make TkDesk buildable using GCC 15.
+Date: Sat, 07 Jun 2025 15:03:37 +0300
+Debian-Bug: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1098003
+
+--- a/libdesk/dsk_ls.c
++++ b/libdesk/dsk_ls.c
+@@ -1568,7 +1568,7 @@
+ #ifdef LSDEBUG
+     fprintf( stderr, "\nEntering write_file_lists ...\n");
+ #endif
+-    if (write_file_lists (0) != TCL_OK)
++    if (write_file_lists () != TCL_OK)
+ 	return (TCL_ERROR);
+ 
+     free_file_lists();
+--- a/netscape-remote/ClientWin.c
++++ b/netscape-remote/ClientWin.c
+@@ -30,7 +30,7 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xatom.h>
+ 
+-static Window TryChildren();
++static Window TryChildren(Display *dpy, Window win, Atom WM_STATE);
+ 
+ /* Find a window with WM_STATE, else return win itself, as per ICCCM */
+ 
+--- a/netscape-remote/netscape_remote.c
++++ b/netscape-remote/netscape_remote.c
+@@ -153,9 +153,9 @@
+ 	 */
+ 	
+ 	Tcl_CreateCommand(interp, "send-netscape", Netscape_Remote_Cmd,
+-			  (ClientData) main, (void (*)()) NULL);
++			  (ClientData) main, (void (*)(void *)) NULL);
+ 	Tcl_CreateCommand(interp, "info-netscape", Netscape_Info_Cmd,
+-			  (ClientData) main, (void (*)()) NULL);
++			  (ClientData) main, (void (*)(void *)) NULL);
+ 	
+ 	/*
+ 	 * Tell the Tcl package interface that we exist

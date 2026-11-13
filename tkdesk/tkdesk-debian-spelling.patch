@@ -1,0 +1,35 @@
+Author: Reiner Herrmann <reiner@reiner-h.de>
+Description: Fix spelling errors found by lintian
+Forwarded: no
+
+--- a/libdesk/dsk_ls.c
++++ b/libdesk/dsk_ls.c
+@@ -1431,7 +1431,7 @@
+ 		par_append_char = 1;
+ 		break;
+ 	    default:
+-		sprintf (dsk_interp->result, "Dont understand: -%c\n%s",
++		sprintf (dsk_interp->result, "Don't understand: -%c\n%s",
+ 			 argv[i][1], USAGE);
+ 		return (TCL_ERROR);
+ 	    }
+--- a/netscape-remote/netscape_remote.c
++++ b/netscape-remote/netscape_remote.c
+@@ -257,7 +257,7 @@
+ 				if (timeout <= 0) {
+ 					Tcl_AppendResult(interp, "\"timeout\" "
+ 							 "must be a positive "
+-							 "interger.",
++							 "integer.",
+ 							 (char *) NULL);
+ 					return TCL_ERROR;
+ 				}
+@@ -388,7 +388,7 @@
+ 
+ 
+ 		if (! CheckForNetscape(Tk_Display(main), w)) {
+-			Tcl_AppendResult(interp, "Window is either nonexistant"
++			Tcl_AppendResult(interp, "Window is either nonexistent"
+ 					 " or is not a valid Netscape window",
+ 					 (char *) NULL);
+ 			return TCL_ERROR;

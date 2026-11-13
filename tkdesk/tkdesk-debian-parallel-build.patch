@@ -1,0 +1,29 @@
+Author: Reiner Herrmann <reiner@reiner-h.de>
+Description: Ensure tkdesk script is removed before generating it
+ With parallel building it could happen that 'rm_tkdesk_script' and
+ 'tkdesk_script' are run in parallel, so the script could be removed while
+ it is being generated.
+ To prevent this, move the 'rm_tkdesk_script' dependency to the
+ 'tkdesk_script' target.
+Forwarded: no
+
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -162,7 +162,7 @@
+ client:
+ 	cd tkdeskclient; $(MAKE) CC_OPTS="$(CC_OPTS)" LD_OPTS="$(LD_OPTS)" all
+ 
+-tkdesk_script:
++tkdesk_script: rm_tkdesk_script
+ 	@echo '#!/bin/sh' >tkdesk
+ 	@echo '#-*- tcl -*- \' >>tkdesk
+ 	@echo "PATH=$(BIN_SEARCH_DIR):"'$$PATH ;#\' >>tkdesk
+@@ -177,7 +177,7 @@
+ rm_tkdesk_script:
+ 	@rm -f tkdesk
+ 
+-install: tkdesksh client rm_tkdesk_script tkdesk_script dirs
++install: tkdesksh client tkdesk_script dirs
+ 	@chmod +x install-sh
+ 	@echo "=== Installing the executables..."
+ 	@for f in tkdesksh; do \

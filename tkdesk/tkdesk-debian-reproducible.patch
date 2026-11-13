@@ -1,0 +1,16 @@
+Author: Alexis Bienvenüe <pado@passoire.fr>
+Description: Sort output of mkindex to make build reproducible
+Bug-Debian: https://bugs.debian.org/824567
+Forwarded: no
+
+--- a/tcldesk/mkindex
++++ b/tcldesk/mkindex
+@@ -74,7 +74,7 @@
+     append index "# sets an element in the auto_index array, where the\n"
+     append index "# element name is the name of a command and the value is\n"
+     append index "# a script that loads the command.\n\n"
+-    foreach file [eval glob $args] {
++    foreach file [lsort [eval glob $args]] {
+ 	set f ""
+ 	set error [catch {
+ 	    set f [open $file]

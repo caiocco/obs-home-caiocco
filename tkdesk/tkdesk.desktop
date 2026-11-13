@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=TkDesk
+GenericName=File Manager
+Comment=Classic Tcl/Tk file manager and desktop tool
+Exec=tkdesk
+Icon=tkdesk
+Terminal=false
+Categories=System;FileTools;FileManager;
+Keywords=files;folders;browser;appbar;

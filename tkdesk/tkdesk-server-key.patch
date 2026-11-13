@@ -1,0 +1,60 @@
+TkDesk server (Options > TkDesk Server, used by tkdeskclient, cd-tkdesk,
+ed-tkdesk...):
+
+- Enabling it aborted the start-up: cb_random seeded itself from the
+  atime of /dev/kmem, which Linux removed in 5.13.  Use [clock clicks].
+- The access key was produced by a pid-seeded LCG, so any local user
+  could guess it and run Tcl commands as the TkDesk user.  Read it
+  from /dev/urandom instead.
+- Listen on 127.0.0.1 only (connections from elsewhere were already
+  rejected, but the port was open on all interfaces).
+
+--- a/tcldesk/cb_tools/tools.tcl	2026-11-12 23:19:15.698670156 -0300
++++ b/tcldesk/cb_tools/tools.tcl	2026-11-12 23:42:23.241749345 -0300
+@@ -801,12 +801,12 @@
+ 	    set RNG_seed [lindex $args 1]
+ 	} else {
+ 	    set RNG_seed [expr \
+-                    ([pid]+[file atime /dev/kmem])%$max]
++                    ([pid]+[clock clicks])%$max]
+ 	}
+ 	return
+     }
+     if ![info exists RNG_seed] {
+-	set RNG_seed [expr ([pid]+[file atime /dev/kmem])%$max]
++	set RNG_seed [expr ([pid]+[clock clicks])%$max]
+     }
+     set RNG_seed [expr ($RNG_seed*7141+54773) % $max]
+     return [expr int(double($RNG_seed)*[lindex $args 0]/$max)]
+--- a/tcldesk/server.tcl	2026-11-12 23:19:15.699670225 -0300
++++ b/tcldesk/server.tcl	2026-11-12 23:42:23.241749345 -0300
+@@ -64,7 +64,7 @@
+     set cnt 1
+     while {$cnt} {
+ 	set cnt [catch {set dsk_server(s_channel) \
+-		[socket -server "_dsk_server_connect" $port]}]
++		[socket -server "_dsk_server_connect" -myaddr 127.0.0.1 $port]}]
+ 	incr port
+     }
+     dsk_debug "dsk_setup_server: listening on port $port"
+@@ -76,12 +76,15 @@
+     }
+     puts $fd [expr $port -1]
+ 
+-    # write key:
+-    set seed [pid]
++    # write key (from the kernel RNG: the old pid-seeded LCG key could
++    # be guessed by other local users, who could then run Tcl commands
++    # through the server):
+     set dsk_server(key) ""
+-    for {set i 0} {$i < 16} {incr i} {
+-	set c [cb_random 94 $seed]
+-	append dsk_server(key) [format %c [expr $c + 33]]
++    set rfd [open /dev/urandom rb]
++    binary scan [read $rfd 16] cu* bytes
++    close $rfd
++    foreach b $bytes {
++	append dsk_server(key) [format %c [expr {$b % 94 + 33}]]
+     }
+     puts $fd $dsk_server(key)
+     close $fd

@@ -1,0 +1,21 @@
+-------------------------------------------------------------------
+Fri Nov 13 03:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of TkDesk 2.0
+  * Upstream patches 2.0p1 and 2.0p2 plus the Debian 2.0-14 patch
+    set (Itcl 4 / Tcl 8.6 port, safe temporary files, GCC 15); the
+    dpkg-specific menu changes in Debian's configs are left out
+  * Use TkDesk's bundled BLT subset instead of a system BLT, ported
+    to Tk 8.6 on 64-bit (tkdesk-blt-tk86.patch): real tkInt.h
+    instead of copied Tk 8.0-8.4 structures, all allocations through
+    Tcl's allocator (fixes "free(): invalid size" at start-up),
+    pointer-sized channel handles and Tcl_Pids (fixes empty Disk
+    Usage window), any Tk 8.6.x accepted
+  * Load [incr Tcl] 4 from the tcl package via package require
+  * tkdesk-server-key.patch: enabling the TkDesk server no longer
+    aborts on the missing /dev/kmem; its access key comes from
+    /dev/urandom instead of a pid-seeded generator, and it only
+    listens on 127.0.0.1
+  * tkdesk-xdg-open.patch: open URLs with xdg-open
+  * Build with optflags (drop the Makefile's -O), no empty RUNPATH
+  * Add a desktop entry and icon

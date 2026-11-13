@@ -1,0 +1,64 @@
+Author: Reiner Herrmann <reiner@reiner-h.de>
+Description: Honour configured build flags
+ needed for debug symbols and proper hardening support
+Forwarded: no
+
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -121,8 +121,8 @@
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+-LDFLAGS =	${LD_OPTS}
++CFLAGS +=	${CC_OPTS} ${AC_FLAGS} -I. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
++LDFLAGS +=	${LD_OPTS}
+ 
+ PKGNAME =	tkdesk
+ VERSION =	1.2
+--- a/blt/Makefile.in
++++ b/blt/Makefile.in
+@@ -29,7 +29,7 @@
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. -I. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
++CFLAGS +=	${CC_OPTS} ${AC_FLAGS} -I.. -I. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ BLT_LIBRARY =	$(LIB_DIR)
+ 
+ libname	=	libBLT.a
+--- a/libdesk/Makefile.in
++++ b/libdesk/Makefile.in
+@@ -29,7 +29,7 @@
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
++CFLAGS +=	${CC_OPTS} ${AC_FLAGS} -I.. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ 
+ libname	=	libdesk.a
+ 
+--- a/netscape-remote/Makefile.in
++++ b/netscape-remote/Makefile.in
+@@ -29,7 +29,7 @@
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I.. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
++CFLAGS +=	${CC_OPTS} ${AC_FLAGS} -I.. ${TCL_INCLUDE_FLAG} ${X_INCLUDE_FLAG}
+ 
+ libname	=	libnetscape.a
+ 
+--- a/tkdeskclient/Makefile.in
++++ b/tkdeskclient/Makefile.in
+@@ -26,8 +26,8 @@
+ # either.
+ #----------------------------------------------------------------
+ 
+-CFLAGS =	${CC_OPTS} ${AC_FLAGS} -I..
+-LDFLAGS =	${LD_OPTS} @LDFLAGS@
++CFLAGS +=	${CC_OPTS} ${AC_FLAGS} -I..
++LDFLAGS +=	${LD_OPTS} @LDFLAGS@
+ 
+ OBJS = 		tkdeskclient.o
+ 

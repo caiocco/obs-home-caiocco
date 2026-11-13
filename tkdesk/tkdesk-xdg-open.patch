@@ -1,0 +1,15 @@
+Open URLs and HTML files with xdg-open instead of the long-gone netscape.
+TkDesk first tries the Mozilla X remote protocol, which no current
+browser implements, and then starts tkdesk(cmd,netscape) with the URL.
+
+--- a/tcldesk/configs/System	2004-04-09 22:21:52.000000000 -0300
++++ b/tcldesk/configs/System	2026-11-12 23:52:03.407258585 -0300
+@@ -144,7 +144,7 @@
+ set tkdesk(cmd,mkdir) "mkdir"	        ;# to create new directories
+ set tkdesk(cmd,print) "lpr"             ;# default command for printing
+ set tkdesk(cmd,ps) "ps"                 ;# default command for the job window
+-set tkdesk(cmd,netscape) "netscape"     ;# command for surfing :-)
++set tkdesk(cmd,netscape) "xdg-open"     ;# command for surfing :-)
+ set tkdesk(cmd,mail) "mail -s %s %a"    ;# mailing, %s: subject, %a: address
+ set tkdesk(cmd,xterm) "xterm -sb"       ;# command to use as "xterm"
+ 
