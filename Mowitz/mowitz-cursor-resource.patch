@@ -1,0 +1,78 @@
+--- a/Mowitz/MwRichtext.c
++++ b/Mowitz/MwRichtext.c
+@@ -43,6 +43,15 @@
+ #define offset(field) XtOffsetOf(MwRichtextRec, richtext.field)
+ static XtResource resources[] = {
+ 	{
++		XtNcursor,
++		XtCCursor,
++		XtRCursor,
++		sizeof(Cursor),
++		offset(pointer),
++		XtRImmediate,
++		(XtPointer)None
++	},
++	{
+ 		XtNrichtextTopRow,	/* name */
+ 		XtCRichtextTopRow,	/* class */
+ 		XtRInt,			/* type */
+@@ -587,6 +596,10 @@
+ 
+ 	if (rtw->richtext.format == -1)
+ 		rtw->richtext.format = MwEncodeFormat(~0, &fmt0);
++	if (rtw->richtext.pointer != None) {
++		*valueMask |= CWCursor;
++		attributes->cursor = rtw->richtext.pointer;
++	}
+ 	(*superclass->core_class.realize)(w, valueMask, attributes);
+ 	fg = BlackPixelOfScreen(XtScreen(w));
+ 	bg = rtw->core.background_pixel;
+--- a/Mowitz/MwRichtextP.h
++++ b/Mowitz/MwRichtextP.h
+@@ -72,6 +72,7 @@
+ 	XIM xim;
+ 	XIC xic;
+ #endif
++	Cursor pointer;		/* mouse pointer shape (XtNcursor) */
+ } MwRichtextPart;
+ 
+ typedef struct s_RichtextRec {
+--- a/Mowitz/MwTable.c
++++ b/Mowitz/MwTable.c
+@@ -37,6 +37,15 @@
+ #define offset(field) XtOffsetOf(MwTableRec, table.field)
+ static XtResource resources[] = {
+ 	{
++		XtNcursor,
++		XtCCursor,
++		XtRCursor,
++		sizeof(Cursor),
++		offset(pointer),
++		XtRImmediate,
++		(XtPointer)None
++	},
++	{
+ 		XtNtableMaxRow,		/* name */
+ 		XtCTableMaxRow,		/* class */
+ 		XtRInt,			/* type */
+@@ -813,6 +822,10 @@
+ 	MwTableWidget tw = (MwTableWidget) w;
+ 	XColor screen_color, exact_color;
+ 
++	if (tw->table.pointer != None) {
++		*valueMask |= CWCursor;
++		attributes->cursor = tw->table.pointer;
++	}
+ 	(*superclass->core_class.realize) (w, valueMask, attributes);
+ 	tw->table.black = BlackPixelOfScreen(XtScreen(w));
+ 	tw->table.white = tw->core.background_pixel;
+--- a/Mowitz/MwTableP.h
++++ b/Mowitz/MwTableP.h
+@@ -69,6 +69,7 @@
+ 	GC cursor_gc;
+ 	GC block_gc;
+ 	XtIntervalId timeout;
++	Cursor pointer;		/* mouse pointer shape (XtNcursor) */
+ } MwTablePart;
+ 
+ typedef struct s_TableRec {

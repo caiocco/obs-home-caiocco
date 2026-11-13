@@ -1,0 +1,181 @@
+--- Mowitz-0.3.1/acinclude.m4
++++ Mowitz-0.3.1/acinclude.m4
+@@ -65,6 +65,19 @@
+ 		fi
+ 	fi ])
+ 
++dnl Antialiased document text through Xft, same Type 1 fonts as t1lib
++AC_ARG_WITH(xft,
++	[  --with-xft              antialiased document text with Xft],
++	[ if test "$withval" != "no"; then
++		XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null`
++		XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null`
++		if test "$XFT_LIBS" != ""; then
++			AC_DEFINE(HAVE_XFT)
++			CFLAGS="$CFLAGS $XFT_CFLAGS"
++			X_LIBS="$XFT_LIBS $X_LIBS"
++		fi
++	fi ])
++
+ 
+ dnl Set NARROWPROTO
+ case "$host_os" in
+--- Mowitz-0.3.1/Mowitz/MwXFormat.c
++++ Mowitz-0.3.1/Mowitz/MwXFormat.c
+@@ -36,6 +36,11 @@
+ #include <t1lib.h>
+ #include <t1libx.h>
+ #endif
++#if defined(HAVE_XFT) && defined(HAVE_LIB_T1X)
++#include <X11/Xft/Xft.h>
++#include <fontconfig/fontconfig.h>
++#define MW_XFT 1
++#endif
+ 
+ #include <Mowitz/Mowitz.h>
+ #include <Mowitz/MwFormatP.h>
+@@ -175,7 +180,12 @@
+ 	check_init();
+ #ifdef HAVE_LIB_T1X
+ 	if (has_t1_font(index)) {
+-		BBox bbox = T1_GetFontBBox(font_table[index].id);
++		BBox bbox;
++		/* T1_GetFontBBox needs the font loaded; only T1_SetChar*
++		   loaded it before, so the first line came out 0 high */
++		if (T1_CheckForFontID(font_table[index].id) == 0)
++			T1_LoadFont(font_table[index].id);
++		bbox = T1_GetFontBBox(font_table[index].id);
+ 		return (bbox.ury-bbox.lly)*font_table[index].size/10000;
+ 	}
+ #endif
+@@ -1026,6 +1036,118 @@
+ x and y are the unzoomed coordinates, i.e. if x=10 and zoom=2.0,
+ the text will be drawn at x=20.
+ */
++#ifdef MW_XFT
++/*
++ * Antialiased glyphs: draw the same Type 1 font files that t1lib uses
++ * through Xft/FreeType. Glyphs are still placed one by one at the AFM
++ * positions, so layout and printing do not change. Set MW_NO_XFT in
++ * the environment to get the old t1lib bitmaps.
++ */
++static int mw_xft_state = -1;		/* -1 unknown, 0 off, 1 on */
++
++static struct mw_xft_cache {
++	int id;
++	int pixels;
++	XftFont *font;
++	struct mw_xft_cache *next;
++} *mw_xft_fonts = NULL;
++
++static int mw_xft_on(void)
++{
++	if (mw_xft_state == -1)
++		mw_xft_state = getenv("MW_NO_XFT") == NULL &&
++			DefaultVisual(t1_dpy, t1_scrn)->class == TrueColor;
++	return mw_xft_state;
++}
++
++static XftFont *mw_xft_font(int id, double size)
++{
++	struct mw_xft_cache *c;
++	int pixels = (int)(size * 64 + 0.5);	/* 1/64 pixel steps */
++	char *path;
++	FcPattern *pat;
++	XftFont *f = NULL;
++
++	for (c = mw_xft_fonts; c; c = c->next)
++		if (c->id == id && c->pixels == pixels) return c->font;
++
++	path = T1_GetFontFilePath(id);
++	if (path) {
++		pat = FcPatternCreate();
++		FcPatternAddString(pat, FC_FILE, (FcChar8 *)path);
++		FcPatternAddInteger(pat, FC_INDEX, 0);
++		FcPatternAddDouble(pat, FC_PIXEL_SIZE, pixels / 64.0);
++		FcConfigSubstitute(NULL, pat, FcMatchPattern);
++		XftDefaultSubstitute(t1_dpy, t1_scrn, pat);
++		/* XftFontOpenPattern loads exactly this file */
++		f = XftFontOpenPattern(t1_dpy, pat);
++		if (f == NULL) FcPatternDestroy(pat);
++	}
++	c = MwMalloc(sizeof *c);
++	c->id = id;
++	c->pixels = pixels;
++	c->font = f;		/* NULL: fall back to t1lib */
++	c->next = mw_xft_fonts;
++	mw_xft_fonts = c;
++	return f;
++}
++
++/* the GC's foreground as an XftColor (TrueColor only) */
++static void mw_xft_color(GC gc, XftColor *xc)
++{
++	static unsigned long last_pixel = ~0UL;
++	static XRenderColor last;
++	XGCValues v;
++	Visual *vis = DefaultVisual(t1_dpy, t1_scrn);
++
++	XGetGCValues(t1_dpy, gc, GCForeground, &v);
++	if (v.foreground != last_pixel) {
++		unsigned long m[3];
++		unsigned short *out[3];
++		int i;
++
++		m[0] = vis->red_mask;
++		m[1] = vis->green_mask;
++		m[2] = vis->blue_mask;
++		out[0] = &last.red;
++		out[1] = &last.green;
++		out[2] = &last.blue;
++		for (i = 0; i < 3; i++) {
++			unsigned long mask = m[i], val;
++			int shift = 0, bits = 0;
++			while (mask && !(mask & 1)) mask >>= 1, shift++;
++			while (mask & 1) mask >>= 1, bits++;
++			val = (v.foreground >> shift) & ((1UL << bits) - 1);
++			*out[i] = bits ? val * 0xffff / ((1UL << bits) - 1) : 0;
++		}
++		last.alpha = 0xffff;
++		last_pixel = v.foreground;
++	}
++	xc->pixel = v.foreground;
++	xc->color = last;
++}
++
++static int mw_xft_char(Drawable d, GC gc, int x, int y, int id,
++		double size, unsigned char ch)
++{
++	XftFont *f;
++	XftDraw *xd;
++	XftColor xc;
++
++	if (!mw_xft_on() || (f = mw_xft_font(id, size)) == NULL)
++		return 0;
++	/* a fresh XftDraw each time: Mowitz draws into short-lived
++	   pixmaps, and a cached Render picture could outlive them */
++	xd = XftDrawCreate(t1_dpy, d, DefaultVisual(t1_dpy, t1_scrn),
++			DefaultColormap(t1_dpy, t1_scrn));
++	if (xd == NULL) return 0;
++	mw_xft_color(gc, &xc);
++	XftDrawString8(xd, &xc, f, x, y, &ch, 1);
++	XftDrawDestroy(xd);
++	return 1;
++}
++#endif	/* MW_XFT */
++
+ static int rc_draw(Drawable d, GC gc, int xo, int yo,
+ 		int x, int y, MwRichchar c, int opaque, float zoom)
+ {
+@@ -1068,6 +1190,11 @@
+ 
+ 	if (has_t1_font(index)) {
+ #ifdef HAVE_LIB_T1X
++#ifdef MW_XFT
++		if (!mw_xft_char(d, gc, xo+zoom*x, yo+zoom*(y+vadj),
++			font_table[index].id,
++			zoom*font_table[index].size/10.0, c.c))
++#endif
+ 		T1_SetCharX(d, gc, t1_mode, xo+zoom*x, yo+zoom*(y+vadj),
+ 			font_table[index].id, c.c,
+ 			zoom*font_table[index].size/10.0, NULL);

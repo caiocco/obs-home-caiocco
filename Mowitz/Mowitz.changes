@@ -1,0 +1,75 @@
+-------------------------------------------------------------------
+Fri Nov 13 23:08:22 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add mowitz-center-on-parent.patch: MwCenter() (alert, list,
+  input, file selector and Siag form dialogs) centred dialogs on the
+  root window, which on a multi-monitor desktop spans every monitor,
+  so "Save?" and friends opened on the wrong screen. Dialogs are now
+  centred over the parent application window when it is mapped
+  (falling back to the screen centre) and kept inside the screen
+
+-------------------------------------------------------------------
+Fri Nov 13 19:06:19 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add mowitz-selection-utf8.patch: MwSelectionToLatin1() and
+  MwLatin1ToUtf8() convert selection text between UTF-8 and the
+  Latin-1 Mowitz works in (punctuation outside Latin-1 such as curly
+  quotes, dashes and ellipsis is approximated); STRING replies that
+  are valid UTF-8 are decoded too, since many clients send UTF-8
+  there. MwTextField pastes UTF8_STRING first and offers it when
+  copying, and gives Xt a copy of the selection text instead of its
+  own buffer (Xt freed it, then MwTextField freed it again)
+
+-------------------------------------------------------------------
+Fri Nov 13 17:11:57 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add mowitz-xft-antialias.patch and build --with-xft: document glyphs
+  are drawn antialiased through Xft/FreeType from the same URW Type 1
+  files t1lib uses, still one by one at the AFM positions, so layout
+  and printing are unchanged (MW_NO_XFT=1 brings back the t1lib
+  bitmaps). Also load the font before T1_GetFontBBox, which returned
+  an empty box (zero line height) until something had drawn with it
+
+-------------------------------------------------------------------
+Fri Nov 13 16:53:20 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- mowitz-xim-latin1.patch: share the input context with XawM through
+  a quark-based XContext; in the C locale take composed Latin-1
+  letters from the keysym (XwcLookupString returns no characters)
+- Add mowitz-filesel-utf8.patch: the file selector showed UTF-8 file
+  names as Latin-1 ("relatÃ³rio") and created files with Latin-1
+  names; convert between the two at the file system boundary. Also
+  size realpath() buffers to PATH_MAX
+- Add mowitz-cursor-resource.patch: cursor resource for MwTable and
+  MwRichtext
+
+-------------------------------------------------------------------
+Fri Nov 13 15:52:40 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add mowitz-xim-latin1.patch: Mowitz keeps text in ISO 8859-1, but
+  XmbLookupString returns UTF-8 in today's locales, so Richtext
+  dropped accented letters and TextField stored UTF-8 bytes. New
+  MwLookupLatin1()/MwInputInit() give each widget an input context
+  on one shared XIM, filter dead keys and return Latin-1
+
+-------------------------------------------------------------------
+Fri Nov 13 14:29:28 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add mowitz-64bit-colors.patch: c.red * 0xffff overflowed int and
+  was sign-extended into unsigned long, so white and other bright
+  colours were allocated nearly black (black Siag cells on 64-bit)
+- Add mowitz-urw-t1lib.patch and build --with-t1lib: text is laid out
+  with the Adobe AFM widths, but the X core fonts on Leap have no
+  scalable Times/Helvetica at 72 dpi, so glyphs fell back to "fixed"
+  and overlapped; render with t1lib using the metric-compatible URW
+  fonts from ghostscript-fonts-std instead (FontDataBase, T1= names,
+  t1lib.config search path); fix T1_Get_no_fonts -> T1_GetNoFonts
+- Mowitz-data requires ghostscript-fonts-std
+- Drop the empty NEWS file from the docs
+
+-------------------------------------------------------------------
+Fri Nov 13 13:33:18 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Mowitz 0.3.1, built against XawM
+- Add mowitz-gcc15.patch: missing includes (GCC 15)
+- Add mowitz-link-libs.patch: link libMowitz against its X libraries

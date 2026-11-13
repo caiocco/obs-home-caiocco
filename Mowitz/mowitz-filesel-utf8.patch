@@ -1,0 +1,275 @@
+--- a/Mowitz/MwFilesel.c
++++ b/Mowitz/MwFilesel.c
+@@ -40,6 +40,8 @@
+ #include <sys/stat.h>
+ #include <sys/param.h>
+ #include <unistd.h>
++#include <langinfo.h>
++#include <limits.h>
+ 
+ #include <X11/Intrinsic.h>
+ #include <X11/StringDefs.h>
+@@ -69,6 +71,90 @@
+ 
+ /* collect directory contents */
+ 
++/*
++ * The dialog shows and edits names in ISO 8859-1, like the rest of
++ * Mowitz, but file names on disk are in the locale's encoding (UTF-8
++ * nowadays). Convert at the boundary. Names that do not fit in
++ * Latin-1, or are not valid UTF-8, are passed through unchanged so
++ * they still round trip.
++ */
++static int utf8_locale(void)
++{
++	const char *cs = nl_langinfo(CODESET);
++	return cs && (!strcmp(cs, "UTF-8") || !strcmp(cs, "utf8"));
++}
++
++/* Decode UTF-8 to Latin-1; returns 0 if src is not all Latin-1 UTF-8 */
++static int utf8_to_latin1(char *dst, const char *src, size_t n)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	size_t i = 0;
++
++	while (*p) {
++		unsigned c = *p;
++		if (c < 0x80) p++;
++		else if ((c == 0xc2 || c == 0xc3) && (p[1] & 0xc0) == 0x80) {
++			c = ((c & 0x1f) << 6) | (p[1] & 0x3f);
++			p += 2;
++		} else return 0;
++		if (i + 1 >= n) return 0;
++		dst[i++] = (char)c;
++	}
++	dst[i] = '\0';
++	return 1;
++}
++
++static int valid_utf8(const char *src)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	while (*p) {
++		int k;
++		if (*p < 0x80) k = 0;
++		else if ((*p & 0xe0) == 0xc0 && *p >= 0xc2) k = 1;
++		else if ((*p & 0xf0) == 0xe0) k = 2;
++		else if ((*p & 0xf8) == 0xf0 && *p <= 0xf4) k = 3;
++		else return 0;
++		p++;
++		while (k--) {
++			if ((*p & 0xc0) != 0x80) return 0;
++			p++;
++		}
++	}
++	return 1;
++}
++
++/* file system name -> what the dialog shows */
++static char *fs2disp(char *dst, const char *src, size_t n)
++{
++	if (!utf8_locale() || !utf8_to_latin1(dst, src, n)) {
++		strncpy(dst, src, n - 1);
++		dst[n - 1] = '\0';
++	}
++	return dst;
++}
++
++/* what the dialog shows or the user typed -> file system name */
++static char *disp2fs(char *dst, const char *src, size_t n)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	size_t i = 0;
++
++	if (!utf8_locale() || valid_utf8(src)) {
++		strncpy(dst, src, n - 1);
++		dst[n - 1] = '\0';
++		return dst;
++	}
++	for (; *p && i + 2 < n; p++) {
++		if (*p < 0x80) dst[i++] = *p;
++		else {
++			dst[i++] = 0xc0 | (*p >> 6);
++			dst[i++] = 0x80 | (*p & 0x3f);
++		}
++	}
++	dst[i] = '\0';
++	return dst;
++}
++
+ static int compar(const void *p, const void *q)
+ {
+ 	return strcmp(*(const char **)p, *(const char **)q);
+@@ -80,11 +166,12 @@
+ {
+ 	DIR *dird;
+ 	struct dirent *dire;
+-	char fn[1024];
++	char fn[PATH_MAX+256], fspath[PATH_MAX], name[NAME_MAX+1];
+ 	struct stat buf;
+ 	char **ldir = NULL, **lfile = NULL;
+ 	int ndir = 0, mdir = 0, nfile = 0, mfile = 0;
+ 
++	path = disp2fs(fspath, path, sizeof fspath);
+ 	if ((dird = opendir(path)) == NULL) {
+ 		fprintf(stderr, "Can't open %s\n", path);
+ 		return 1;
+@@ -99,14 +186,16 @@
+ 			if (ndir >= mdir)
+ 				ldir = MwRealloc(ldir,
+ 					(mdir += 256)*sizeof(char *));
+-			ldir[ndir++] = MwStrdup(dire->d_name);
++			ldir[ndir++] = MwStrdup(fs2disp(name,
++						dire->d_name, sizeof name));
+ 		}
+ 		else if (S_IFREG & buf.st_mode && 
+ 				!fnmatch(pattern, dire->d_name, 0)) {
+ 			if (nfile >= mfile)
+ 				lfile = MwRealloc(lfile,
+ 					(mfile += 256)*sizeof(char *));
+-			lfile[nfile++] = MwStrdup(dire->d_name);
++			lfile[nfile++] = MwStrdup(fs2disp(name,
++						dire->d_name, sizeof name));
+ 		}
+ 	}
+ 	closedir(dird);
+@@ -248,18 +337,20 @@
+ 
+ static void dir_select(Widget w, XtPointer client_data, XtPointer call_data)
+ {
+-	char path[1024];
+-	char newpath[1024];
++	char path[PATH_MAX];
++	char newpath[PATH_MAX];
+ 
+ 	XawListReturnStruct *list_struct = (XawListReturnStruct *)call_data;
+ 	String string = list_struct->string;
+ 
++	char fspath[PATH_MAX];
++
+ 	sprintf(path, "%s/%s", MwLabelGet(fsel_dirbutton), string);
+ 
+-	if (!realpath(path, newpath))
++	if (!realpath(disp2fs(fspath, path, sizeof fspath), newpath))
+ 		fprintf(stderr, "Couldn't realpath %s\n", path);
+ 
+-	MwLabelSet(fsel_dirbutton, newpath);
++	MwLabelSet(fsel_dirbutton, fs2disp(path, newpath, sizeof path));
+ 
+ 	XawListUnhighlight(fsel_filelist);
+ 	XawListUnhighlight(fsel_dirlist);
+@@ -299,15 +390,15 @@
+ 
+ static void change_dir(Widget w, XtPointer client_data, XtPointer call_data)
+ {
+-	char path[1024];
+-	char newpath[1024];
++	char path[PATH_MAX];
++	char newpath[PATH_MAX];
+ 
+-	strcpy(path, (char *)client_data);
++	disp2fs(path, (char *)client_data, sizeof path);
+ 
+ 	if (!realpath(path, newpath))
+ 		fprintf(stderr, "Couldn't realpath %s\n", path);
+ 
+-	MwLabelSet(fsel_dirbutton, newpath);
++	MwLabelSet(fsel_dirbutton, fs2disp(path, newpath, sizeof path));
+ 
+ 	fsel_scan();
+ }
+@@ -357,17 +448,20 @@
+ 
+ static void fsel_done(Widget w, XtPointer client_data, XtPointer call_data)
+ {
+-	char path[1024], newpath[1024];
++	char path[PATH_MAX], newpath[PATH_MAX];
+ 	struct stat buf;
+ 	String string;
+ 	XtVaGetValues(fsel_filetext,
+ 		XtNstring, &string, (char *)0);
+ 	if (string[0] == '/') strcpy(path, string);
+ 	else sprintf(path, "%s/%s", MwLabelGet(fsel_dirbutton), string);
+-	realpath(path, newpath);
++	if (realpath(disp2fs(newpath, path, sizeof newpath), path))
++		strcpy(newpath, path);
++	else
++		newpath[0] = '\0';	/* new file: not a directory */
+ 	if (!stat(newpath, &buf) &&
+ 		(S_IFDIR & buf.st_mode)) {
+-		MwLabelSet(fsel_dirbutton, newpath);
++		MwLabelSet(fsel_dirbutton, fs2disp(path, newpath, sizeof path));
+ 		XtVaSetValues(fsel_filetext,
+ 			XtNstring, "", (char *)0);
+ 		fsel_scan();
+@@ -417,20 +511,20 @@
+ 
+ static void fsel_find(Widget w, XtPointer client_data, XtPointer call_data)
+ {
+-	char fn[1024];
+-	char cmd[1024];	
++	char fn[1024], fsfn[1024], fsdir[PATH_MAX];
++	char cmd[PATH_MAX + 2*1024 + 32];
+ 	char **files = NULL;
+ 	int nfiles = 0, i;
+ 	FILE *fp;
+ 
+ 	fn[0] = '\0';
+ 	if (MwDialogInput(fsel_pshell, "Find pattern:", fn)) {
+-		if (fn[0] == '!') {
+-			sprintf(cmd, "find %s %s -print",
+-				MwLabelGet(fsel_dirbutton), fn+1);
++		disp2fs(fsdir, MwLabelGet(fsel_dirbutton), sizeof fsdir);
++		disp2fs(fsfn, fn, sizeof fsfn);
++		if (fsfn[0] == '!') {
++			sprintf(cmd, "find %s %s -print", fsdir, fsfn+1);
+ 		} else {
+-			sprintf(cmd, "find %s -name '%s' -print",
+-				MwLabelGet(fsel_dirbutton), fn);
++			sprintf(cmd, "find %s -name '%s' -print", fsdir, fsfn);
+ 		}
+ 		if (!(fp = popen(cmd, "r"))) {
+ 			MwErrorBox(fsel_pshell, "Can't exec find");
+@@ -439,7 +533,7 @@
+ 		while ((fgets(fn, sizeof fn, fp))) {
+ 			MwChomp(fn);
+ 			files = MwRealloc(files, (nfiles+1)*(sizeof(char *)));
+-			files[nfiles++] = MwStrdup(fn);
++			files[nfiles++] = MwStrdup(fs2disp(fsfn, fn, sizeof fsfn));
+ 		}
+ 		pclose(fp);
+ 		if (nfiles) {
+@@ -690,7 +784,7 @@
+ 	String string;
+ 	XtAppContext app_context = XtWidgetToApplicationContext(pw);
+ 	int i;
+-	char newpath[PATH_MAX];
++	char newpath[PATH_MAX], disp[PATH_MAX];
+ 
+ 	if (!realpath(path, newpath))
+ 		getcwd(newpath, sizeof newpath);
+@@ -712,8 +806,9 @@
+ 	make_menu(patterns, fsel_formatmenu);
+ 	ch_ext = ext;
+ 
+-	MwLabelSet(fsel_dirbutton, path);
+-	XtVaSetValues(fsel_filetext, XtNstring, name, (char *)0);
++	MwLabelSet(fsel_dirbutton, fs2disp(disp, path, sizeof disp));
++	XtVaSetValues(fsel_filetext,
++		XtNstring, fs2disp(disp, name, sizeof disp), (char *)0);
+ 	add_extra(extra);
+ 	status = MW_WAITING;
+ 
+@@ -740,8 +835,10 @@
+ 		XtDestroyWidget(fsel_extra[i]);
+ 
+ 	XtVaGetValues(fsel_filetext, XtNstring, &string, (char *)0);
+-	strcpy(name, string);
+-	strcpy(path, MwLabelGet(fsel_dirbutton));
++	disp2fs(disp, string, sizeof disp);
++	strcpy(name, disp);
++	disp2fs(disp, MwLabelGet(fsel_dirbutton), sizeof disp);
++	strcpy(path, disp);
+ 	strcpy(fmt, MwLabelGet(fsel_formatbutton));
+ 	return status;
+ }

@@ -1,0 +1,304 @@
+--- a/Mowitz/MwRichtext.c
++++ b/Mowitz/MwRichtext.c
+@@ -584,9 +584,6 @@
+ 	unsigned long fg, bg, blockbg;
+ 	XColor screen_color, exact_color;
+ 	Display *dpy = XtDisplay(w);
+-	char *name, *class;
+-	XIMStyles *styles;
+-	int i;
+ 
+ 	if (rtw->richtext.format == -1)
+ 		rtw->richtext.format = MwEncodeFormat(~0, &fmt0);
+@@ -606,25 +603,9 @@
+         XSetLineAttributes(dpy, rtw->richtext.cursor_gc,
+ 			1, LineSolid, CapButt, JoinMiter);
+ 
+-#ifdef HAVE_XCREATEIC
+-	/* Set up input methods */
+-	XtGetApplicationNameAndClass(dpy, &name, &class);
+-	rtw->richtext.xim = XOpenIM(dpy, XtDatabase(dpy), name, class);
+-	if (rtw->richtext.xim) {
+-		XGetIMValues(rtw->richtext.xim,
+-			XNQueryInputStyle, &styles,
+-			(char *)0);
+-		for (i = 0; i < styles->count_styles; i++) {
+-			if (styles->supported_styles[i] ==
+-			    (XIMPreeditNothing | XIMStatusNothing)) break;
+-		}
+-		if (i == styles->count_styles) i = 0;
+-		rtw->richtext.xic = XCreateIC(rtw->richtext.xim,
+-			XNInputStyle, styles->supported_styles[i],
+-			XNClientWindow, XtWindow(w),
+-			(char *)0);
+-	}
+-#endif
++	rtw->richtext.xim = NULL;
++	rtw->richtext.xic = NULL;
++	MwInputInit(w);
+ }
+ 
+ static void Initialize(Widget request, Widget new, ArgList args, Cardinal *n)
+@@ -1374,19 +1355,7 @@
+ int MwRichtextLookupString(Widget w, XEvent *event, char *buf,
+ 			 int bufsiz, KeySym *keysym)
+ {
+-#ifdef HAVE_XCREATEIC
+-	Status status;
+-	if (((MwRichtextWidget)w)->richtext.xim)
+-		return XmbLookupString(((MwRichtextWidget)w)->richtext.xic,
+-					(XKeyEvent *)event, (char *)buf, bufsiz,
+-					keysym, &status);
+-	else	
+-	        return XLookupString((XKeyEvent *)event, (char *)buf, bufsiz,
+-					keysym, NULL);
+-#else
+-        return XLookupString((XKeyEvent *)event, (char *)buf, bufsiz,
+-				keysym, NULL);
+-#endif
++	return MwLookupLatin1(w, event, buf, bufsiz, keysym);
+ }
+ 
+ void MwRichtextSetZoom(Widget w, float zoom)
+--- a/Mowitz/MwTextField.c
++++ b/Mowitz/MwTextField.c
+@@ -34,6 +34,7 @@
+ #include <stdlib.h>
+ 
+ #include "MwUtils.h"
++#include "MwXutils.h"
+ #include "MwTextFieldP.h"
+ 
+ #define offset(field) XtOffsetOf(MwTextFieldRec, text.field)
+@@ -278,33 +279,12 @@
+ 		XSetWindowAttributes *attributes)
+ {
+ 	MwTextFieldWidget rtw = (MwTextFieldWidget)w;
+-	Display *dpy;
+-	char *name, *class;
+-	XIMStyles *styles;
+-	int i;
+ 
+ 	(*superclass->core_class.realize)(w, valueMask, attributes);
+ 
+-#ifdef HAVE_XCREATEIC
+-	/* Set up input methods */
+-	dpy = XtDisplay(w);
+-	XtGetApplicationNameAndClass(dpy, &name, &class);
+-	rtw->text.xim = XOpenIM(dpy, XtDatabase(dpy), name, class);
+-	if (rtw->text.xim) {
+-		XGetIMValues(rtw->text.xim,
+-			XNQueryInputStyle, &styles,
+-			(char *)0);
+-		for (i = 0; i < styles->count_styles; i++) {
+-			if (styles->supported_styles[i] ==
+-				(XIMPreeditNothing | XIMStatusNothing)) break;
+-		}
+-		if (i == styles->count_styles) i = 0;
+-		rtw->text.xic = XCreateIC(rtw->text.xim,
+-			XNInputStyle, styles->supported_styles[i],
+-			XNClientWindow, XtWindow(w),
+-			(char *)0);
+-	}
+-#endif
++	rtw->text.xim = NULL;
++	rtw->text.xic = NULL;
++	MwInputInit(w);
+ }
+ 
+ static void
+@@ -709,16 +689,7 @@
+   if (!w->text.Editable)
+     return;
+ 
+-#ifdef HAVE_XCREATEIC
+-	if (((MwTextFieldWidget)w)->text.xim)
+-		len = XmbLookupString(((MwTextFieldWidget)w)->text.xic,
+-					(XKeyEvent *)event, (char *)buf, BUFSIZ,
+-					&keysym, &status);
+-	else
+-		len = XLookupString((XKeyEvent *) event, buf, BUFSIZ, NULL, NULL);
+-#else
+-  len = XLookupString((XKeyEvent *) event, buf, BUFSIZ, NULL, NULL);
+-#endif
++  len = MwLookupLatin1(aw, event, buf, INSERTCHARBUFSIZ - 1, &keysym);
+ 
+   /* Throw away characters with values < Space (32) */
+ /* Unbroken by Ulric: keep negative values */
+--- a/Mowitz/MwXutils.c
++++ b/Mowitz/MwXutils.c
+@@ -28,6 +28,8 @@
+ #include <X11/Intrinsic.h>
+ #include <X11/StringDefs.h>
+ #include <X11/xpm.h>
++#include <X11/Xresource.h>
++#include <wchar.h>
+ #include <Mowitz/Mowitz.h>
+ 
+ static int find_file(const char *path, char *fn, const char *name)
+@@ -513,3 +515,155 @@
+ 		actions, XtNumber(actions));
+ }
+ 
++
++/*
++ * Keyboard input through the X input method.
++ *
++ * Mowitz and Siag Office keep text in ISO 8859-1. XmbLookupString
++ * returns the locale's multibyte encoding (UTF-8 in today's locales)
++ * and XLookupString does not compose dead keys, so accented letters
++ * were lost. These helpers give each widget window an input context
++ * on one shared input method and convert what it returns to Latin-1.
++ */
++
++static XIM mw_xim = NULL;
++static Boolean mw_xim_tried = False;
++static XContext mw_xic_context = 0;
++
++/* One input context per shell window. Keys reach widgets through the
++   shell (Xt keyboard focus) or straight to their own window, so a
++   context on the shell sees every key of that window, and the
++   composed character comes back to whichever widget has the focus. */
++
++static void mw_input_destroy(Widget shell, XtPointer client_data,
++		XtPointer call_data)
++{
++	XIC xic = (XIC)client_data;
++
++	if (XtWindow(shell) != None)
++		XDeleteContext(XtDisplay(shell), XtWindow(shell),
++				mw_xic_context);
++	if (xic) XDestroyIC(xic);
++}
++
++static XIC mw_input_ic(Widget w, Boolean *created)
++{
++	Widget shell = w;
++	Display *dpy = XtDisplay(w);
++	Window win;
++	XPointer p;
++	XIC xic = NULL;
++	XIMStyles *styles = NULL;
++	XIMStyle style = 0;
++	unsigned short i;
++
++	if (created) *created = False;
++	while (shell && !XtIsShell(shell)) shell = XtParent(shell);
++	if (shell == NULL || (win = XtWindow(shell)) == None) return NULL;
++	/* shared with XawM (same quark), so both use one context per shell */
++	if (mw_xic_context == 0)
++		mw_xic_context = (XContext)XrmStringToQuark("MwLatin1InputContext");
++	if (XFindContext(dpy, win, mw_xic_context, &p) == 0)
++		return (XIC)p;
++
++	if (!mw_xim_tried) {
++		char *name, *class;
++		mw_xim_tried = True;
++		XtGetApplicationNameAndClass(dpy, &name, &class);
++		mw_xim = XOpenIM(dpy, XtDatabase(dpy), name, class);
++	}
++	if (mw_xim &&
++	    XGetIMValues(mw_xim, XNQueryInputStyle, &styles, NULL) == NULL &&
++	    styles) {
++		for (i = 0; i < styles->count_styles; i++) {
++			XIMStyle s = styles->supported_styles[i];
++			if (s == (XIMPreeditNothing | XIMStatusNothing)) {
++				style = s;
++				break;
++			}
++			if (s == (XIMPreeditNone | XIMStatusNone))
++				style = s;
++		}
++		XFree(styles);
++	}
++	if (style)
++		xic = XCreateIC(mw_xim, XNInputStyle, style,
++				XNClientWindow, win,
++				XNFocusWindow, win,
++				NULL);
++	if (xic) XSetICFocus(xic);
++	/* remember failures too, so we do not retry on every key */
++	XSaveContext(dpy, win, mw_xic_context, (XPointer)xic);
++	XtAddCallback(shell, XtNdestroyCallback, mw_input_destroy,
++			(XtPointer)xic);
++	if (created) *created = True;
++	return xic;
++}
++
++/* Create the input context for a realized widget's shell. Optional:
++   done on the first key press otherwise. */
++void MwInputInit(Widget w)
++{
++	(void)mw_input_ic(w, NULL);
++}
++
++/* Like XLookupString, but composes through the input method and
++   returns ISO 8859-1 text. Characters outside Latin-1 are dropped. */
++int MwLookupLatin1(Widget w, XEvent *event, char *buf, int bufsiz,
++		KeySym *keysym)
++{
++	XIC xic;
++	Window focus = None;
++	wchar_t wbuf[64];
++	KeySym ks = NoSymbol;
++	Status status;
++	int i, n, len = 0;
++	Boolean created;
++
++	if (keysym) *keysym = NoSymbol;
++	if (event->type != KeyPress || (xic = mw_input_ic(w, &created)) == NULL)
++		return XLookupString(&event->xkey, buf, bufsiz, keysym, NULL);
++
++	/* XtDispatchEvent has already filtered events sent to the
++	   context's own window; filter the others here. */
++	XGetICValues(xic, XNFocusWindow, &focus, NULL);
++	if ((created || event->xkey.window != focus) &&
++	    XFilterEvent(event, focus))
++		return 0;
++
++	n = XwcLookupString(xic, &event->xkey, wbuf,
++			sizeof wbuf / sizeof wbuf[0], &ks, &status);
++	switch (status) {
++	case XLookupChars:
++		ks = NoSymbol;
++		break;
++	case XLookupBoth:
++		break;
++	case XLookupKeySym:
++		/* in the C locale a composed letter comes back as a
++		   keysym only; Latin-1 keysyms equal their codes */
++		if (ks >= 0x1000000 + 0xa0 && ks <= 0x10000ff)
++			ks -= 0x1000000;
++		if (ks >= 0xa0 && ks <= 0xff && bufsiz > 0) {
++			buf[0] = (char)ks;
++			n = 0;
++			len = 1;
++			goto done;
++		}
++		n = 0;
++		break;
++	default:	/* XLookupNone, XBufferOverflow */
++		return 0;
++	}
++	for (i = 0; i < n && len < bufsiz; i++) {
++		if (wbuf[i] > 0 && wbuf[i] < 256)
++			buf[len++] = (char)wbuf[i];
++	}
++done:
++	if (len < bufsiz) buf[len] = '\0';
++	/* Latin-1 keysyms equal their character codes */
++	if (ks == NoSymbol && len == 1)
++		ks = (unsigned char)buf[0];
++	if (keysym) *keysym = ks;
++	return len;
++}
+--- a/Mowitz/MwXutils.h
++++ b/Mowitz/MwXutils.h
+@@ -16,5 +16,7 @@
+ extern int MwXErrorHandler(Display *, XErrorEvent *);
+ extern void MwSetIcon(Widget, char **);
+ extern void MwHighlightInit(Widget);
++extern void MwInputInit(Widget);
++extern int MwLookupLatin1(Widget, XEvent *, char *, int, KeySym *);
+ 
+ #endif	/* MW_XUTILS_H */

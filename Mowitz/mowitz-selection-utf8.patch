@@ -1,0 +1,267 @@
+--- a/Mowitz/MwXutils.c	2026-11-13 16:04:07.220187959 -0300
++++ b/Mowitz/MwXutils.c	2026-11-13 16:04:43.178602040 -0300
+@@ -667,3 +667,170 @@
+ 	if (keysym) *keysym = ks;
+ 	return len;
+ }
++
++/*
++ * Selections.
++ *
++ * Mowitz and its applications keep text in ISO 8859-1. Other clients
++ * offer text as UTF8_STRING, and many of them also answer STRING
++ * requests with UTF-8 bytes instead of Latin-1, so pasted accents
++ * came out as "Ã©". These helpers convert in both directions.
++ */
++
++/* decode one UTF-8 sequence; returns its length, 0 if invalid */
++static int mw_utf8_decode(const unsigned char *p, unsigned long n,
++	unsigned long *cp)
++{
++	unsigned long c;
++	int k, i;
++
++	if (n == 0) return 0;
++	if (p[0] < 0x80) {
++		*cp = p[0];
++		return 1;
++	}
++	if (p[0] >= 0xc2 && p[0] <= 0xdf) k = 1, c = p[0] & 0x1f;
++	else if ((p[0] & 0xf0) == 0xe0) k = 2, c = p[0] & 0x0f;
++	else if (p[0] >= 0xf0 && p[0] <= 0xf4) k = 3, c = p[0] & 0x07;
++	else return 0;
++	if (n < (unsigned long)k + 1) return 0;
++	for (i = 1; i <= k; i++) {
++		if ((p[i] & 0xc0) != 0x80) return 0;
++		c = (c << 6) | (p[i] & 0x3f);
++	}
++	if ((k == 2 && c < 0x800) || (k == 3 && (c < 0x10000 || c > 0x10ffff))
++			|| (c >= 0xd800 && c <= 0xdfff))
++		return 0;
++	*cp = c;
++	return k + 1;
++}
++
++/* True if the data is valid UTF-8 with at least one non-ASCII char */
++static int mw_looks_utf8(const unsigned char *p, unsigned long n)
++{
++	unsigned long i = 0, cp;
++	int multi = 0;
++
++	while (i < n) {
++		int k;
++		if (p[i] == '\0') {
++			i++;
++			continue;
++		}
++		k = mw_utf8_decode(p + i, n - i, &cp);
++		if (k == 0) return 0;
++		if (k > 1) multi = 1;
++		i += k;
++	}
++	return multi;
++}
++
++/* Latin-1 approximation of characters outside the repertoire */
++static const char *mw_latin1_fallback(unsigned long cp)
++{
++	switch (cp) {
++	case 0x2018: case 0x2019: case 0x201a: case 0x201b:
++	case 0x2032: case 0x2039: case 0x203a:
++		return "'";
++	case 0x201c: case 0x201d: case 0x201e: case 0x201f:
++	case 0x2033:
++		return "\"";
++	case 0x2010: case 0x2011: case 0x2012: case 0x2013:
++	case 0x2014: case 0x2015: case 0x2212:
++		return "-";
++	case 0x2026: return "...";
++	case 0x2022: case 0x2027: case 0x2219: case 0x22c5:
++		return "\267";
++	case 0x2002: case 0x2003: case 0x2009: case 0x202f:
++		return " ";
++	case 0x2007: case 0x2008: case 0x200a:
++		return " ";
++	case 0x200b: case 0x200c: case 0x200d: case 0x2060:
++	case 0xfeff: case 0x00ad:
++		return "";
++	case 0x20ac: return "EUR";
++	case 0x2122: return "TM";
++	case 0x2028: case 0x2029: return "\n";
++	case 0xfb01: return "fi";
++	case 0xfb02: return "fl";
++	default: return "?";
++	}
++}
++
++/* ---
++Convert selection data to a NUL-terminated Latin-1 string allocated
++with MwMalloc. If utf8 is false the data is still decoded as UTF-8 when
++it is valid UTF-8 containing multibyte sequences, since many clients
++send UTF-8 in reply to STRING requests. Carriage returns are dropped
++(CR LF -> LF) and NUL bytes are skipped.
++*/
++char *MwSelectionToLatin1(const char *value, unsigned long length, int utf8)
++{
++	const unsigned char *p = (const unsigned char *)value;
++	unsigned long i = 0, cp;
++	char *out, *q;
++
++	if (value == NULL) length = 0;
++	if (!utf8) utf8 = mw_looks_utf8(p, length);
++	/* every replacement is no longer than its UTF-8 sequence */
++	out = q = MwMalloc(length + 1);
++	while (i < length) {
++		int k = 1;
++		if (p[i] == '\0') {
++			i++;
++			continue;
++		}
++		if (p[i] == '\r') {
++			if (i + 1 >= length || p[i+1] != '\n') *q++ = '\n';
++			i++;
++			continue;
++		}
++		if (utf8 && p[i] >= 0x80
++				&& (k = mw_utf8_decode(p + i, length - i, &cp)) > 0) {
++			if (cp < 0x100 && cp != 0xad) {
++				*q++ = (char)cp;
++			} else {
++				const char *f = mw_latin1_fallback(cp);
++				while (*f) *q++ = *f++;
++			}
++			i += k;
++		} else {
++			*q++ = (char)p[i++];	/* Latin-1 already */
++		}
++	}
++	*q = '\0';
++	return out;
++}
++
++/* ---
++Convert a Latin-1 string to UTF-8 for UTF8_STRING requests. The result
++is allocated with XtMalloc so that it can be handed to Xt as a
++selection value; its length (without NUL) goes to *outlen.
++*/
++char *MwLatin1ToUtf8(const char *src, unsigned long length,
++	unsigned long *outlen)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	char *out = XtMalloc(2 * length + 1);
++	unsigned long i, n = 0;
++
++	for (i = 0; i < length; i++) {
++		if (p[i] < 0x80) {
++			out[n++] = (char)p[i];
++		} else {
++			out[n++] = (char)(0xc0 | (p[i] >> 6));
++			out[n++] = (char)(0x80 | (p[i] & 0x3f));
++		}
++	}
++	out[n] = '\0';
++	if (outlen) *outlen = n;
++	return out;
++}
++
++/* ---
++The UTF8_STRING atom
++*/
++Atom MwUtf8Atom(Display *dpy)
++{
++	return XInternAtom(dpy, "UTF8_STRING", False);
++}
+--- a/Mowitz/MwXutils.h	2026-11-13 16:04:07.220187959 -0300
++++ b/Mowitz/MwXutils.h	2026-11-13 16:04:43.180602175 -0300
+@@ -18,5 +18,8 @@
+ extern void MwHighlightInit(Widget);
+ extern void MwInputInit(Widget);
+ extern int MwLookupLatin1(Widget, XEvent *, char *, int, KeySym *);
++extern char *MwSelectionToLatin1(const char *, unsigned long, int);
++extern char *MwLatin1ToUtf8(const char *, unsigned long, unsigned long *);
++extern Atom MwUtf8Atom(Display *);
+ 
+ #endif	/* MW_XUTILS_H */
+--- a/Mowitz/MwTextField.c	2026-11-13 16:04:07.220187959 -0300
++++ b/Mowitz/MwTextField.c	2026-11-13 16:04:56.417490838 -0300
+@@ -978,9 +978,10 @@
+       target, type, (XtPointer)&std_targets,
+       &std_length, format);
+ 
+-    *value = MwMalloc((unsigned) sizeof(Atom) * (std_length + 1));
++    *value = MwMalloc((unsigned) sizeof(Atom) * (std_length + 2));
+     targetP = *(Atom **) value;
+-    *length = std_length + 1;
++    *length = std_length + 2;
++    *targetP++ = MwUtf8Atom(XtDisplay(aw));
+     *targetP++ = XA_STRING;
+     memmove((char *) targetP, (char *) std_targets, sizeof(Atom) * std_length);
+     MwFree((char *) std_targets);
+@@ -989,12 +990,21 @@
+     return True;
+   }
+   else if (*target == XA_STRING) {
++    /* Xt frees the value after the transfer: hand it a copy */
+     *length = (long) w->text.SelectionLen;
+-    *value = w->text.SelectionText;
++    *value = XtMalloc(w->text.SelectionLen + 1);
++    memcpy(*value, w->text.SelectionText, w->text.SelectionLen);
+     *type = XA_STRING;
+     *format = 8;
+     return True;
+   }
++  else if (*target == MwUtf8Atom(XtDisplay(aw))) {
++    *value = MwLatin1ToUtf8(w->text.SelectionText,
++      w->text.SelectionLen, length);
++    *type = *target;
++    *format = 8;
++    return True;
++  }
+   return False;
+ }
+ 
+@@ -1060,10 +1070,32 @@
+     printf("RequestSelection: inserting %s length=%d at pos: %d\n",
+       (char *) value, (int) (*length), w->text.CursorPos);
+ #endif
+-    TextInsert(w, (char *) value, (int) (*length));
++    {
++      char *text = MwSelectionToLatin1((char *) value, *length,
++        *type == MwUtf8Atom(XtDisplay(aw)));
++      TextInsert(w, text, (int) strlen(text));
++      MwFree(text);
++    }
+     w->text.OldCursorX = savex;
+     Draw(w);
+   }
++  if (value) XtFree((char *) value);
++}
++
++/* ARGSUSED */
++static void
++RequestUtf8Selection(Widget aw, XtPointer client, Atom * selection,
++  Atom * type, XtPointer value, unsigned long *length, int *format)
++{
++  if (value == NULL || *length == 0 || *type != MwUtf8Atom(XtDisplay(aw))) {
++    /* the owner has no UTF8_STRING; ask for plain STRING */
++    if (value) XtFree((char *) value);
++    XtGetSelectionValue(aw, *selection, XA_STRING,
++      RequestSelection, client,
++      XtLastTimestampProcessed(XtDisplay(aw)));
++    return;
++  }
++  RequestSelection(aw, client, selection, type, value, length, format);
+ }
+ 
+ /* ARGSUSED */
+@@ -1080,8 +1112,8 @@
+ #ifdef DEBUG_TF
+   printf("InsertSelection: event at pos: %d\n", pos);
+ #endif
+-  XtGetSelectionValue(aw, XA_PRIMARY, XA_STRING,
+-    RequestSelection,
++  XtGetSelectionValue(aw, XA_PRIMARY, MwUtf8Atom(XtDisplay(aw)),
++    RequestUtf8Selection,
+     (XtPointer) pos, event->xbutton.time);
+ }
+ 

@@ -1,0 +1,56 @@
+--- a/Mowitz/MwXutils.c
++++ b/Mowitz/MwXutils.c
+@@ -288,24 +288,49 @@
+ Place the child centered relative to the parent.
+ 
+ 011225: Center relative to screen instead.
++Now: centered over the parent's shell when it is mapped, else the screen.
+ */
+ 
+ void MwCenter(Widget child)
+ {
++	Display *dpy = XtDisplay(child);
++	Widget parent = XtParent(child);
+ 	Position x, y;
+ 	Dimension w1, h1;
+-	Window root;
++	Window root, dummy;
+ 	int rx, ry, rw, rh, rb, rd;
++	int cx, cy, px, py;
++	XWindowAttributes pa;
+ 
+ 	XtRealizeWidget(child);
+ 	XtUnrealizeWidget(child);
+ 	XtVaGetValues(child,
+ 		XtNwidth, &w1,
+ 		XtNheight, &h1, (char *)0);
+-	XGetGeometry(XtDisplay(child), DefaultRootWindow(XtDisplay(child)),
++	XGetGeometry(dpy, DefaultRootWindow(dpy),
+ 		&root, &rx, &ry, &rw, &rh, &rb, &rd);
+-	x = (rw-w1)/2;
+-	y = (rh-h1)/2;
++	cx = rw/2;
++	cy = rh/2;
++	/* Over the application window when it is on screen; the root
++	   window spans every monitor, so its centre falls between them
++	   (or on the wrong one) on a multi-head desktop. */
++	while (parent && !XtIsShell(parent)) parent = XtParent(parent);
++	if (parent && XtIsRealized(parent) &&
++	    XGetWindowAttributes(dpy, XtWindow(parent), &pa) &&
++	    pa.map_state == IsViewable &&
++	    XTranslateCoordinates(dpy, XtWindow(parent), pa.root,
++			0, 0, &px, &py, &dummy)) {
++		cx = px + pa.width/2;
++		cy = py + pa.height/2;
++	}
++	cx -= w1/2;
++	cy -= h1/2;
++	if (cx > rw - (int)w1) cx = rw - (int)w1;
++	if (cy > rh - (int)h1) cy = rh - (int)h1;
++	if (cx < 0) cx = 0;
++	if (cy < 0) cy = 0;
++	x = cx;
++	y = cy;
+ 	XtVaSetValues(child,
+ 		XtNx, x,
+ 		XtNy, y, (char *)0);

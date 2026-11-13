@@ -1,0 +1,17 @@
+--- Mowitz-0.3.1.orig/Mowitz/MwXutils.c	2026-11-13 10:59:23.008897921 -0300
++++ Mowitz-0.3.1/Mowitz/MwXutils.c	2026-11-13 10:59:23.010898051 -0300
+@@ -223,11 +223,11 @@
+ 		alloc_cache[j] = alloc_cache[j-1];
+ 	}
+ 	alloc_cache[i] = c;
+-	x = c.red * 0xffff;
++	x = (unsigned long)c.red * 0xffff;
+ 	c.red = x / 0xf800;
+-	x = c.green * 0xffff;
++	x = (unsigned long)c.green * 0xffff;
+ 	c.green = x / 0xf800;
+-	x = c.blue * 0xffff;
++	x = (unsigned long)c.blue * 0xffff;
+ 	c.blue = x / 0xf800;
+ 	c.flags = DoRed|DoGreen|DoBlue;
+ 	if (XAllocColor(dpy, cmap, &c) == 0) {
