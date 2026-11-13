@@ -1,0 +1,31 @@
+--- Ted-2.23.orig/appFrame/appCopyPasteMotif.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appFrame/appCopyPasteMotif.c	2026-11-13 01:48:40.871906434 -0300
+@@ -16,6 +16,8 @@
+ 
+ #   ifdef	USE_MOTIF
+ 
++#   include	<X11/Xatom.h>
++
+ /************************************************************************/
+ /*									*/
+ /*  Respond to selection events.					*/
+@@ -241,8 +243,8 @@
+ 	XChangeProperty( display,
+ 			response.xselection.requestor,
+ 			response.xselection.property,
+-			response.xselection.target,
+-			8* sizeof(Atom), PropModeReplace,
++			XA_ATOM,
++			32, PropModeReplace,
+ 			(unsigned char *)atoms,
+ 			ed->edTargetTypeCount );
+ 
+@@ -697,7 +699,7 @@
+ 
+     XChangeProperty( selEvent->display,
+ 		    selEvent->requestor, selEvent->property, selEvent->target,
+-		    8* sizeof(Pixmap), PropModeReplace,
++		    32, PropModeReplace,
+ 		    (unsigned char *)&pixmapCopied,
+ 		    1 );
+     }

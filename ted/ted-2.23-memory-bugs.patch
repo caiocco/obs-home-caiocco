@@ -1,0 +1,35 @@
+diff -ru Ted-2.23.orig/appUtil/utilDosTime.c Ted-2.23/appUtil/utilDosTime.c
+--- Ted-2.23.orig/appUtil/utilDosTime.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appUtil/utilDosTime.c	2026-11-13 00:59:28.496678022 -0300
+@@ -21,7 +21,7 @@
+ 				int *		pDate,
+ 				const long	unixTime )
+     {
+-    time_t	unixTime_t;
++    time_t	unixTime_t= unixTime;
+ 
+     struct tm	struct_tm= *localtime( &unixTime_t );
+ 
+diff -ru Ted-2.23.orig/bitmap/bmpng.c Ted-2.23/bitmap/bmpng.c
+--- Ted-2.23.orig/bitmap/bmpng.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/bitmap/bmpng.c	2026-11-13 00:59:28.496678022 -0300
+@@ -401,6 +401,7 @@
+ 		if  ( bd->bdHasAlpha )
+ 		    { sig_bit.alpha= bd->bdBitsPerSample;	}
+ 
++		i= bd->bdPalette.cpColorCount;
+ 		(*pPalette)[i].red= 255;
+ 		(*pPalette)[i].green= 255;
+ 		(*pPalette)[i].blue= 255;
+diff -ru Ted-2.23.orig/drawMeta/drawMetafileSvg.c Ted-2.23/drawMeta/drawMetafileSvg.c
+--- Ted-2.23.orig/drawMeta/drawMetafileSvg.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/drawMeta/drawMetafileSvg.c	2026-11-13 00:59:28.496678022 -0300
+@@ -709,7 +709,7 @@
+ 	sprintf( id, "pat%d", pb->pbTileNumber );
+ 	sprintf( viewBox, "0 0 %d %d",
+ 				drSrc.drX1- drSrc.drX0+ 1,
+-				drSrc.drX1- drSrc.drX0+ 1 );
++				drSrc.drY1- drSrc.drY0+ 1 );
+ 
+ 	xmlPutString( "<pattern ", xw );
+ 	xmlWriteStringAttribute( xw, "id", id );

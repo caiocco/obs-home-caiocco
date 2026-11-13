@@ -1,0 +1,91 @@
+--- Ted-2.23.orig/appFrame/appFontMotif.c
++++ Ted-2.23/appFrame/appFontMotif.c
+@@ -25,6 +25,7 @@
+ 
+ #   include	"drawScreenFontAdmin.h"
+ #   include	"drawDrawingSurfacePrivate.h"
++#   include	"drawDrawingSurfaceImpl.h"
+ #   include	<bitmap.h>
+ 
+ /************************************************************************/
+@@ -96,6 +97,10 @@
+     APP_FONT *		xfs= (APP_FONT *)0;
+     XmFontList		fontList= (XmFontList)0;
+     APP_WIDGET		label= (APP_WIDGET)0;
++    int			screenFont;
++#   ifdef	USE_XFT
++    XftFont *		xftFont= (XftFont *)0;
++#   endif
+ 
+     if  ( ! ds )
+ 	{ XDEB(ds); return -1;	}
+@@ -138,6 +143,29 @@
+ 	    else if  ( fontType != XmFONT_IS_FONTSET )
+ 		{
+ 		xfs= drawCoreFontForXft( w, fontPtr, fontSizeHintPixels );
++
++#		ifdef	USE_XFT
++		/*  Also keep a reference to the Xft font itself: drawString()
++		 *  and drawGetTextExtents() prefer it to the core font, so
++		 *  rulers and the page number line are antialiased like the
++		 *  rest of the Motif GUI. Open it before the (temporary)
++		 *  label that owns the render table is destroyed.
++		 */
++		if  ( fontType == XmFONT_IS_XFT	&&
++		      fontPtr			&&
++		      ((XftFont *)fontPtr)->pattern	)
++		    {
++		    FcPattern *	pat;
++
++		    pat= FcPatternDuplicate( ((XftFont *)fontPtr)->pattern );
++		    if  ( pat )
++			{
++			xftFont= XftFontOpenPattern( XtDisplay( w ), pat );
++			if  ( ! xftFont )
++			    { FcPatternDestroy( pat );	}
++			}
++		    }
++#		endif
+ 		}
+ 	    else{
+ 		int		fontCount;
+@@ -167,9 +195,37 @@
+ 	{ XtDestroyWidget( label );	}
+ 
+     if  ( ! xfs )
+-	{ XDEB(xfs); return -1;	}
++	{
++#	ifdef	USE_XFT
++	if  ( xftFont )
++	    { XftFontClose( XtDisplay( w ), xftFont );	}
++#	endif
++	XDEB(xfs); return -1;
++	}
++
++    screenFont= guiSystemFont( ds, xfs );
++
++#   ifdef	USE_XFT
++    if  ( xftFont )
++	{
++	DrawScreenFont *	dsf= (DrawScreenFont *)0;
++
++	if  ( screenFont >= 0 )
++	    {
++	    dsf= drawGetScreenFontByNumber( &(ds->dsScreenFontAdmin),
++								screenFont );
++	    }
++
++	if  ( dsf )
++	    {
++	    dsf->dsfDisplay= XtDisplay( w );
++	    dsf->dsfXftFont= xftFont;	/*  closed by drawCleanScreenFont */
++	    }
++	else{ XftFontClose( XtDisplay( w ), xftFont );	}
++	}
++#   endif
+ 
+-    return guiSystemFont( ds, xfs );
++    return screenFont;
+     }
+ 
+ #   endif

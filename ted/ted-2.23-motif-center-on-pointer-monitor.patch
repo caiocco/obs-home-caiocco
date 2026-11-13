@@ -1,0 +1,157 @@
+--- Ted-2.23.orig/appFrame/appGuiMotif.c
++++ Ted-2.23/appFrame/appGuiMotif.c
+@@ -13,6 +13,8 @@
+ #   ifdef USE_MOTIF
+ 
+ #   include	<X11/Xatom.h>
++#   include	<X11/Xutil.h>
++#   include	<X11/extensions/Xinerama.h>
+ #   include	<Xm/RowColumn.h>
+ #   include	<Xm/Label.h>
+ #   include	<Xm/ToggleB.h>
+@@ -633,11 +635,135 @@
+ /*									*/
+ /************************************************************************/
+ 
++/************************************************************************/
++/*									*/
++/*  Place a shell that has never been shown in the middle of the	*/
++/*  monitor that holds the mouse pointer, like GTK_WIN_POS_CENTER does	*/
++/*  in the GTK build. The Motif VendorShell always announces a		*/
++/*  'program specified' position of 0,0 that window managers obey,	*/
++/*  which puts every window in the top left corner of the desktop.	*/
++/*  A position that the user asked for with a geometry resource is	*/
++/*  left alone.								*/
++/*									*/
++/************************************************************************/
++
++static void appGuiMotifCenterOnPointerMonitor(	APP_WIDGET	shell )
++    {
++    Display *		display= XtDisplay( shell );
++    Screen *		screen= XtScreen( shell );
++    Window		root= RootWindowOfScreen( screen );
++    char *		geometry= (char *)0;
++
++    int			mx= 0;
++    int			my= 0;
++    int			mw= WidthOfScreen( screen );
++    int			mh= HeightOfScreen( screen );
++
++    Window		rootRet;
++    Window		childRet;
++    int			px= mw/ 2;
++    int			py= mh/ 2;
++    int			wx, wy;
++    unsigned int	mask;
++
++    Dimension		width= 0;
++    Dimension		height= 0;
++    Dimension		border= 0;
++    XtWidgetGeometry	preferred;
++    int			x, y;
++
++    XtVaGetValues( shell,	XmNgeometry,	&geometry,
++				NULL );
++    if  ( geometry )
++	{ return;	}
++
++    if  ( XQueryPointer( display, root, &rootRet, &childRet,
++					&px, &py, &wx, &wy, &mask )	&&
++	  rootRet == root						)
++	{
++	int			count= 0;
++	int			i;
++	XineramaScreenInfo *	monitors= (XineramaScreenInfo *)0;
++
++	if  ( XineramaIsActive( display ) )
++	    { monitors= XineramaQueryScreens( display, &count );	}
++
++	for ( i= 0; i < count; i++ )
++	    {
++	    if  ( px >= monitors[i].x_org				&&
++		  py >= monitors[i].y_org				&&
++		  px <  monitors[i].x_org+ monitors[i].width		&&
++		  py <  monitors[i].y_org+ monitors[i].height		)
++		{
++		mx= monitors[i].x_org; my= monitors[i].y_org;
++		mw= monitors[i].width; mh= monitors[i].height;
++		break;
++		}
++	    }
++
++	if  ( monitors )
++	    { XFree( monitors );	}
++	}
++
++    XtVaGetValues( shell,	XmNwidth,	&width,
++				XmNheight,	&height,
++				XmNborderWidth,	&border,
++				NULL );
++    if  ( width < 2 || height < 2 )
++	{
++	XtQueryGeometry( shell, (XtWidgetGeometry *)0, &preferred );
++	if  ( preferred.request_mode & CWWidth )
++	    { width= preferred.width;	}
++	if  ( preferred.request_mode & CWHeight )
++	    { height= preferred.height;	}
++	}
++
++    x= mx+ ( mw- (int)width- 2* (int)border )/ 2;
++    y= my+ ( mh- (int)height- 2* (int)border )/ 2;
++    if  ( x < mx )
++	{ x= mx;	}
++    if  ( y < my )
++	{ y= my;	}
++
++    XtVaSetValues( shell,	XmNx,		(Position)x,
++				XmNy,		(Position)y,
++				NULL );
++    }
++
++static XContext appGuiMotifShellPlacedContext= 0;
++
++static void appGuiMotifForgetShellPlaced(	Widget		shell,
++						XtPointer	voidClient,
++						XtPointer	voidCall )
++    {
++    if  ( XtIsRealized( shell ) )
++	{
++	XDeleteContext( XtDisplay( shell ), XtWindow( shell ),
++					appGuiMotifShellPlacedContext );
++	}
++    }
++
+ void appShowShellWidget(		EditApplication *	ea,
+ 					APP_WIDGET		shell )
+     {
++    XPointer		placed;
++
+     XtRealizeWidget( shell );
+ 
++    if  ( ! appGuiMotifShellPlacedContext )
++	{ appGuiMotifShellPlacedContext= XUniqueContext();	}
++
++    if  ( XFindContext( XtDisplay( shell ), XtWindow( shell ),
++			appGuiMotifShellPlacedContext, &placed )	)
++	{
++	appGuiMotifCenterOnPointerMonitor( shell );
++
++	XSaveContext( XtDisplay( shell ), XtWindow( shell ),
++			appGuiMotifShellPlacedContext, (XPointer)shell );
++	XtAddCallback( shell, XmNdestroyCallback,
++			appGuiMotifForgetShellPlaced, (XtPointer)0 );
++	}
++
+     XtVaSetValues( shell, XmNinitialState, NormalState, NULL );
+     XtMapWidget( shell );
+     XRaiseWindow( XtDisplay( shell ), XtWindow( shell ) );
+--- Ted-2.23.orig/Ted/makefile.in
++++ Ted-2.23/Ted/makefile.in
+@@ -203,6 +203,7 @@
+ 
+ MOTIF_X_LIBS=	$(X_LIBS)		\
+ 		-lXt			\
++		-lXinerama	\
+ 		-lXext			\
+ 		$(X_PRE_LIBS)		\
+ 		-lX11			\

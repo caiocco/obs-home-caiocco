@@ -1,0 +1,44 @@
+--- Ted-2.23.orig/appFrame/appDocumentGtk.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appFrame/appDocumentGtk.c	2026-11-13 14:20:56.214495759 -0300
+@@ -337,6 +337,23 @@
+ /*									*/
+ /************************************************************************/
+ 
++/************************************************************************/
++/*									*/
++/*  Give the text area the I-beam cursor, as the Motif version does	*/
++/*  with XDefineCursor(). The drawing area may not be realized yet.	*/
++/*									*/
++/************************************************************************/
++
++static void appDocSetDocumentCursor(	GtkWidget *	w,
++					void *		voided )
++    {
++    EditDocument *	ed= (EditDocument *)voided;
++    EditApplication *	ea= ed->edApplication;
++
++    if  ( ea->eaDocumentCursor && w->window )
++	{ gdk_window_set_cursor( w->window, ea->eaDocumentCursor );	}
++    }
++
+ int appFinishDocumentSetup(	EditDocument *		ed )
+     {
+     EditApplication *	ea= ed->edApplication;
+@@ -384,6 +401,17 @@
+ 			    (GtkSignalFunc)appDocHorizontalScrollbarCallback,
+ 			    (void *)ed );
+ 
++    if  ( ea->eaDocumentCursor )
++	{
++	if  ( GTK_WIDGET_REALIZED( dw->dwWidget ) )
++	    { appDocSetDocumentCursor( dw->dwWidget, (void *)ed );	}
++	else{
++	    gtk_signal_connect_after( GTK_OBJECT( dw->dwWidget ), "realize",
++			    (GtkSignalFunc)appDocSetDocumentCursor,
++			    (void *)ed );
++	    }
++	}
++
+     appDocumentSetInputContext( ea->eaInputMethod, dw );
+ 
+     return 0;

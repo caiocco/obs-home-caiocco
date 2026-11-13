@@ -1,0 +1,86 @@
+--- Ted-2.23.orig/appFrame/appFontMotif.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appFrame/appFontMotif.c	2026-11-13 01:28:27.451964531 -0300
+@@ -17,6 +17,10 @@
+ #   include	<string.h>
+ #   include	<Xm/Label.h>
+ 
++#   ifdef	USE_XFT
++#	include	<X11/Xft/Xft.h>
++#   endif
++
+ #   include	<appDebugon.h>
+ 
+ #   include	"drawScreenFontAdmin.h"
+@@ -25,6 +29,61 @@
+ 
+ /************************************************************************/
+ /*									*/
++/*  The widget font is an Xft font (Motif 2.3 renderTable with		*/
++/*  fontType FONT_IS_XFT, e.g. set globally by CDE/NsCDE resources).	*/
++/*  Ted draws rulers and labels with core X fonts, so load a core font	*/
++/*  of about the same pixel size.					*/
++/*									*/
++/************************************************************************/
++
++static XFontStruct * drawCoreFontForXft(	Widget		w,
++						XtPointer	fontPtr,
++						int		sizeHint )
++    {
++    Display *		display= XtDisplay( w );
++    int			pixelSize= sizeHint;
++    char		name[200];
++    XFontStruct *	xfs;
++
++    static const char * const	patterns[]=
++	{
++	"-*-helvetica-medium-r-normal--%d-*-*-*-p-*-iso8859-1",
++	"-*-*-medium-r-normal--%d-*-*-*-p-*-iso8859-1",
++	"-*-*-medium-r-normal--%d-*-*-*-*-*-iso8859-1",
++	};
++    int			i;
++
++#   ifdef	USE_XFT
++    if  ( fontPtr )
++	{
++	XftFont *	xft= (XftFont *)fontPtr;
++	double		px= 0;
++
++	if  ( xft->pattern						&&
++	      XftPatternGetDouble( xft->pattern, XFT_PIXEL_SIZE, 0, &px )
++							== XftResultMatch &&
++	      px > 0							)
++	    { pixelSize= (int)( px+ 0.5 );		}
++	else{ pixelSize= xft->ascent+ xft->descent;	}
++	}
++#   endif
++
++    if  ( pixelSize < 6 || pixelSize > 72 )
++	{ pixelSize= 12;	}
++
++    for ( i= 0; i < sizeof(patterns)/sizeof(patterns[0]); i++ )
++	{
++	sprintf( name, patterns[i], pixelSize );
++	xfs= XLoadQueryFont( display, name );
++	if  ( xfs )
++	    { return xfs;	}
++	}
++
++    return XLoadQueryFont( display, "fixed" );
++    }
++
++/************************************************************************/
++/*									*/
+ /*  Open the default font belonging to a widget. (Or the system)	*/
+ /*									*/
+ /************************************************************************/
+@@ -76,6 +135,10 @@
+ 
+ 	    if  ( fontType == XmFONT_IS_FONT )
+ 		{ xfs= (XFontStruct *)fontPtr;	}
++	    else if  ( fontType != XmFONT_IS_FONTSET )
++		{
++		xfs= drawCoreFontForXft( w, fontPtr, fontSizeHintPixels );
++		}
+ 	    else{
+ 		int		fontCount;
+ 		char **		fontNameList;

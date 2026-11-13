@@ -1,0 +1,38 @@
+--- Ted-2.23.orig/appFrame/appFontGtk.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appFrame/appFontGtk.c	2026-11-13 01:28:54.014831943 -0300
+@@ -59,15 +59,31 @@
+ 		if  ( fam )
+ 		    { fontFamilyName= fam;	}
+ 
+-		if  ( fontSizeHintPixels <= 0				&&
+-		      pango_font_description_get_size_is_absolute(
+-							gs->font_desc )	)
++		if  ( fontSizeHintPixels <= 0 )
+ 		    {
+ 		    int		sz;
+ 
++		    /*  Pango sizes are in PANGO_SCALE units: device	*/
++		    /*  pixels when absolute, points otherwise.		*/
+ 		    sz= pango_font_description_get_size( gs->font_desc );
+ 		    if  ( sz > 0 )
+-			{ pixelSize= sz;	}
++			{
++			double	px= (double)sz/ PANGO_SCALE;
++
++			if  ( ! pango_font_description_get_size_is_absolute(
++							gs->font_desc )	)
++			    {
++			    double	dpi= gdk_screen_get_resolution(
++						gtk_widget_get_screen( w ) );
++
++			    if  ( dpi <= 0 )
++				{ dpi= 96.0;	}
++
++			    px= ( px* dpi )/ 72.0;
++			    }
++
++			pixelSize= (int)( px+ 0.5 );
++			}
+ 		    }
+ 
+ 		style= pango_font_description_get_style( gs->font_desc );

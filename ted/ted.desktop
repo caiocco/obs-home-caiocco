@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Ted
+GenericName=Word Processor
+Comment=Edit rich text (RTF) documents
+Icon=ted
+Exec=Ted %F
+Terminal=false
+MimeType=application/rtf;text/rtf;
+Categories=Office;WordProcessor;

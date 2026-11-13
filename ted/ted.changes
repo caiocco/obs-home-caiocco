@@ -1,0 +1,112 @@
+-------------------------------------------------------------------
+Fri Nov 13 20:10:00 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add ted-2.23-motif-xft-ruler-text.patch: with an Xft render
+  table the Motif rulers and the "Page n/n, Section n/n" status
+  line were drawn with a core bitmap font (jagged, no
+  antialiasing); keep the render table's Xft font in the ruler's
+  screen font as well, so Ted's Xft text path draws them
+  antialiased like the rest of the GUI
+
+-------------------------------------------------------------------
+Fri Nov 13 19:30:00 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add ted-2.23-motif-format-tool-size.patch: with an Xft render
+  table Motif sizes an XmText as XmNcolumns times the font's
+  max_advance_width (16px for Droid Sans 10, twice a digit), and
+  since Ted's rows split into equal columns the Format Tool opened
+  606px wide instead of 360px; size the text boxes by the width
+  of an average digit instead. Also let the user resize the
+  Format Tool (the minimum stays the size that fits every page),
+  as Ted-gtk already does
+
+-------------------------------------------------------------------
+Fri Nov 13 17:40:00 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add ted-2.23-gtk-ibeam-cursor.patch: Ted-gtk created the I-beam
+  document cursor but never put it on the text area, so the pointer
+  stayed an arrow over the document; set it on the drawing area
+  when it is realized, as the Motif version does with XDefineCursor
+  (the rulers keep the arrow)
+
+-------------------------------------------------------------------
+Fri Nov 13 16:40:20 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add a Brazilian Portuguese spelling dictionary (pt_BR.dfa) to
+  ted-spell: upstream ted_pt_BR.tar.gz is a UI translation only.
+  ted-pt_BR-wordlist.py (Source3) derives ~763k clean inflected
+  forms from VERO (myspell-pt_BR) with a morphological-family
+  heuristic instead of a full unmunch (10.5M forms with hyphenated
+  enclisis, truncated verb forms, pre-AO90 spellings and rare 1913
+  stems), and ted-mkdfa.c (Source4) compiles the list with Ted's
+  own lib/ind.a into a minimised automaton (~4.9 MB)
+- Name the pt_BR and pt_PT dictionaries in Ted-pt_BR.properties
+  (Ted.NAME_pt_BR / Ted.NAME_pt_PT)
+- BuildRequires: myspell-pt_BR, python3-base
+
+-------------------------------------------------------------------
+Fri Nov 13 12:48:11 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add ted-2.23-motif-center-on-pointer-monitor.patch: the Motif
+  VendorShell always sets a program-specified position of 0,0, so
+  every Motif window (documents, main window, tools) opened in the
+  top left corner of the whole desktop; on first show, center it on
+  the Xinerama/RandR monitor that holds the pointer, as the GTK
+  version does with GTK_WIN_POS_CENTER (a *geometry resource still
+  wins)
+
+-------------------------------------------------------------------
+Fri Nov 13 05:00:53 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Do not apply the upstream ted.gtkrc-2.0 compact styles: zeroed
+  x/ythickness and 8px option menu indicators made the GTK Format
+  Tool look cramped under most themes (clipped borders, arrow
+  offset, entries indistinguishable from the background); the
+  original is installed as ted.gtkrc-2.0.upstream
+
+-------------------------------------------------------------------
+Fri Nov 13 04:53:16 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add ted-2.23-motif-selection-format32.patch: on 64-bit the Motif
+  version answered TARGETS selection requests (e.g. from a
+  clipboard manager such as CopyQ) with property format
+  8*sizeof(Atom) = 64, and the resulting X BadValue error made Ted
+  exit as soon as text was selected (e.g. clicking a link in the
+  help document); use format 32 and type ATOM, and format 32 for
+  copied pixmaps
+
+-------------------------------------------------------------------
+Fri Nov 13 04:36:40 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add ted-2.23-motif-xft-default-font.patch: the Motif version
+  crashed at startup when the widget font came from an Xft
+  renderTable (e.g. "*renderTable" with fontType FONT_IS_XFT, as
+  set by CDE/NsCDE), because the XftFont was used as an XFontSet;
+  load a core font of the same pixel size instead
+- Add ted-2.23-gtk-default-font-size.patch: the GTK version only
+  honoured absolute theme font sizes (and without dividing by
+  PANGO_SCALE), so text drawn with the default font fell back to
+  10 pixels; convert point sizes using the screen resolution
+- Stop ted.gtkrc-2.0 from forcing "Sans 7" on the Format Tool and
+  on every option menu (also squeezed the print dialog)
+
+-------------------------------------------------------------------
+Fri Nov 13 04:09:18 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Ted 2.23 (last upstream release, 2013)
+  * Ted is built twice: Motif (/usr/bin/Ted, main package) and
+    GTK+ 2 (/usr/bin/Ted-gtk, ted-gtk subpackage); data files are
+    shared in ted-common
+  * Add ted-2.23-memory-bugs.patch, fixing problems reported by
+    GCC 15 and not addressed by any distribution:
+    + bmpng.c: heap overflow writing palette[256] when saving a
+      paletted PNG with alpha
+    + utilDosTime.c: uninitialized time_t used for ZIP (EPUB)
+      timestamps
+    + drawMetafileSvg.c: SVG pattern viewBox used the width twice
+  * Ship the upstream localization tarballs split into ted-spell
+    (dictionaries) and ted-lang (UI translations, selected from
+    the locale, and localized manuals), without Supplements
+  * Install rtf2pdf, rtf2ps, rtf2html, rtf2txt and rtf2epub in
+    /usr/bin and the man pages with the data directory filled in
+  * Own desktop entries and icon name

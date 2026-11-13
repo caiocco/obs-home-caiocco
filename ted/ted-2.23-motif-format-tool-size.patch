@@ -1,0 +1,85 @@
+diff -ru Ted-2.23.orig/appFrame/appInspector.c Ted-2.23/appFrame/appInspector.c
+--- Ted-2.23.orig/appFrame/appInspector.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appFrame/appInspector.c	2026-11-13 16:16:40.437755498 -0300
+@@ -200,7 +200,7 @@
+     APP_BITMAP_IMAGE		iconPixmap;
+     APP_BITMAP_MASK		iconMask;
+ 
+-    const int			userResizable= 0;
++    const int			userResizable= 1;
+ 
+     APP_WIDGET			row;
+ 
+diff -ru Ted-2.23.orig/appFrame/appTextMotif.c Ted-2.23/appFrame/appTextMotif.c
+--- Ted-2.23.orig/appFrame/appTextMotif.c	2013-02-01 10:11:08.000000000 -0200
++++ Ted-2.23/appFrame/appTextMotif.c	2026-11-13 16:16:32.275207502 -0300
+@@ -27,6 +27,53 @@
+ 
+ /************************************************************************/
+ /*									*/
++/*  Motif sizes a text widget as XmNcolumns times the widest glyph of	*/
++/*  the font. With an Xft render table that is the max_advance_width	*/
++/*  of the font, which is about twice the width of a digit for most	*/
++/*  sans fonts: The text boxes, and the tools that hold them, come out	*/
++/*  twice as wide as needed. Use the width of an average digit.		*/
++/*									*/
++/************************************************************************/
++
++static void appMotifSizeTextByDigits(	Widget		text )
++    {
++    XmRenderTable	rt= (XmRenderTable)0;
++    short		columns= 0;
++    Dimension		marginWidth= 0;
++    Dimension		shadowThickness= 0;
++    Dimension		highlightThickness= 0;
++    XmString		digits;
++    Dimension		digitsWide;
++
++    XtVaGetValues( text,
++		    XmNrenderTable,		&rt,
++		    XmNcolumns,			&columns,
++		    XmNmarginWidth,		&marginWidth,
++		    XmNshadowThickness,		&shadowThickness,
++		    XmNhighlightThickness,	&highlightThickness,
++		    NULL );
++
++    if  ( ! rt || columns <= 0 )
++	{ return;	}
++
++    digits= XmStringCreateLocalized( "0123456789" );
++    digitsWide= XmStringWidth( rt, digits );
++    XmStringFree( digits );
++
++    if  ( digitsWide == 0 )
++	{ return;	}
++
++    XtVaSetValues( text,
++		    XmNwidth,	( columns* digitsWide+ 9 )/ 10+
++				2* ( marginWidth+ shadowThickness+
++						    highlightThickness ),
++		    NULL );
++
++    return;
++    }
++
++/************************************************************************/
++/*									*/
+ /*  Make a text box widget in a row.					*/
+ /*									*/
+ /************************************************************************/
+@@ -91,6 +138,7 @@
+ 	}
+ 
+     text= XmCreateText( row, WIDGET_NAME, al, ac );
++    appMotifSizeTextByDigits( text );
+ 
+     if  ( APP_PasteTranslations )
+ 	{ XtOverrideTranslations( text, APP_PasteTranslations ); }
+@@ -158,6 +206,7 @@
+ 	}
+ 
+     text= XmCreateText( column, WIDGET_NAME, al, ac );
++    appMotifSizeTextByDigits( text );
+ 
+     if  ( APP_PasteTranslations )
+ 	{ XtOverrideTranslations( text, APP_PasteTranslations ); }
