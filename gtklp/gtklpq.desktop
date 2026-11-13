@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=GtkLPQ
+GenericName=Print Queue
+GenericName[pt_BR]=Fila de impressão
+GenericName[de]=Druckerwarteschlange
+Comment=View and manage CUPS print jobs
+Comment[pt_BR]=Mostra e gerencia os trabalhos de impressão do CUPS
+Comment[de]=CUPS-Druckaufträge anzeigen und verwalten
+Exec=gtklpq
+Icon=printer
+Terminal=false
+Categories=GTK;Utility;Printing;
+Keywords=print;queue;lpq;cups;jobs;

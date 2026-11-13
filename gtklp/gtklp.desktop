@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=GtkLP
+GenericName=Print Files
+GenericName[pt_BR]=Imprimir arquivos
+GenericName[de]=Dateien drucken
+Comment=Print files through CUPS with all printer options
+Comment[pt_BR]=Imprime arquivos pelo CUPS com todas as opções da impressora
+Comment[de]=Dateien über CUPS mit allen Druckeroptionen drucken
+Exec=gtklp %F
+Icon=printer
+Terminal=false
+Categories=GTK;Utility;Printing;
+Keywords=print;lpr;cups;printer;

@@ -1,0 +1,20 @@
+--- gtklp-1.3.4.orig/libgtklp/libgtklp.c	2019-11-01 13:27:28.000000000 -0300
++++ gtklp-1.3.4/libgtklp/libgtklp.c	2026-11-13 14:34:12.125931455 -0300
+@@ -939,7 +939,7 @@
+ 		gtk_widget_show(pixmapwid);
+ 
+ 		if (strlen(gerror2) == 0)
+-			snprintf(tmplabel, (size_t) MAXLINE, gerror1);
++			snprintf(tmplabel, (size_t) MAXLINE, "%s", gerror1);
+ 		else
+ 			snprintf(tmplabel, (size_t) MAXLINE, gerror1, gerror2);
+ 		label = gtk_label_new(tmplabel);
+@@ -973,7 +973,7 @@
+ #endif
+ 	} else {
+ 		if (strlen(gerror2) == 0)
+-			g_warning(gerror1);
++			g_warning("%s", gerror1);
+ 		else
+ 			g_warning(gerror1, gerror2);
+ 	}

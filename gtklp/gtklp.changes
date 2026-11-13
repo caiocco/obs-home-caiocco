@@ -1,0 +1,22 @@
+-------------------------------------------------------------------
+Fri Nov 13 18:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of GtkLP 1.3.4 (last upstream release, 2019) for
+  openSUSE Leap 16.0: GTK 2 frontend to CUPS that reads the job from
+  stdin, so it can be the "lpr" print command of Siag Office & co.
+- gtklp-1.3.4-gettext-external.patch: drop the second, bare
+  AM_GNU_GETTEXT call (refused by gettext >= 0.20); tarball lacks
+  aclocal.m4, so %prep runs autoreconf
+- gtklp-1.3.4-format-security.patch: "%s" for the single-argument
+  exitOnError() messages
+- gtklp-1.3.4-buffer-overflows.patch: freadline() wrote one byte past
+  the buffer for ~/.gtklp lines longer than 256 chars; gtklpq's status
+  line used snprintf() with the destination as argument; PPD choices
+  with empty text fall back to the choice name
+- gtklp-1.3.4-defaults.patch: xdg-open instead of netscape, CUPS 2
+  help URL, "Call GtkLPQ" runs "gtklpq &" by default
+- gtklp-1.3.4-icon-xpm.patch: 32x32 window icon declared 3 colours
+  but has 4, so GdkPixbuf rejected it (GLib-CRITICAL on startup)
+- Build with -fcommon (globals defined in headers)
+- Desktop files for gtklp and gtklpq; translations and ru/uk man
+  pages in -lang (no Supplements)

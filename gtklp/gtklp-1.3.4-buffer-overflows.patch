@@ -1,0 +1,49 @@
+--- gtklp-1.3.4.orig/gtklp/gtklp_functions.c	2019-11-01 13:27:28.000000000 -0300
++++ gtklp-1.3.4/gtklp/gtklp_functions.c	2026-11-13 14:34:43.042014424 -0300
+@@ -1773,7 +1773,7 @@
+ 			break;
+ 		}
+ 		i2++;
+-		if (ct < howmuch) {
++		if (ct + 1 < howmuch) {
+ 			ct++;
+ 		} else {
+ 			*String = (uintptr_t) NULL;
+--- gtklp-1.3.4.orig/gtklpq/printer.c	2019-11-01 13:27:28.000000000 -0300
++++ gtklp-1.3.4/gtklpq/printer.c	2026-11-13 14:34:22.881656121 -0300
+@@ -532,9 +532,13 @@
+ 				      IPP_TAG_ZERO)) != NULL) {
+ 			if ((strlen(toolstring) +
+ 			     strlen(ippGetString(attr, 0, NULL))) < MAXLINE)
+-				snprintf(toolstring, (size_t) MAXLINE,
+-					 "%s - %s", toolstring,
++			{
++				size_t used = strlen(toolstring);
++
++				snprintf(toolstring + used,
++					 (size_t) MAXLINE - used, " - %s",
+ 					 ippGetString(attr, 0, NULL));
++			}
+ 		}
+ 		if (nox == 0)
+ 			m_id_state =
+--- gtklp-1.3.4.orig/gtklp/ppd.c	2019-11-01 13:27:28.000000000 -0300
++++ gtklp-1.3.4/gtklp/ppd.c	2026-11-13 14:34:12.133931994 -0300
+@@ -181,7 +181,7 @@
+ 				switch (option->ui) {
+ 				case PPD_UI_BOOLEAN:
+ 				case PPD_UI_PICKONE:
+-					if (choice->text == NULL) {
++					if (choice->text[0] == 0) {
+ 						list =
+ 						    g_list_append(list,
+ 								  str2str
+@@ -251,7 +251,7 @@
+ 						gtk_widget_show(vbox);
+ 					}
+ 
+-					if (choice->text == NULL)
++					if (choice->text[0] == 0)
+ 						ppdWidget =
+ 						    gtk_check_button_new_with_label
+ 						    (choice->choice);
