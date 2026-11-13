@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Siag Spreadsheet
+GenericName=Spreadsheet
+Comment=Scheme In A Grid spreadsheet from Siag Office
+Exec=siag %f
+Icon=siag
+Terminal=false
+Categories=Office;Spreadsheet;
+MimeType=text/csv;

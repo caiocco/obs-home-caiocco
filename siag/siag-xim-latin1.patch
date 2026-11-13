@@ -1,0 +1,14 @@
+--- siag-3.6.1/xsiag/window.c
++++ siag-3.6.1.xim/xsiag/window.c
+@@ -1398,7 +1398,10 @@
+ 	KeySym keysym;
+ 	XKeyEvent kevent;
+ 	kevent = event->xkey;
+-	count = XLookupString(&kevent, buf, bufsiz, &keysym, NULL);
++	/* compose dead keys through the input method; Latin-1 result */
++	count = MwLookupLatin1(w, event, buf, bufsiz, &keysym);
++	if (count == 0 && keysym == NoSymbol)
++		return;		/* swallowed by the input method */
+ 
+ 	lastc = keysym;
+ 	switch (lastc) {

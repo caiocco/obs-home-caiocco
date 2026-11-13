@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Egon Animator
+GenericName=Presentation
+Comment=Animation and presentation program from Siag Office
+Exec=egon %f
+Icon=siag-egon
+Terminal=false
+Categories=Office;Presentation;

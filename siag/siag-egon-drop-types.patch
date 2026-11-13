@@ -1,0 +1,10 @@
+--- siag-3.6.1.orig/xegon/window.c	2006-11-10 07:05:46.000000000 -0200
++++ siag-3.6.1/xegon/window.c	2026-11-13 10:54:10.955535821 -0300
+@@ -1378,6 +1378,7 @@
+ 		    mwApplicationShellWidgetClass,
+ 		    NULL);		/* terminate varargs list */
+ 
++	drop_types = MwMalloc(3*sizeof *drop_types);
+ 	drop_types[0] = XInternAtom(XtDisplay(topLevel), "text/plain", False);
+ 	drop_types[1] = XInternAtom(XtDisplay(topLevel), "text/uri-list", False);
+ 	drop_types[2] = None;

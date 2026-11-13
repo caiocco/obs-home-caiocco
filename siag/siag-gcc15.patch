@@ -1,0 +1,222 @@
+--- siag-3.6.1.orig/siod/slibu.c	2003-01-15 21:55:13.000000000 -0200
++++ siag-3.6.1/siod/slibu.c	2026-11-13 10:48:53.045178258 -0300
+@@ -27,8 +27,8 @@
+ #ifndef unix
+ #define unix
+ #endif
+-#ifndef __USE_XOPEN
+-#define __USE_XOPEN
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
+ #endif
+ 
+ #include <stdio.h>
+--- siag-3.6.1.orig/stocks/lists.c	2003-02-25 19:02:56.000000000 -0300
++++ siag-3.6.1/stocks/lists.c	2026-11-13 10:48:53.045178258 -0300
+@@ -24,9 +24,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ 
+-#ifdef __WINDOWS__
+ #include <stdlib.h>
+-#endif
+ 
+ #include "stocks.h"
+ #include "lists.h"
+--- siag-3.6.1.orig/stocks/http.c	2003-03-02 16:43:37.000000000 -0300
++++ siag-3.6.1/stocks/http.c	2026-11-13 10:48:53.046178327 -0300
+@@ -98,7 +98,7 @@
+   setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, 0, 0);
+ 
+   /* connect to server */
+-  if (connect(s, &server, sizeof(server)) < 0)
++  if (connect(s, (struct sockaddr *)&server, sizeof(server)) < 0)
+     {
+ #ifdef DEBUG
+       printf(" connect to server : NOK\n");
+--- siag-3.6.1.orig/egon/siodi.c	2003-01-16 06:51:08.000000000 -0200
++++ siag-3.6.1/egon/siodi.c	2026-11-13 10:48:53.046178327 -0300
+@@ -23,6 +23,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include <stdlib.h>
+ #include <ctype.h>
+ 
+--- siag-3.6.1.orig/pw/siodi.c	2003-01-16 06:51:08.000000000 -0200
++++ siag-3.6.1/pw/siodi.c	2026-11-13 10:48:53.046178327 -0300
+@@ -23,6 +23,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include <stdlib.h>
+ #include <ctype.h>
+ 
+--- siag-3.6.1.orig/plugins/siodi.c	2003-01-16 06:51:08.000000000 -0200
++++ siag-3.6.1/plugins/siodi.c	2026-11-13 10:48:53.046178327 -0300
+@@ -23,6 +23,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include <stdlib.h>
+ #include <ctype.h>
+ 
+--- siag-3.6.1.orig/xfiler/Errors.c	2003-01-15 21:57:07.000000000 -0200
++++ siag-3.6.1/xfiler/Errors.c	2026-11-13 10:48:53.046178327 -0300
+@@ -8,6 +8,7 @@
+ -----------------------------------------------------------------------------*/
+ 
+ #include <errno.h>
++#include <stdlib.h>
+ 
+ #include <X11/Intrinsic.h>
+ #include <X11/StringDefs.h>
+--- siag-3.6.1.orig/xfiler/Exec.c	2003-01-15 21:57:07.000000000 -0200
++++ siag-3.6.1/xfiler/Exec.c	2026-11-13 10:48:53.046178327 -0300
+@@ -7,6 +7,7 @@
+   Procedures for executing files
+ ---------------------------------------------------------------------------*/
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <memory.h>
+ #include <string.h>
+ #include <ctype.h>
+--- siag-3.6.1.orig/xfiler/tycoon.c	2003-01-15 21:57:11.000000000 -0200
++++ siag-3.6.1/xfiler/tycoon.c	2026-11-13 10:48:53.046178327 -0300
+@@ -1,6 +1,7 @@
+ #include <X11/Intrinsic.h>
+ #include <X11/Xatom.h>
+ #include <stdio.h>
++#include <stdlib.h>
+ 
+ extern void ExecExternalApplication(Display *dpy, int x, int y, char *label, 
+ 				    char *icon,char *cmd,char *drop,char *dir);
+--- siag-3.6.1.orig/tsiag/window.c	2003-01-15 21:56:24.000000000 -0200
++++ siag-3.6.1/tsiag/window.c	2026-11-13 10:49:42.376564030 -0300
+@@ -98,7 +98,7 @@
+ 
+ int columns;    /* number of cells per line */
+ int width;      /* default cell width */
+-int left_margin;
++static int scr_left_margin;
+ /*int right_margin = 5;*/
+ 
+ float zoom = 1.0;	/* unused */
+@@ -126,7 +126,7 @@
+ 			for (j = 0; j < screen_size.col; j++) {
+ 				ret_pvalue(s, buffer_of_window(w), w->sht, data_start.row + i, data_start.col + j, -1);
+ 				if (s[0] == '\0') {
+-					wmove(stdscr, 1 + screen_start.row + i, left_margin + (screen_start.col + j) * width);
++					wmove(stdscr, 1 + screen_start.row + i, scr_left_margin + (screen_start.col + j) * width);
+ 					waddch(stdscr, S9);
+ 				}
+ 			}
+@@ -139,29 +139,29 @@
+ 			MwDecodeFormat(ret_format(buffer_of_window(w), w->sht, data_start.row + i, data_start.col + j), ~0, &fmt);
+ 
+ 			if (fmt.borders & MW_BORDER_RIGHT) {
+-				wmove(stdscr, 1 + screen_start.row + i, left_margin + (screen_start.col + j + 1) * width - 1);
++				wmove(stdscr, 1 + screen_start.row + i, scr_left_margin + (screen_start.col + j + 1) * width - 1);
+ 				waddch(stdscr, VLINE);
+ 			}
+ 			if (fmt.borders & MW_BORDER_LEFT) {
+-				wmove(stdscr, 1 + screen_start.row + i, left_margin + (screen_start.col + j) * width - 1);
++				wmove(stdscr, 1 + screen_start.row + i, scr_left_margin + (screen_start.col + j) * width - 1);
+ 				waddch(stdscr, VLINE);
+ 			}
+ 			if (fmt.borders & MW_BORDER_TOP) {
+ 				int k;
+-				wmove(stdscr, 1 + screen_start.row + i, 1 + left_margin + (screen_start.col + j) * width);
++				wmove(stdscr, 1 + screen_start.row + i, 1 + scr_left_margin + (screen_start.col + j) * width);
+ 				for (k = 0; k < width - (fmt.borders & MW_BORDER_RIGHT ? 2 : 1); k++)
+ 					waddch(stdscr, S1);
+ 			}
+ 			if (fmt.borders & MW_BORDER_BOTTOM) {
+ 				int k;
+-				wmove(stdscr, 1 + screen_start.row + i, 1 + left_margin + (screen_start.col + j) * width);
++				wmove(stdscr, 1 + screen_start.row + i, 1 + scr_left_margin + (screen_start.col + j) * width);
+ 				for (k = 0; k < width - (fmt.borders & MW_BORDER_RIGHT ? 2 : 1); k++)
+ 					waddch(stdscr, S9);
+ 			}
+ 
+ 			ret_pvalue(s, buffer_of_window(w), w->sht, data_start.row + i, data_start.col + j, -1);
+ 			if (s[0] != '\0') {
+-				wmove(stdscr, 1 + screen_start.row + i, left_margin + (screen_start.col + j) * width);
++				wmove(stdscr, 1 + screen_start.row + i, scr_left_margin + (screen_start.col + j) * width);
+ 				if (inblock(w, add_position(data_start, make_position(i, j))))
+ 					wstandout(stdscr);
+ 				else
+@@ -176,7 +176,7 @@
+ 				else
+ 					wattroff(stdscr, A_DIM);
+ #endif
+-				waddnstr(stdscr, s, size.ws_col - (left_margin + (screen_start.col + j) * width));
++				waddnstr(stdscr, s, size.ws_col - (scr_left_margin + (screen_start.col + j) * width));
+ 				wstandend(stdscr);
+ 			}
+ 		}
+@@ -201,10 +201,10 @@
+ 	wstandout(stdscr);
+ 	for (i = 0; i < size.ws_row - 3; i++) {
+ 		wmove(stdscr, 1 + i, 0);
+-		wprintw(stdscr, "%-*d", left_margin - 1, get_top(w).row - get_prot(w).row + i + P_MIN.row);
++		wprintw(stdscr, "%-*d", scr_left_margin - 1, get_top(w).row - get_prot(w).row + i + P_MIN.row);
+ 	}
+ 	for (i = 0; i < columns; i++) {
+-		wmove(stdscr, 0, left_margin + width * i);
++		wmove(stdscr, 0, scr_left_margin + width * i);
+ 		wprintw(stdscr, "%-*s", width - 1,
+ 			colnum_text(w->buf, get_top(w).col - get_prot(w).col + i + P_MIN.col));
+ 	}
+@@ -390,7 +390,7 @@
+ {
+ 	MW_TRACE((f, "edit_cell"));
+ 
+-	wmove(stdscr, 1 - P_MIN.row + get_point(w_list).row - get_top(w_list).row + get_prot(w_list).row, left_margin + width * (get_point(w_list).col - get_top(w_list).col - P_MIN.col + get_prot(w_list).col) - 1);
++	wmove(stdscr, 1 - P_MIN.row + get_point(w_list).row - get_top(w_list).row + get_prot(w_list).row, scr_left_margin + width * (get_point(w_list).col - get_top(w_list).col - P_MIN.col + get_prot(w_list).col) - 1);
+ 	waddch(stdscr, RARROW);
+ 
+ 	/* Make show_cur() redraw the contents */
+@@ -599,8 +599,8 @@
+ 		die("The screen is too small");
+ 
+ 	width = 8;
+-	left_margin = 8;
+-	columns = (size.ws_col - left_margin) / width;
++	scr_left_margin = 8;
++	columns = (size.ws_col - scr_left_margin) / width;
+ 
+ 	pr_scr_flag = TRUE;
+ 	show_cur(w_list);
+@@ -610,8 +610,9 @@
+ {
+ 	MW_TRACE((f,"new_ncurses"));
+ 
+-	if ((stdscr = newwin(0, 0, 0, 0)) == NULL)
++	if (stdscr == NULL)
+ 		die("Error creating window");
++	clearok(stdscr, TRUE);
+ 
+ #ifdef A_NORMAL
+ 	wattrset(stdscr, A_NORMAL);
+@@ -632,7 +633,7 @@
+ {
+ 	MW_TRACE((f,"suspend_function"));
+ #ifdef SIGTSTP
+-	delwin(stdscr);
++	endwin();
+ 	raise(SIGTSTP);
+ 	new_ncurses();
+ #else
+@@ -835,7 +836,7 @@
+ 	wstandend(stdscr);
+ 
+ 	/* finally, the cursor */
+-	wmove(stdscr, 1 - P_MIN.row + get_point(w).row - get_top(w).row + get_prot(w).row, left_margin + width * (get_point(w).col - get_top(w).col - P_MIN.col + get_prot(w).col));
++	wmove(stdscr, 1 - P_MIN.row + get_point(w).row - get_top(w).row + get_prot(w).row, scr_left_margin + width * (get_point(w).col - get_top(w).col - P_MIN.col + get_prot(w).col));
+ 
+ 	wrefresh(stdscr);
+ } /* show_cur */

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Xedplus
+GenericName=Text Editor
+Comment=Text editor from Siag Office
+Exec=xedplus %f
+Icon=siag-xedplus
+Terminal=false
+Categories=Utility;TextEditor;
+MimeType=text/plain;

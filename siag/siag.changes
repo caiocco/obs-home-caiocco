@@ -1,0 +1,95 @@
+-------------------------------------------------------------------
+Fri Nov 13 23:08:22 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add siag-pw-keyboard-focus.patch: PW only took keyboard input
+  while the pointer was over its window. The shell's ChangeManaged
+  makes the unrealized topbox its focus widget first, so Xt never
+  selected KeyPress on the shell window and keys delivered there
+  (click-to-focus, pointer elsewhere) were dropped. The focus is now
+  cleared before activate_window() sets it to the text grid
+
+-------------------------------------------------------------------
+Fri Nov 13 22:05:00 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add siag-pw-modified-flag.patch: in PW, ins_text() never set the
+  buffer's modified flag, so typing (or pasting) text within a line
+  left the document "unchanged" and File > Exit, Ctrl+Q or the window
+  manager's close button quit without asking to save. Files given on
+  the command line are now marked unmodified after loading
+
+-------------------------------------------------------------------
+Fri Nov 13 21:20:25 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add siag-form-dialog-focus.patch: form dialogs (File > Print
+  Format, Tools > Environment > Custom, ...) warped the pointer to
+  their corner before the window manager placed them, so it jumped to
+  the middle of the screen; the warp is gone. The dialog now carries
+  _NET_WM_USER_TIME so xfwm4's focus-stealing prevention gives it the
+  focus, and WM_DELETE_WINDOW so the window manager's close button
+  cancels the form instead of killing the program
+- Add siag-print-format-save.patch: File > Print Format opened with
+  empty fields and only changed the commands for the session, and
+  load-applications was an empty stub, so ~/.siag/applications.sh was
+  written but never read. The form now shows the current previewer and
+  print commands, saves them, and they are loaded at start-up. One
+  shared print-format in common.scm also fixes Egon's menu entry,
+  which called an undefined function
+
+-------------------------------------------------------------------
+Fri Nov 13 19:19:07 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add siag-xedplus-delete-key.patch: Xedplus bound Delete and KP_Delete to delete-previous-character in both insert and overwrite modes, so Delete erased backwards like BackSpace; they now delete the next character (Meta+Delete deletes the next word). Matches the XawM fix for dialog text fields
+
+-------------------------------------------------------------------
+Fri Nov 13 19:06:19 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add siag-selection-utf8.patch: text pasted from other programs
+  showed accents as "Ã©" because their UTF-8 was inserted as Latin-1;
+  siag and pw now ask for UTF8_STRING (falling back to STRING, also
+  decoded when it is UTF-8) and convert to Latin-1, and offer
+  UTF8_STRING and STRING when copying. Fix the reversed memcpy that
+  left siag's TARGETS reply uninitialized. pw now rebreaks pasted
+  paragraphs to the margins instead of leaving one long line past
+  the right margin. Needs the matching Mowitz update
+
+-------------------------------------------------------------------
+Fri Nov 13 17:40:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add siag-buffer-name-latin1.patch: buffer names came straight from
+  UTF-8 file names, but lists, tabs and prompts draw Latin-1, so
+  "ação.siag" showed as "aÃ§Ã£o.siag" (e.g. Close Buffer on exit).
+  buffer_name() in siag, pw and egon now converts to Latin-1 (paths
+  stay in the file system encoding); window titles are converted
+  back to the locale encoding for Xt
+
+-------------------------------------------------------------------
+Fri Nov 13 16:53:20 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add siag-pointer-cursors.patch: plus pointer over the spreadsheet
+  grid (the motion handler reset it to None), I-beam over the edit
+  line, cell editor and the pw page
+
+-------------------------------------------------------------------
+Fri Nov 13 15:52:40 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add siag-xim-latin1.patch: the spreadsheet read keys with
+  XLookupString, which does not compose dead keys; use Mowitz's
+  MwLookupLatin1() so accented letters can be typed
+
+-------------------------------------------------------------------
+Fri Nov 13 14:35:04 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Siag Office 3.6.1, built with the Motif-like
+  XawM widget set (upstream default is the NeXTSTEP-like neXtaw)
+  and t1lib text rendering through Mowitz
+- Add siag-gcc15.patch: missing includes and sockaddr cast, strptime
+  feature macro, ncurses stdscr not assignable, tsiag screen margin
+  renamed (it clashed with libsiag's paper left_margin under
+  -fno-common)
+- Add siag-egon-drop-types.patch: egon crashed at startup writing
+  through an unallocated drop_types array
+- Add siag-xfiler-argv-overflow.patch: argv[4] written past the end
+- Add siag-install-duplicate-xpm.patch: duplicate xedplus.xpm broke
+  make install
+- Add siag-siaghelp-xdg-open.patch: prefer xdg-open for online help
+- Add .desktop files and icons

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Gvu
+GenericName=PostScript Viewer
+Comment=PostScript previewer from Siag Office
+Exec=gvu %f
+Icon=siag-gvu
+Terminal=false
+Categories=Graphics;Viewer;
+MimeType=application/postscript;

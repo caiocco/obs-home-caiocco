@@ -1,0 +1,11 @@
+--- siag-3.6.1.orig/common/bitmaps/Makefile.am	2003-01-16 06:51:08.000000000 -0200
++++ siag-3.6.1/common/bitmaps/Makefile.am	2026-11-13 10:50:50.129214113 -0300
+@@ -17,7 +17,7 @@
+ 	fonts.xpm data.xpm unknown.xpm \
+ 	center.xpm larger.xpm smaller.xpm portrait.xpm landscape.xpm \
+ 	editor.xpm SO3.xpm book-closed.xpm book-open.xpm handlebg.xpm \
+-	xfiler.xpm gvu.xpm xedplus.xpm \
++	xfiler.xpm gvu.xpm \
+ 	security.xpm \
+ 	navigator.xpm mail.xpm news.xpm addressbook.xpm composer.xpm
+ 

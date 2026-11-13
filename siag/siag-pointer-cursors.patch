@@ -1,0 +1,36 @@
+--- siag-3.6.1/xpw/Pw.ad
++++ siag-3.6.1/xpw/Pw.ad
+@@ -74,6 +74,7 @@
+ Pw*grid.gridy:				1
+ Pw*grid.gridWidth:			4
+ Pw*grid.background:			white
++Pw*grid.cursor:				xterm
+ Pw*grid.borderWidth:			0
+ Pw*grid.richtextDelay:			50
+ 
+--- siag-3.6.1/xsiag/Siag.ad
++++ siag-3.6.1/xsiag/Siag.ad
+@@ -97,6 +97,9 @@
+ Siag*grid.gridy:		1
+ Siag*grid.gridWidth:		2
+ Siag*grid.background:		white
++Siag*grid.cursor:		plus
++Siag*text1.cursor:		xterm
++Siag*edit_text.cursor:		xterm
+ Siag*grid.translations:\
+ 	Shift<Btn1Down>:	grid-button(select)			\n\
+ 	:<Btn1Down>:		grid-button(point)			\n\
+--- siag-3.6.1/xsiag/window.c
++++ siag-3.6.1/xsiag/window.c
+@@ -3008,7 +3008,10 @@
+ 	} else if (wd < 5) {
+ 		XDefineCursor(XtDisplay(w), XtWindow(w), lr_cursor);
+ 	} else {
+-		XDefineCursor(XtDisplay(w), XtWindow(w), None);
++		/* back to the grid's own cursor resource */
++		Cursor c = None;
++		XtVaGetValues(w, XtNcursor, &c, (char *)0);
++		XDefineCursor(XtDisplay(w), XtWindow(w), c);
+ 	}
+ }
+ 

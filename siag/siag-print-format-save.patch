@@ -1,0 +1,109 @@
+--- a/common/common.scm	2003-01-15 21:55:18.000000000 -0200
++++ b/common/common.scm	2026-11-13 18:18:16.895455366 -0300
+@@ -54,9 +54,42 @@
+ 	    "calculator=\"" calculator-command "\"\n")
+     (fclose fp)))
+ 
++; Remove the double quotes save-applications puts around a value
++(define (applications-unquote s)
++  (let ((n (string-length s)))
++    (if (and (>= n 2)
++	     (equal? (substring s 0 1) "\"")
++	     (equal? (substring s (- n 1) n) "\""))
++      (substring s 1 (- n 1))
++      s)))
++
++; Read the name=value lines written by save-applications or siagrun.
++; This used to be a stub, so settings were lost on every restart.
+ (define (load-applications)
+-  (let ((fp (fopen appfile "r")))
+-; read line by line...
++  (let ((fp (fopen appfile "r"))
++	(line nil)
++	(eq nil)
++	(key nil)
++	(val nil))
++    (set! line (readline fp))
++    (while line
++      (set! eq (string-search "=" line))
++      (if eq
++	(begin
++	  (set! key (string-trim (substring line 0 eq)))
++	  (set! val (applications-unquote
++		      (string-trim (substring line (+ eq 1)
++					      (string-length line)))))
++	  (cond
++	    ((equal? key "viewer") (set! viewer-command val))
++	    ((equal? key "lpr") (set! lpr-command val))
++	    ((equal? key "editor") (set! editor-command val))
++	    ((equal? key "help") (set! help-command val))
++	    ((equal? key "filer") (set! filer-command val))
++	    ((equal? key "terminal") (set! terminal-command val))
++	    ((equal? key "calculator") (set! calculator-command val))
++	    (t nil))))
++      (set! line (readline fp)))
+     (fclose fp)))
+ 
+ (if (stat appfile)
+@@ -151,6 +184,25 @@
+     (set! calc (extract-string "calc" new))
+     (set-applications viewer lpr editor help filer term calc)))
+ 
++; File - Print Format, shared by Siag, Pw and Egon. The form shows the
++; current commands, and what is entered is kept in applications.sh.
++(define (print-format)
++  (let ((props nil))
++    (form-begin)
++    (input-field "Previewer" 120 "viewer" 300 viewer-command)
++    (input-field "Print Command" 120 "lpr" 300 lpr-command)
++    (form-okbutton "OK")
++    (form-property XtNwidth 80)
++    (form-cancelbutton "Cancel")
++    (form-property XtNwidth 80)
++    (set! props (form-end))
++    (if props		; nil when cancelled; an empty field keeps the old command
++      (let ((viewer (extract-string "viewer" props))
++	    (lpr (extract-string "lpr" props)))
++	(set-applications (if (equal? viewer "") nil viewer)
++			  (if (equal? lpr "") nil lpr)
++			  nil nil nil nil nil)))))
++
+ (define (exec-siod)
+   (execute-interpreter-command 'SIOD))
+ 
+--- a/siag/siag.scm	2003-01-16 18:32:44.000000000 -0200
++++ b/siag/siag.scm	2026-11-13 18:18:07.917852320 -0300
+@@ -679,14 +679,7 @@
+       (spawn (string-append lpr-command " " fn))
+       (llpr "Can't make postscript"))))
+ 
+-(define (print-format)
+-  (let* ((props (form-record "Previewer" "Print Command"))
+-	 (viewcmd (cdr (assoc "Previewer" props)))
+-	 (printcmd (cdr (assoc "Print Command" props))))
+-    (if (not (equal? viewcmd ""))
+-      (set! viewer-command viewcmd))
+-    (if (not (equal? printcmd ""))
+-      (set! lpr-command printcmd))))
++; print-format is in common/common.scm
+ 
+ ; To consider: make sure that top is outside the protected area
+ ; Also: change (set-point) et al to do this
+--- a/pw/pw.scm	2006-11-10 08:52:04.000000000 -0200
++++ b/pw/pw.scm	2026-11-13 18:18:07.917852320 -0300
+@@ -372,14 +372,7 @@
+       (spawn (string-append lpr-command " " fn))
+       (llpr "Can't make Postscript"))))
+ 
+-(define (print-format)
+-  (let* ((props (form-record "Previewer" "Print Command"))
+-	 (viewcmd (cdr (assoc "Previewer" props)))
+-	 (printcmd (cdr (assoc "Print Command" props))))
+-    (if (not (equal? viewcmd ""))
+-      (set! viewer-command viewcmd))
+-    (if (not (equal? printcmd ""))
+-      (set! lpr-command printcmd))))
++; print-format is in common/common.scm
+ 
+ ; load the fonts
+ ;(require (string-append datadir "/common/fonts.scm"))

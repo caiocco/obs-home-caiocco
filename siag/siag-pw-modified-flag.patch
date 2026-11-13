@@ -1,0 +1,20 @@
+--- a/pw/matrix.c
++++ b/pw/matrix.c
+@@ -453,6 +453,7 @@
+ 		check_line_height(buf, s, pos.row);
+ 	MwFree(p);
+ 	MwFree(q);
++	buf->change = TRUE;
+ 	return 1;
+ }
+ 
+--- a/pw/main.c
++++ b/pw/main.c
+@@ -133,6 +133,7 @@
+ 			strcpy(path, argv[i]);
+ 			buf = new_buffer(buffer_name(argv[i]), path);
+ 			loadmatrix(path, buf, guess_file_format(path));
++			buf->change = FALSE;
+ 			w_list->buf = buf;
+ 		}
+ 	}

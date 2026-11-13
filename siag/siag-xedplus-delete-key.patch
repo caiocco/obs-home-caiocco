@@ -1,0 +1,94 @@
+diff -ru a/xed/app-defaults.h b/xed/app-defaults.h
+--- a/xed/app-defaults.h	2026-11-13 16:18:10.271786539 -0300
++++ b/xed/app-defaults.h	2026-11-13 16:18:10.278787009 -0300
+@@ -153,8 +153,8 @@
+ :Meta<Key>greater:	end-of-file() \\n\
+ :Meta<Key>]:	forward-paragraph() \\n\
+ :Meta<Key>[:	backward-paragraph() \\n\
+-~Shift Meta<Key>Delete:		delete-previous-word() \\n\
+- Shift Meta<Key>Delete:		backward-kill-word() \\n\
++~Shift Meta<Key>Delete:		delete-next-word() \\n\
++ Shift Meta<Key>Delete:		kill-word() \\n\
+ ~Shift Meta<Key>BackSpace:	delete-previous-word() \\n\
+  Shift Meta<Key>BackSpace:	backward-kill-word() \\n\
+ :Ctrl<Key>Home:	beginning-of-file() \\n\
+@@ -179,8 +179,8 @@
+ :<Key>KP_Down:	next-line() \\n\
+ <Key>Up:	previous-line() \\n\
+ :<Key>KP_Up:	previous-line() \\n\
+-<Key>Delete:	delete-previous-character() \\n\
+-:<Key>KP_Delete: delete-previous-character() \\n\
++<Key>Delete:	delete-next-character() \\n\
++:<Key>KP_Delete: delete-next-character() \\n\
+ <Key>BackSpace:	delete-previous-character() \\n\
+ <Key>Linefeed:	newline-and-indent() \\n\
+ <Key>Return:	newline() \\n\
+@@ -268,8 +268,8 @@
+ :Meta<Key>greater:	end-of-file() \\n\
+ :Meta<Key>]:	forward-paragraph() \\n\
+ :Meta<Key>[:	backward-paragraph() \\n\
+-~Shift Meta<Key>Delete:		delete-previous-word() \\n\
+- Shift Meta<Key>Delete:		backward-kill-word() \\n\
++~Shift Meta<Key>Delete:		delete-next-word() \\n\
++ Shift Meta<Key>Delete:		kill-word() \\n\
+ ~Shift Meta<Key>BackSpace:	delete-previous-word() \\n\
+  Shift Meta<Key>BackSpace:	backward-kill-word() \\n\
+ :Ctrl<Key>Home:	beginning-of-file() \\n\
+@@ -294,8 +294,8 @@
+ :<Key>KP_Down:	next-line() \\n\
+ <Key>Up:	previous-line() \\n\
+ :<Key>KP_Up:	previous-line() \\n\
+-<Key>Delete:	delete-previous-character() \\n\
+-:<Key>KP_Delete: delete-previous-character() \\n\
++<Key>Delete:	delete-next-character() \\n\
++:<Key>KP_Delete: delete-next-character() \\n\
+ <Key>BackSpace:	delete-previous-character() \\n\
+ <Key>Linefeed:	newline-and-indent() \\n\
+ <Key>Return:	newline() \\n\
+diff -ru a/xed/Xed.ad b/xed/Xed.ad
+--- a/xed/Xed.ad	2026-11-13 16:18:10.271786539 -0300
++++ b/xed/Xed.ad	2026-11-13 16:18:10.275786807 -0300
+@@ -206,8 +206,8 @@
+ :Meta<Key>greater:	end-of-file() \n\
+ :Meta<Key>]:	forward-paragraph() \n\
+ :Meta<Key>[:	backward-paragraph() \n\
+-~Shift Meta<Key>Delete:		delete-previous-word() \n\
+- Shift Meta<Key>Delete:		backward-kill-word() \n\
++~Shift Meta<Key>Delete:		delete-next-word() \n\
++ Shift Meta<Key>Delete:		kill-word() \n\
+ ~Shift Meta<Key>BackSpace:	delete-previous-word() \n\
+  Shift Meta<Key>BackSpace:	backward-kill-word() \n\
+ :Ctrl<Key>Home:	beginning-of-file() \n\
+@@ -232,8 +232,8 @@
+ :<Key>KP_Down:	next-line() \n\
+ <Key>Up:	previous-line() \n\
+ :<Key>KP_Up:	previous-line() \n\
+-<Key>Delete:	delete-previous-character() \n\
+-:<Key>KP_Delete: delete-previous-character() \n\
++<Key>Delete:	delete-next-character() \n\
++:<Key>KP_Delete: delete-next-character() \n\
+ <Key>BackSpace:	delete-previous-character() \n\
+ <Key>Linefeed:	newline-and-indent() \n\
+ <Key>Return:	newline() \n\
+@@ -323,8 +323,8 @@
+ :Meta<Key>greater:	end-of-file() \n\
+ :Meta<Key>]:	forward-paragraph() \n\
+ :Meta<Key>[:	backward-paragraph() \n\
+-~Shift Meta<Key>Delete:		delete-previous-word() \n\
+- Shift Meta<Key>Delete:		backward-kill-word() \n\
++~Shift Meta<Key>Delete:		delete-next-word() \n\
++ Shift Meta<Key>Delete:		kill-word() \n\
+ ~Shift Meta<Key>BackSpace:	delete-previous-word() \n\
+  Shift Meta<Key>BackSpace:	backward-kill-word() \n\
+ :Ctrl<Key>Home:	beginning-of-file() \n\
+@@ -349,8 +349,8 @@
+ :<Key>KP_Down:	next-line() \n\
+ <Key>Up:	previous-line() \n\
+ :<Key>KP_Up:	previous-line() \n\
+-<Key>Delete:	delete-previous-character() \n\
+-:<Key>KP_Delete: delete-previous-character() \n\
++<Key>Delete:	delete-next-character() \n\
++:<Key>KP_Delete: delete-next-character() \n\
+ <Key>BackSpace:	delete-previous-character() \n\
+ <Key>Linefeed:	newline-and-indent() \n\
+ <Key>Return:	newline() \n\

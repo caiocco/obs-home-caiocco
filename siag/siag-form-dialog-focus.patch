@@ -1,0 +1,63 @@
+--- a/xcommon/forminput.c	2003-01-15 21:55:42.000000000 -0200
++++ b/xcommon/forminput.c	2026-11-13 18:17:54.351941066 -0300
+@@ -25,6 +25,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <X11/keysym.h>
++#include <X11/Xatom.h>
+ #include <X11/Intrinsic.h>
+ #include <X11/StringDefs.h>
+ #include <X11/Shell.h>
+@@ -76,6 +77,17 @@
+ 	status = ABORT;
+ }
+ 
++/* the window manager's close button cancels the form */
++static void form_wm_message(Widget w, XtPointer client_data,
++		XEvent *event, Boolean *cont)
++{
++	Atom wm_delete = (Atom)client_data;
++
++	if (event->type == ClientMessage &&
++	    (Atom)event->xclient.data.l[0] == wm_delete)
++		status = ABORT;
++}
++
+ static void CBform_cmd(Widget w, XtPointer client_data, XtPointer call_data)
+ {
+ 	exec_expr(siod_interpreter, (char *)client_data);
+@@ -433,13 +445,30 @@
+ 	LISP result;
+ 	Widget w = first_textwidget();
+ 
+-	XtRealizeWidget(form_shell);
+-	XtUnrealizeWidget(form_shell);
++	Display *dpy = XtDisplay(form_shell);
++	Atom wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
++	unsigned long user_time = XtLastTimestampProcessed(dpy);
++
+ 	MwCenter(form_shell);
++	XtRealizeWidget(form_shell);
++	/* Without WM_DELETE_WINDOW the window manager's close button
++	   killed the whole application. */
++	XSetWMProtocols(dpy, XtWindow(form_shell), &wm_delete, 1);
++	XtAddEventHandler(form_shell, NoEventMask, True,
++		form_wm_message, (XtPointer)wm_delete);
++	/* Tell focus-stealing prevention (xfwm4, KWin, ...) that the form
++	   answers the user's last click or key, so it gets the focus. */
++	if (user_time != CurrentTime)
++		XChangeProperty(dpy, XtWindow(form_shell),
++			XInternAtom(dpy, "_NET_WM_USER_TIME", False),
++			XA_CARDINAL, 32, PropModeReplace,
++			(unsigned char *)&user_time, 1);
+ 	XtPopup(form_shell, XtGrabNonexclusive);
+ 
+-	XWarpPointer(XtDisplay(form_shell), None, XtWindow(form_shell),
+-		0, 0, 0, 0, 0, 0);
++	/* The form used to warp the pointer to its top left corner here.
++	   That happened before the window manager placed the window, so
++	   the pointer landed in the middle of the screen, on the title
++	   bar or outside the form. Leave the pointer alone. */
+ 	set_focus(w);
+ 	/* and the loop */
+ 	status = WAITING;

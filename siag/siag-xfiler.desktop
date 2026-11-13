@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Xfiler
+GenericName=File Manager
+Comment=File manager from Siag Office
+Exec=xfiler %f
+Icon=siag-xfiler
+Terminal=false
+Categories=System;FileTools;FileManager;
+MimeType=inode/directory;

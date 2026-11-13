@@ -1,0 +1,221 @@
+--- a/common/common.c	2003-01-15 21:55:17.000000000 -0200
++++ b/common/common.c	2026-11-13 14:33:34.291382355 -0300
+@@ -25,6 +25,7 @@
+ #include <signal.h>
+ #include <unistd.h>
+ #include <locale.h>
++#include <langinfo.h>
+ #include <sys/stat.h>
+ #include <sys/wait.h>
+ #include "../config.h"
+@@ -99,6 +100,89 @@
+ Check if a string should be interpreted as a positive answer.
+ */
+ 
++/*
++ * The X interfaces show text in ISO 8859-1 (dictionaries, Mowitz
++ * widgets, core fonts), but file names come from the file system in
++ * the locale's encoding, which is UTF-8 nowadays. Buffer names are
++ * derived from file names and shown in lists, tabs and prompts, so
++ * they are converted to Latin-1 when the buffer is named. Names that
++ * do not fit in Latin-1 are kept unchanged.
++ */
++static int utf8_locale(void)
++{
++	const char *cs = nl_langinfo(CODESET);
++	return cs && (!strcmp(cs, "UTF-8") || !strcmp(cs, "utf8"));
++}
++
++static int valid_utf8(const char *src)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	while (*p) {
++		int k;
++		if (*p < 0x80) k = 0;
++		else if ((*p & 0xe0) == 0xc0 && *p >= 0xc2) k = 1;
++		else if ((*p & 0xf0) == 0xe0) k = 2;
++		else if ((*p & 0xf8) == 0xf0 && *p <= 0xf4) k = 3;
++		else return 0;
++		p++;
++		while (k--) {
++			if ((*p & 0xc0) != 0x80) return 0;
++			p++;
++		}
++	}
++	return 1;
++}
++
++/* file system name -> Latin-1 display name */
++char *fs_to_latin1(char *dst, const char *src, size_t n)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	size_t i = 0;
++
++	if (utf8_locale()) {
++		while (*p && i + 1 < n) {
++			unsigned c = *p;
++			if (c < 0x80) p++;
++			else if ((c == 0xc2 || c == 0xc3)
++					&& (p[1] & 0xc0) == 0x80) {
++				c = ((c & 0x1f) << 6) | (p[1] & 0x3f);
++				p += 2;
++			} else break;
++			dst[i++] = (char)c;
++		}
++		if (*p == '\0') {
++			dst[i] = '\0';
++			return dst;
++		}
++	}
++	strncpy(dst, src, n - 1);
++	dst[n - 1] = '\0';
++	return dst;
++}
++
++/* Latin-1 display text -> locale encoding (e.g. for window titles,
++   which Xt converts from the locale) */
++char *latin1_to_locale(char *dst, const char *src, size_t n)
++{
++	const unsigned char *p = (const unsigned char *)src;
++	size_t i = 0;
++
++	if (!utf8_locale() || valid_utf8(src)) {
++		strncpy(dst, src, n - 1);
++		dst[n - 1] = '\0';
++		return dst;
++	}
++	for (; *p && i + 2 < n; p++) {
++		if (*p < 0x80) dst[i++] = *p;
++		else {
++			dst[i++] = 0xc0 | (*p >> 6);
++			dst[i++] = 0x80 | (*p & 0x3f);
++		}
++	}
++	dst[i] = '\0';
++	return dst;
++}
++
+ int itsayes(char *p)
+ {
+ 	return !MwStrcasecmp(p, "yes")
+--- a/common/common.h	2003-01-15 21:55:16.000000000 -0200
++++ b/common/common.h	2026-11-13 14:33:34.291382355 -0300
+@@ -33,6 +33,8 @@
+ extern void to_cchar(char *, int);
+ extern void common_init(char *);
+ extern int itsayes(char *);
++extern char *fs_to_latin1(char *, const char *, size_t);
++extern char *latin1_to_locale(char *, const char *, size_t);
+ extern void deletia_add(long, char *);
+ extern void deletia_mark(long);
+ extern void deletia_reap(void);
+--- a/egon/buffer.c	2003-01-15 21:56:42.000000000 -0200
++++ b/egon/buffer.c	2026-11-13 14:33:34.291382355 -0300
+@@ -73,11 +73,13 @@
+ char *buffer_name(char *fn)
+ {
+ 	static char name[256];
++	char disp[256];
+ 	int i;
+ 
+ 	char *p = strrchr(fn, '/');
+ 	if (p != NULL) p++;
+ 	if (p == NULL || *p == '\0') p = fn;
++	p = fs_to_latin1(disp, p, sizeof disp);
+ 	if (unique_name(p)) {
+ 		strcpy(name, p);
+ 		return name;
+--- a/pw/buffer.c	2003-01-15 21:56:29.000000000 -0200
++++ b/pw/buffer.c	2026-11-13 14:33:34.291382355 -0300
+@@ -73,11 +73,13 @@
+ char *buffer_name(char *fn)
+ {
+ 	static char name[256];
++	char disp[256];
+ 	int i;
+ 
+ 	char *p = strrchr(fn, '/');
+ 	if (p != NULL) p++;
+ 	if (p == NULL || *p == '\0') p = fn;
++	p = fs_to_latin1(disp, p, sizeof disp);
+ 	if (unique_name(p)) {
+ 		strcpy(name, p);
+ 		return name;
+--- a/siag/buffer.c	2003-01-15 21:55:49.000000000 -0200
++++ b/siag/buffer.c	2026-11-13 14:33:34.291382355 -0300
+@@ -78,11 +78,13 @@
+ char *buffer_name(char *fn)
+ {
+ 	static char name[256];
++	char disp[256];
+ 	int i;
+ 
+ 	char *p = strrchr(fn, '/');
+ 	if (p != NULL) p++;
+ 	if (p == NULL || *p == '\0') p = fn;
++	p = fs_to_latin1(disp, p, sizeof disp);
+ 	if (unique_name(p)) {
+ 		strncpy(name, p, 255);
+ 		return name;
+--- a/xegon/window.c	2026-11-13 14:33:17.068221947 -0300
++++ b/xegon/window.c	2026-11-13 14:33:34.292382423 -0300
+@@ -687,14 +687,15 @@
+ */
+ void activate_window(window *w)
+ {
+-	char b[256];
++	char b[256], title[512];
+ 	int tab, s = w->sht;
+ 
+ 	w_list = w;
+ 	if (w) {
+ 		strcpy(b, "Egon Animator: ");
+ 		strncat(b, w->buf->name, 200);
+-		XtVaSetValues(topLevel, XtNtitle, b, NULL);
++		XtVaSetValues(topLevel, XtNtitle,
++			latin1_to_locale(title, b, sizeof title), NULL);
+ 		tab = MwTabbingTextToPos(w->ui->tab, w->buf->sht[s].name);
+ 		if (tab < 0) {
+ 			w_list->sht = s = tab = 0;
+--- a/xpw/window.c	2003-09-16 03:37:45.000000000 -0300
++++ b/xpw/window.c	2026-11-13 14:33:40.209781107 -0300
+@@ -443,7 +443,7 @@
+ */
+ void activate_window(window *w)
+ {
+-	char b[256];
++	char b[256], title[512];
+ 	int tab, s;
+ 	buffer *buf;
+ 
+@@ -457,7 +457,8 @@
+ 		w_list->sht = s = tab = 0;
+ 	}
+ 	XtVaSetValues(w->ui->tab, XtNtabbingSelected, tab, (char *)0);
+-	XtVaSetValues(topLevel, XtNtitle, b, (char *)0);
++	XtVaSetValues(topLevel, XtNtitle,
++		latin1_to_locale(title, b, sizeof title), (char *)0);
+ 	XtVaSetValues(w->ui->grid,
+ 		XtNrichtextData, w,
+ 		XtNleftMargin, w->buf->left_margin,
+--- a/xsiag/window.c	2026-11-13 14:33:17.073222283 -0300
++++ b/xsiag/window.c	2026-11-13 14:33:34.292382423 -0300
+@@ -2791,7 +2791,7 @@
+ that are not on the current sheet of the current window.  */
+ void activate_window(window * w)
+ {
+-	char b[256];
++	char b[256], title[512];
+ 	int tab;
+ 	int s;
+ 	buffer *buf;
+@@ -2814,7 +2814,8 @@
+ 		XtVaSetValues(w->ui->tab, XtNtabbingSelected, tab,
+ 			      (char *) 0);
+ 	}
+-	XtVaSetValues(topLevel, XtNtitle, b, (char *) NULL);
++	XtVaSetValues(topLevel, XtNtitle,
++		latin1_to_locale(title, b, sizeof title), (char *) NULL);
+ 	XtVaSetValues(w->ui->grid, XtNtableVisibleCursor, True,
+ 		      (char *) NULL);
+ 

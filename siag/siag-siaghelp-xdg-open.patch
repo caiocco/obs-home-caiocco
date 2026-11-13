@@ -1,0 +1,16 @@
+--- siag-3.6.1.orig/common/docs/siaghelp	2003-01-15 21:55:26.000000000 -0200
++++ siag-3.6.1/common/docs/siaghelp	2026-11-13 11:31:12.451153066 -0300
+@@ -13,9 +13,11 @@
+ WS=`which "$SIAGHELP" 2> /dev/null`
+ 
+ if [ "$SIAGHELP" = "" -o ! -x "$WS" ]; then
+-	if which netscape > /dev/null; then
++	if which xdg-open > /dev/null 2>&1; then
++		SIAGHELP=xdg-open
++	elif which netscape > /dev/null 2>&1; then
+ 		SIAGHELP=netscape
+-	elif which lynx > /dev/null; then
++	elif which lynx > /dev/null 2>&1; then
+ 		SIAGHELP="xterm -e lynx"
+ 	else
+ 		SIAGHELP=pw

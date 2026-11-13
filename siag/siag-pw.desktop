@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pathetic Writer
+GenericName=Word Processor
+Comment=Word processor from Siag Office
+Exec=pw %f
+Icon=siag-pw
+Terminal=false
+Categories=Office;WordProcessor;
+MimeType=text/html;application/rtf;

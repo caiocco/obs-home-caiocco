@@ -1,0 +1,272 @@
+--- a/pw/matrix.c	2003-02-28 16:26:35.000000000 -0300
++++ b/pw/matrix.c	2026-11-13 16:05:34.252030874 -0300
+@@ -818,6 +818,9 @@
+ {
+ 	char *p;
+ 
++	/* Each pasted line is a paragraph of its own, and every
++	   paragraph touched is rebroken to the margins like typed
++	   text; previously a long pasted line ran past the margin. */
+ 	while (*data) {		/* NUL marks end of data */
+ 		p = strchr(data, '\n');		/* look for eol */
+ 		if (p) {	/* found one; copy data, then split line */
+@@ -826,7 +829,8 @@
+ 				(unsigned char *)data,
+ 				ret_format(buf, s, row, col));
+ 			split_line(buf, s, row, col+strlen(data));
+-			row++;
++			set_bop(buf, s, row+1, 1);
++			row = rebreak_line(buf, s, row)+1;
+ 			col = 0;
+ 			data = p+1;	/* start of next line */
+ 		} else {	/* last line; copy data, no split */
+@@ -836,6 +840,8 @@
+ 			data += strlen(data);	/* end of data */
+ 		}
+ 	}
++	rebreak_line(buf, s, row);
++	pr_scr_flag = TRUE;
+ }
+ 
+ /* ---
+--- a/xpw/window.c	2026-11-13 16:03:45.968761237 -0300
++++ b/xpw/window.c	2026-11-13 16:05:23.847332351 -0300
+@@ -179,10 +179,12 @@
+ 			target, type_return,
+ 			(XPointer *)&std_targets,
+ 			&std_length, format_return);
+-		*value_return = XtMalloc(sizeof(Atom)*(std_length+1));
++		*value_return = XtMalloc(sizeof(Atom)*(std_length+3));
+ 		targetP = *(Atom **)value_return;
+-		*length_return = std_length+1;
++		*length_return = std_length+3;
+ 		*targetP++ = target_atom;
++		*targetP++ = MwUtf8Atom(XtDisplay(w));
++		*targetP++ = XA_STRING;
+ 		memcpy(targetP, std_targets, sizeof(Atom)*std_length);
+ 		XtFree((char *)std_targets);
+ 		*type_return = XA_ATOM;
+@@ -216,6 +218,19 @@
+ 		*type_return = XA_STRING;
+ 		*format_return = 8;
+ 		return True;
++	} else if (*target == MwUtf8Atom(XtDisplay(w))) {
++		/* PW text is Latin-1; UTF8_STRING requesters get UTF-8 */
++		char *data = pack_area(wl->buf, wl->bsht,
++			block_upper(wl).row, block_upper(wl).col,
++			block_lower(wl).row, block_lower(wl).col,
++			&lr);
++		if (data == NULL) return False;
++		*value_return = MwLatin1ToUtf8(data, strlen(data),
++						length_return);
++		MwFree(data);
++		*type_return = *target;
++		*format_return = 8;
++		return True;
+ 	} else {
+ 		if (XmuConvertStandardSelection(w, CurrentTime, selection,
+ 				target, type_return, (XPointer *)value_return,
+@@ -251,10 +266,12 @@
+ 			target, type_return,
+ 			(XPointer *)&std_targets,
+ 			&std_length, format_return);
+-		*value_return = XtMalloc(sizeof(Atom)*(std_length+1));
++		*value_return = XtMalloc(sizeof(Atom)*(std_length+3));
+ 		targetP = *(Atom **)value_return;
+-		*length_return = std_length+1;
++		*length_return = std_length+3;
+ 		*targetP++ = target_atom;
++		*targetP++ = MwUtf8Atom(XtDisplay(w));
++		*targetP++ = XA_STRING;
+ 		memcpy(targetP, std_targets, sizeof(Atom)*std_length);
+ 		XtFree((char *)std_targets);
+ 		*type_return = XA_ATOM;
+@@ -280,6 +297,12 @@
+ 		*type_return = XA_STRING;
+ 		*format_return = 8;
+ 		return True;
++	} else if (*target == MwUtf8Atom(XtDisplay(w))) {
++		*value_return = MwLatin1ToUtf8(clip_string,
++				strlen(clip_string), length_return);
++		*type_return = *target;
++		*format_return = 8;
++		return True;
+ 	} else {
+ 		if (XmuConvertStandardSelection(w, CurrentTime, selection,
+ 				target, type_return, (XPointer *)value_return,
+@@ -338,9 +361,13 @@
+                 XBell(XtDisplay(w), 100);
+                 XtWarning("PW: no selection or selection timed out");
+         } else {
+-                unpack_string_area(w_list->buf, (char *)value,
++		/* other clients send UTF-8, even for STRING requests */
++		char *text = MwSelectionToLatin1((char *)value, *length,
++				*type == MwUtf8Atom(XtDisplay(w)));
++                unpack_string_area(w_list->buf, text,
+ 			w_list->sht,
+                         get_point(w_list).row, get_point(w_list).col);
++		MwFree(text);
+                 w_list->buf->change = TRUE;
+                 XtFree((char *)value);
+                 pr_scr_flag = TRUE;
+@@ -348,16 +375,33 @@
+ 	show_cur(w_list);
+ }
+ 
++static void utf8_requestor_callback(Widget w, XtPointer client_data,
++        Atom *selection, Atom *type, XtPointer value,
++        unsigned long *length, int *format)
++{
++	if (value == NULL || *length == 0
++			|| *type != MwUtf8Atom(XtDisplay(w))) {
++		/* no UTF8_STRING; try a plain STRING */
++		if (value) XtFree((char *)value);
++                XtGetSelectionValue(w, *selection, XA_STRING,
++                        string_requestor_callback,
++                        NULL, XtLastTimestampProcessed(XtDisplay(w)));
++		return;
++	}
++	string_requestor_callback(w, client_data, selection, type,
++		value, length, format);
++}
++
+ void requestor_callback(Widget w, XtPointer client_data,
+ 	Atom *selection, Atom *type, XtPointer value,
+ 	unsigned long *length, int *format)
+ {
+ 	if ((value == NULL) && (*length == 0)) {
+         /* if we asked for a PW_BLOCK and got a null response,
+-           we'll ask again, this time for an XA_STRING */
+-                XtGetSelectionValue(w, *selection, XA_STRING,
+-                        string_requestor_callback,
+-                        NULL, CurrentTime);     /* NULL is bogus event */
++           we'll ask again, this time for UTF8_STRING, then STRING */
++                XtGetSelectionValue(w, *selection, MwUtf8Atom(XtDisplay(w)),
++                        utf8_requestor_callback,
++                        NULL, XtLastTimestampProcessed(XtDisplay(w)));
+ 	} else {
+ 		unpack_area(w_list->buf, (char *)value,
+ 			w_list->sht,
+--- a/xsiag/window.c	2026-11-13 16:03:45.969761304 -0300
++++ b/xsiag/window.c	2026-11-13 16:05:53.624331441 -0300
+@@ -246,11 +246,13 @@
+ 					    target, type_return,
+ 					    (XPointer *) & std_targets,
+ 					    &std_length, format_return);
+-		*value_return = XtMalloc(sizeof(Atom) * (std_length + 1));
++		*value_return = XtMalloc(sizeof(Atom) * (std_length + 3));
+ 		targetP = *(Atom **) value_return;
+-		*length_return = std_length + 1;
++		*length_return = std_length + 3;
+ 		*targetP++ = target_atom;
+-		memcpy(std_targets, targetP, sizeof(Atom) * std_length);
++		*targetP++ = MwUtf8Atom(XtDisplay(w));
++		*targetP++ = XA_STRING;
++		memcpy(targetP, std_targets, sizeof(Atom) * std_length);
+ 		XtFree((char *) std_targets);
+ 		*type_return = XA_ATOM;
+ 		*format_return = sizeof(Atom) * 8;
+@@ -300,6 +302,19 @@
+ 		*type_return = XA_STRING;
+ 		*format_return = 8;
+ 		return True;
++	} else if (*target == MwUtf8Atom(XtDisplay(w))) {
++		/* Siag text is Latin-1; UTF8_STRING requesters get UTF-8 */
++		char *data = pack_string(wl->buf, wl->bsht,
++				   block_upper(wl).row,
++				   block_upper(wl).col,
++				   block_lower(wl).row,
++				   block_lower(wl).col);
++		*value_return = MwLatin1ToUtf8(data, strlen(data),
++					       length_return);
++		MwFree(data);
++		*type_return = *target;
++		*format_return = 8;
++		return True;
+ 	} else {
+ 		if (XmuConvertStandardSelection(w, CurrentTime, selection,
+ 						target, type_return,
+@@ -333,11 +348,13 @@
+ 					    target, type_return,
+ 					    (XPointer *) & std_targets,
+ 					    &std_length, format_return);
+-		*value_return = XtMalloc(sizeof(Atom) * (std_length + 1));
++		*value_return = XtMalloc(sizeof(Atom) * (std_length + 3));
+ 		targetP = *(Atom **) value_return;
+-		*length_return = std_length + 1;
++		*length_return = std_length + 3;
+ 		*targetP++ = target_atom;
+-		memcpy(std_targets, targetP, sizeof(Atom) * std_length);
++		*targetP++ = MwUtf8Atom(XtDisplay(w));
++		*targetP++ = XA_STRING;
++		memcpy(targetP, std_targets, sizeof(Atom) * std_length);
+ 		XtFree((char *) std_targets);
+ 		*type_return = XA_ATOM;
+ 		*format_return = sizeof(Atom) * 8;
+@@ -362,6 +379,13 @@
+ 		*type_return = XA_STRING;
+ 		*format_return = 8;
+ 		return True;
++	} else if (*target == MwUtf8Atom(XtDisplay(w))) {
++		*value_return = MwLatin1ToUtf8(clip_string,
++					       strlen(clip_string),
++					       length_return);
++		*type_return = *target;
++		*format_return = 8;
++		return True;
+ 	} else {
+ 		if (XmuConvertStandardSelection(w, CurrentTime, selection,
+ 						target, type_return,
+@@ -411,10 +435,14 @@
+ 		XBell(XtDisplay(w), 100);
+ 		XtWarning("Siag: no selection or selection timed out\n");
+ 	} else {
+-		unpack_string(w_list->buf, (char *) value,
++		/* other clients send UTF-8, even for STRING requests */
++		char *text = MwSelectionToLatin1((char *) value, *length,
++					*type == MwUtf8Atom(XtDisplay(w)));
++		unpack_string(w_list->buf, text,
+ 			      w_list->sht,
+ 			      get_point(w_list).row,
+ 			      get_point(w_list).col);
++		MwFree(text);
+ 		w_list->buf->change = TRUE;
+ 		calc_matrix(w_list->buf);
+ 		XtFree((char *) value);
+@@ -422,14 +450,34 @@
+ 	}
+ }
+ 
++static void utf8_requestor_callback(Widget w, XtPointer client_data,
++			Atom * selection, Atom * type, XtPointer value,
++			unsigned long *length, int *format)
++{
++	if (value == NULL || *length == 0
++			|| *type != MwUtf8Atom(XtDisplay(w))) {
++		/* no UTF8_STRING; try a plain STRING */
++		if (value)
++			XtFree((char *) value);
++		XtGetSelectionValue(w, *selection, XA_STRING,
++				    string_requestor_callback, NULL,
++				    XtLastTimestampProcessed(XtDisplay(w)));
++		return;
++	}
++	string_requestor_callback(w, client_data, selection, type,
++				  value, length, format);
++}
++
+ void requestor_callback(Widget w, XtPointer client_data,
+ 			Atom * selection, Atom * type, XtPointer value,
+ 			unsigned long *length, int *format)
+ {
+ 	if ((value == NULL) && (*length == 0)) {
+ 		/* if we asked for a SIAG_BLOCK and got a null response,
+-		   we'll ask again, this time for an XA_STRING */
+-		XtGetSelectionValue(w, *selection, XA_STRING, string_requestor_callback, NULL, CurrentTime);	/* NULL is bogus event */
++		   we'll ask again, this time for UTF8_STRING, then STRING */
++		XtGetSelectionValue(w, *selection, MwUtf8Atom(XtDisplay(w)),
++				    utf8_requestor_callback, NULL,
++				    XtLastTimestampProcessed(XtDisplay(w)));
+ 	} else {
+ 		unpack_area(w_list->buf, (char *) value,
+ 			    w_list->sht,

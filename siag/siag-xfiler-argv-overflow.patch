@@ -1,0 +1,11 @@
+--- siag-3.6.1.orig/xfiler/Fw.c	2003-01-15 21:57:08.000000000 -0200
++++ siag-3.6.1/xfiler/Fw.c	2026-11-13 10:50:26.773611143 -0300
+@@ -418,7 +418,7 @@
+ 	cmd_store(string);
+ 	cmd_curr = cmd_count;
+ 	if (!fork()) {
+-		char *argv[4];
++		char *argv[5];
+ 		argv[0] = "runcmd";
+ 		argv[1] = "/bin/sh";
+ 		argv[2] = "-c";

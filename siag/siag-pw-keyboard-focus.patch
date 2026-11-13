@@ -1,0 +1,15 @@
+--- a/xpw/window.c
++++ b/xpw/window.c
+@@ -2209,6 +2209,12 @@
+ 
+ 	grid_cursor = XCreateFontCursor(display, XC_xterm);
+ 
++	/* The shell's ChangeManaged already made the still unrealized
++	   topbox its focus widget, so Xt forwards no key events from the
++	   shell window: with the pointer outside the text area, keys
++	   typed under click-to-focus were lost. Clearing the focus makes
++	   activate_window() install the forwarding handler afresh. */
++	XtSetKeyboardFocus(topLevel, None);
+ 	activate_window(new_window(b, NULL));
+ 
+ 	wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", False);
