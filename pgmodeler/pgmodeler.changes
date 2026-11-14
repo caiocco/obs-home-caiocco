@@ -1,0 +1,10 @@
+-------------------------------------------------------------------
+Sat Nov 14 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of pgModeler 2.0.0 (community build)
+  * Build with GCC instead of the hard-coded clang
+  * Update check disabled (updates come from the package)
+  * Add a .desktop entry, icons and a MIME type for .dbm models
+  * Helper programs installed with the private libraries; their
+    unversioned sonames are kept out of Provides/Requires
+  * Translations in a -lang subpackage
