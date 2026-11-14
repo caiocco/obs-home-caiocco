@@ -11,4 +11,3 @@ Terminal=false
 Categories=Development;Database;Qt;
 MimeType=application/x-pgmodeler;
 Keywords=PostgreSQL;database;ERD;SQL;model;
-StartupWMClass=pgmodeler

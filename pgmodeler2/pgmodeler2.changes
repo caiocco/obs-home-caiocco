@@ -1,0 +1,15 @@
+-------------------------------------------------------------------
+Sat Nov 14 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of pgModeler 2.0.0 Community edition as pgmodeler2,
+  installable next to pgmodeler (1.2.x), which keeps the database
+  import, diff and SQL tools that 2.0 moved to the paid Plus edition
+  * Build with GCC instead of the hard-coded clang
+  * Update check disabled (updates come from the package)
+  * Executables live in %{_libdir}/pgmodeler2, with pgmodeler2 and
+    pgmodeler2-cli symlinks in %{_bindir}, so the $ORIGIN RUNPATH
+    points at a library directory; the unversioned private sonames
+    are kept out of Provides/Requires
+  * Add a .desktop entry and icon; the .dbm MIME type comes from the
+    pgmodeler package
+  * Translations in a -lang subpackage

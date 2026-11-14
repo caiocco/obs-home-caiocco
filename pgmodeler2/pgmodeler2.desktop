@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=pgModeler 2
+GenericName=PostgreSQL Database Modeler
+GenericName[pt_BR]=Modelador de bancos de dados PostgreSQL
+Comment=Design PostgreSQL databases with entity-relationship diagrams (Community 2.x)
+Comment[pt_BR]=Projete bancos de dados PostgreSQL com diagramas entidade-relacionamento (Community 2.x)
+Exec=pgmodeler2 %F
+Icon=pgmodeler2
+Terminal=false
+Categories=Development;Database;Qt;
+MimeType=application/x-pgmodeler;
+Keywords=PostgreSQL;database;ERD;SQL;model;

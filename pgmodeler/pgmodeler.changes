@@ -1,10 +1,13 @@
 -------------------------------------------------------------------
 Sat Nov 14 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
-- Initial package of pgModeler 2.0.0 (community build)
-  * Build with GCC instead of the hard-coded clang
+- Initial package of pgModeler 1.2.3, the last release with database
+  import, model diff, SQL tool and database explorer in the open
+  source build (2.0 moved them to the paid Plus edition; 2.x is
+  packaged separately as pgmodeler2)
   * Update check disabled (updates come from the package)
+  * Executables live in %{_libdir}/pgmodeler, with pgmodeler and
+    pgmodeler-cli symlinks in %{_bindir}, so the $ORIGIN RUNPATH
+    points at a library directory; the unversioned private sonames
+    are kept out of Provides/Requires
   * Add a .desktop entry, icons and a MIME type for .dbm models
-  * Helper programs installed with the private libraries; their
-    unversioned sonames are kept out of Provides/Requires
-  * Translations in a -lang subpackage
