@@ -1,0 +1,35 @@
+--- a/paint.c
++++ b/paint.c
+@@ -709,6 +709,9 @@
+ 
+ #define SPRAY_DENSITY 10
+ 
++// Minimum drag distance (pixels) to create a text box
++#define TEXT_BOX_MIN_DRAG 4
++
+ void paint_tool_update(PaintContext* ctx)
+ {
+     CcBitmap* b = &ctx->layers[LAYER_MAIN].bitmap;
+@@ -854,6 +857,22 @@
+             if (ctx->active_layer == LAYER_MAIN)
+             {
+                 CcRect rect = cc_rect_around_corners(x, y, ctx->line_x, ctx->line_y);
++
++                // A click (or a tiny drag) must not create a text box:
++                // the text would be invisible because nothing is drawn
++                // unless the box is taller than one line.
++                if (rect.w < TEXT_BOX_MIN_DRAG && rect.h < TEXT_BOX_MIN_DRAG)
++                {
++                    cc_layer_reset(ctx->layers + LAYER_OVERLAY);
++                    break;
++                }
++
++                // Make room for at least one line at the current font size
++                // (see line_height in bitmap_text.c).
++                int min_size = ctx->text.font_size * 2 + 1;
++                if (rect.h < min_size) rect.h = min_size;
++                if (rect.w < min_size) rect.w = min_size;
++
+                 if (rect.w > 0 && rect.h > 0)
+                 {
+                     CcBitmap b = {

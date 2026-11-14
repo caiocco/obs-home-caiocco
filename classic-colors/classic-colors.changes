@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Sun Nov 15 00:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add classic-colors-save-prompt.patch: track whether the image was
+  modified and, on File > Exit or when the window is closed, ask
+  "Do you want to save changes?" (Save / Don't Save / Cancel); Save
+  places a pending text box or selection first and uses Save As for
+  untitled images
+- Add classic-colors-text-box-click.patch: a plain click with the
+  text tool no longer creates a tiny box whose text is invisible;
+  boxes smaller than one line at the current font size are enlarged
+
+-------------------------------------------------------------------
 Sat Nov 14 23:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Initial package of classic-colors 1.1.1

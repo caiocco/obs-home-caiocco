@@ -1,0 +1,366 @@
+--- a/paint.h
++++ b/paint.h
+@@ -184,6 +184,9 @@
+     CcUndo undo;
+ 
+     char open_file_path[OS_PATH_MAX];
++
++    // set when the image changes, cleared when it is opened or saved
++    int modified;
+ } PaintContext;
+ 
+ void paint_undo(PaintContext* ctx);
+@@ -193,6 +196,7 @@
+ int paint_open_file(PaintContext* ctx, const char* path, const char** error_message);
+ int paint_save_file_as(PaintContext* ctx, const char* path);
+ int paint_save_file(PaintContext* ctx);
++int paint_is_modified(PaintContext* ctx);
+ 
+ int paint_init(PaintContext* ctx);
+ 
+--- a/paint.c
++++ b/paint.c
+@@ -30,6 +30,7 @@
+ 
+     const CcLayer* l = ctx->layers + LAYER_MAIN;
+     cc_undo_record_change(&ctx->undo, l, r);
++    ctx->modified = 1;
+ }
+ 
+ static
+@@ -43,6 +44,7 @@
+ 
+ void paint_undo(PaintContext* ctx)
+ {
++    if (cc_undo_can_back(&ctx->undo)) ctx->modified = 1;
+     cc_undo_maybe_back(&ctx->undo, ctx->layers + LAYER_MAIN);
+ 
+     ctx->active_layer = LAYER_MAIN;
+@@ -52,6 +54,7 @@
+ 
+ void paint_redo(PaintContext* ctx)
+ {
++    if (cc_undo_can_forward(&ctx->undo)) ctx->modified = 1;
+     cc_undo_maybe_forward(&ctx->undo, ctx->layers + LAYER_MAIN);
+ 
+     ctx->active_layer = LAYER_MAIN;
+@@ -105,6 +108,7 @@
+     cc_viewport_init(&ctx->viewport);
+ 
+     paint_undo_save_full(ctx);
++    ctx->modified = 0;
+ 	return 1;
+ }
+ 
+@@ -189,15 +193,25 @@
+ int paint_save_file_as(PaintContext* ctx, const char* path)
+ {
+     strncpy(ctx->open_file_path, path, OS_PATH_MAX);
+-    return save_file_(ctx, paint_file_path(ctx));
++    int result = save_file_(ctx, paint_file_path(ctx));
++    if (result) ctx->modified = 0;
++    return result;
+ }
+ 
+ int paint_save_file(PaintContext* ctx)
+ {
+     int result = save_file_(ctx, paint_file_path(ctx));
++    if (result) ctx->modified = 0;
+     return result;
+ }
+ 
++int paint_is_modified(PaintContext* ctx)
++{
++    // text typed in a box that was not placed yet also counts
++    return ctx->modified ||
++        (paint_is_editing_text(ctx) && ctx->text.text[0] != L'\0');
++}
++
+ int paint_init(PaintContext* ctx)
+ {
+     ctx->line_width = 1;
+--- a/ui.h
++++ b/ui.h
+@@ -68,6 +68,7 @@
+ 
+ void ui_refresh_tool(void);
+ void ui_refresh_title(void);
++void ui_request_quit(void);
+ XtAppContext ui_app();
+ 
+ XImage *cc_bitmap_create_ximage(CcBitmap *b, Display *display, Visual *visual);
+--- a/ui_file.c
++++ b/ui_file.c
+@@ -30,6 +30,22 @@
+ static
+ char potential_save_path[OS_PATH_MAX];
+ 
++// set while the Save As dialog was opened from the quit prompt
++static
++int quit_after_save;
++
++static
++Widget quit_dialog;
++
++static void save_succeeded_(void)
++{
++    ui_refresh_title();
++    if (quit_after_save)
++    {
++        XtAppSetExitFlag(g_app);
++    }
++}
++
+ void ui_new(Widget widget)
+ {
+     PaintContext* ctx = &g_paint_ctx;
+@@ -162,7 +178,7 @@
+     {
+         XtUnmanageChild(save_dialog);
+         XtDestroyWidget(save_dialog);
+-        ui_refresh_title();
++        save_succeeded_();
+     }
+ }
+ 
+@@ -195,7 +211,7 @@
+             // success. close.
+             XtUnmanageChild(widget);
+             XtDestroyWidget(widget);
+-            ui_refresh_title();
++            save_succeeded_();
+         }
+     }
+     else
+@@ -231,6 +247,7 @@
+ 
+ static void cb_save_cancel_(Widget widget, XtPointer client_data, XtPointer call_data)
+ {
++    quit_after_save = 0;
+     XtUnmanageChild(widget);
+     XtDestroyWidget(widget);
+     save_dialog = NULL;
+@@ -238,6 +255,7 @@
+ 
+ static void cb_save_destroy_(Widget widget, XtPointer client_data, XtPointer call_data)
+ {
++    quit_after_save = 0;
+     save_dialog = NULL;
+ }
+ 
+@@ -279,6 +297,156 @@
+     return dialog;
+ }
+ 
++static void show_save_dialog_(void)
++{
++    if (!save_dialog)
++    {
++        save_dialog = setup_save_dialog_(g_main_w);
++    }
++    XtManageChild(save_dialog);
++}
++
++static void show_save_error_(void)
++{
++    int n = 0;
++    Arg args[UI_ARGS_MAX];
++    XmString message = XmStringCreateLocalized("Failed to save file.");
++    XtSetArg(args[n], XmNmessageString, message); ++n;
++    Widget dialog = XmCreateErrorDialog(g_main_w, "save_error_dialog", args, n);
++
++    XtUnmanageChild(XtNameToWidget(dialog, "Help"));
++    XtUnmanageChild(XtNameToWidget(dialog, "Cancel"));
++    XtManageChild(dialog);
++
++    XmStringFree(message);
++}
++
++static void quit_dialog_close_(void)
++{
++    if (quit_dialog)
++    {
++        XtUnmanageChild(quit_dialog);
++        XtDestroyWidget(quit_dialog);
++        quit_dialog = NULL;
++    }
++}
++
++static void cb_quit_save_(Widget widget, XtPointer client_data, XtPointer call_data)
++{
++    PaintContext* ctx = &g_paint_ctx;
++    quit_dialog_close_();
++
++    // place a pending text box or floating selection into the image
++    paint_set_tool(ctx, ctx->tool);
++    ui_disable_editing_text();
++    ui_refresh_drawing(0);
++
++    if (paint_file_path(ctx))
++    {
++        if (paint_save_file(ctx))
++        {
++            XtAppSetExitFlag(g_app);
++        }
++        else
++        {
++            show_save_error_();
++        }
++    }
++    else
++    {
++        quit_after_save = 1;
++        show_save_dialog_();
++    }
++}
++
++static void cb_quit_discard_(Widget widget, XtPointer client_data, XtPointer call_data)
++{
++    quit_dialog_close_();
++    XtAppSetExitFlag(g_app);
++}
++
++static void cb_quit_cancel_(Widget widget, XtPointer client_data, XtPointer call_data)
++{
++    quit_dialog_close_();
++}
++
++static void cb_quit_destroy_(Widget widget, XtPointer client_data, XtPointer call_data)
++{
++    quit_dialog = NULL;
++}
++
++// Called by File > Exit and by the window manager's close button.
++void ui_request_quit(void)
++{
++    PaintContext* ctx = &g_paint_ctx;
++
++    if (!paint_is_modified(ctx))
++    {
++        XtAppSetExitFlag(g_app);
++        return;
++    }
++
++    if (quit_dialog)
++    {
++        XtManageChild(quit_dialog);
++        return;
++    }
++
++    char name[OS_PATH_MAX];
++    const char* path = paint_file_path(ctx);
++    if (path)
++    {
++        char temp_path[OS_PATH_MAX];
++        strncpy(temp_path, path, OS_PATH_MAX);
++        temp_path[OS_PATH_MAX - 1] = '\0';
++        snprintf(name, OS_PATH_MAX, "%s", basename(temp_path));
++    }
++    else
++    {
++        snprintf(name, OS_PATH_MAX, "Untitled");
++    }
++
++    char text[OS_PATH_MAX + 64];
++    snprintf(text, sizeof(text), "Do you want to save changes to \"%s\"?", name);
++
++    int n = 0;
++    Arg args[UI_ARGS_MAX];
++    XmString message = XmStringCreateLocalized(text);
++    XmString title = XmStringCreateLocalized("Classic Colors");
++    XmString save = XmStringCreateLocalized("Save");
++    XmString cancel = XmStringCreateLocalized("Cancel");
++    XtSetArg(args[n], XmNmessageString, message); ++n;
++    XtSetArg(args[n], XmNdialogTitle, title); ++n;
++    XtSetArg(args[n], XmNokLabelString, save); ++n;
++    XtSetArg(args[n], XmNcancelLabelString, cancel); ++n;
++    XtSetArg(args[n], XmNdefaultButtonType, XmDIALOG_OK_BUTTON); ++n;
++    XtSetArg(args[n], XmNdialogStyle, XmDIALOG_FULL_APPLICATION_MODAL); ++n;
++    XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); ++n;
++    quit_dialog = XmCreateWarningDialog(g_main_w, "quit_dialog", args, n);
++
++    // An extra child of a message box is placed after the OK button:
++    // Save | Don't Save | Cancel
++    XmString discard_str = XmStringCreateLocalized("Don't Save");
++    Widget discard = XtVaCreateManagedWidget("dont_save",
++            xmPushButtonWidgetClass, quit_dialog,
++            XmNlabelString, discard_str,
++            NULL);
++    XmStringFree(discard_str);
++
++    XtAddCallback(quit_dialog, XmNokCallback, cb_quit_save_, NULL);
++    XtAddCallback(discard, XmNactivateCallback, cb_quit_discard_, NULL);
++    XtAddCallback(quit_dialog, XmNcancelCallback, cb_quit_cancel_, NULL);
++    XtAddCallback(quit_dialog, XmNdestroyCallback, cb_quit_destroy_, NULL);
++    XtUnmanageChild(XtNameToWidget(quit_dialog, "Help"));
++
++    XtManageChild(quit_dialog);
++
++    XmStringFree(message);
++    XmStringFree(title);
++    XmStringFree(save);
++    XmStringFree(cancel);
++}
++
+ void ui_cb_file_menu(Widget w, XtPointer a, XtPointer b)
+ {
+     PaintContext* ctx = &g_paint_ctx;
+@@ -306,14 +474,10 @@
+             }
+             // fallthrough
+         case 3:
+-            if (!save_dialog)
+-            {
+-                save_dialog = setup_save_dialog_(g_main_w);
+-            }
+-            XtManageChild(save_dialog);
++            show_save_dialog_();
+             break;
+         case 4:
+-            XtAppSetExitFlag(g_app);
++            ui_request_quit();
+             break;
+ 
+     }
+--- a/ui_main.c
++++ b/ui_main.c
+@@ -24,6 +24,7 @@
+ #include <Xm/MainW.h>
+ #include <Xm/PanedW.h>
+ #include <Xm/CascadeB.h>
++#include <Xm/Protocols.h>
+ 
+ #include <X11/xpm.h>
+ #include "icons/icon_app.xpm"
+@@ -163,6 +164,11 @@
+ }
+ 
+ 
++static void cb_wm_close_(Widget widget, XtPointer client_data, XtPointer call_data)
++{
++    ui_request_quit();
++}
++
+ XtAppContext ui_app()
+ {
+     return g_app;
+@@ -311,6 +317,9 @@
+     XtSetArg(args[n], XmNwidth, default_width); ++n;
+     XtSetArg(args[n], XmNheight, default_height); ++n;
+ 
++    // ask about unsaved changes instead of closing right away
++    XtSetArg(args[n], XmNdeleteResponse, XmDO_NOTHING); ++n;
++
+     XtSetValues(top_wid, args, n);
+ 
+     g_main_w = XtCreateManagedWidget(
+@@ -348,6 +357,9 @@
+     XtManageChild(g_main_w);
+     XtRealizeWidget(top_wid);
+ 
++    Atom wm_delete_window = XmInternAtom(XtDisplay(top_wid), "WM_DELETE_WINDOW", False);
++    XmAddWMProtocolCallback(top_wid, wm_delete_window, cb_wm_close_, NULL);
++
+     if (!paint_init(&g_paint_ctx))
+     {
+         fprintf(stderr, "failed to setup paint context");

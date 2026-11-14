@@ -21,6 +21,10 @@ Source0:        https://github.com/justinmeiners/classic-colors/archive/refs/tag
 Source1:        %{name}.desktop
 # PATCH-FIX-UPSTREAM classic-colors-gcc14.patch -- fix pointer types rejected by GCC 14+ (XmStringFree for an XmString, XmStringTable casts)
 Patch0:         %{name}-gcc14.patch
+# PATCH-FEATURE-OPENSUSE classic-colors-save-prompt.patch -- ask to save unsaved changes on File > Exit and window close
+Patch1:         %{name}-save-prompt.patch
+# PATCH-FIX-OPENSUSE classic-colors-text-box-click.patch -- a click no longer creates an invisible text box; boxes fit one line
+Patch2:         %{name}-text-box-click.patch
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc
 BuildRequires:  hicolor-icon-theme
