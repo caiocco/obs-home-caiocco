@@ -1,0 +1,26 @@
+# Estado do osc e checkouts perdidos
+.osc/
+/home:caiocco/
+/.claude/
+
+# Árvores de fonte extraídas dentro de pacotes (pacotes são planos)
+/*/*/
+
+# Fontes upstream: ficam no OBS / são baixadas de novo
+*.tar
+*.tar.*
+*.tgz
+*.tbz2
+*.txz
+*.zip
+*.7z
+*.obscpio
+*.rpm
+*.deb
+
+# Artefatos locais
+*~
+*~[0-9]*
+*.orig
+*.rej
+_service:*
