@@ -1,0 +1,1164 @@
+diff --git a/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.c b/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.c
+index a21c8a4..8978e3a 100644
+--- a/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.c
++++ b/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.c
+@@ -33,6 +33,8 @@
+ #include <Xm/LabelG.h>
+ #include "fnmatch.h"
+ #include <pwd.h>
++#include <stdlib.h>
++#include <iconv.h>
+ 
+ /*--- Constants ---*/
+ #define XcFS_TIMOUT_INTERVAL (unsigned long)8000
+@@ -75,6 +77,119 @@ ___INLINE static boolean is_really_interresting ___PROTO((c_FileSelector *this,
+ 							  fs_file_t *file));
+ static void cb_update ___PROTO((c_FileSelector *this));
+ 
++
++/*--- File name encoding ---*/
++/* The interface is Latin-1 (core iso8859-1 fonts, Latin-1 keyboard
++** input), but under a UTF-8 locale the file names on disk are UTF-8:
++** "Música/" was listed as "MÃºsica/".  The list and the folder menu show
++** a Latin-1 label; the name itself is kept as read from the disk, and
++** typed text is converted back to UTF-8. */
++static int fs_utf8_names = -1;
++
++static boolean fs_utf8()
++{
++ if(fs_utf8_names < 0)
++ {
++  char *loc;
++
++  if(((loc = getenv("LC_ALL")) == NULL) || !*loc)
++   if(((loc = getenv("LC_CTYPE")) == NULL) || !*loc)
++    loc = getenv("LANG");
++  fs_utf8_names = (loc && (strstr(loc, "UTF-8") || strstr(loc, "utf-8") ||
++			   strstr(loc, "UTF8") || strstr(loc, "utf8")))? 1 : 0;
++ }
++ return fs_utf8_names? TRUE : FALSE;
++}
++
++static char *fs_iconv(to, from, s)
++char *to;
++char *from;
++char *s;
++{
++ iconv_t cd;
++ size_t inl, outl;
++ char *in, *out, *o;
++
++ if((cd = iconv_open(to, from)) == (iconv_t)-1) return NULL;
++ inl = strlen(s);
++ outl = 2 * inl + 1;
++ if((out = Xc_malloc("filename", outl)) != NULL)
++ {
++  in = s;
++  o = out;
++  if(iconv(cd, &in, &inl, &o, &outl) == (size_t)-1)
++  {
++   Xc_free(out);
++   out = NULL;
++  }
++  else
++   *o = 0;
++ }
++ iconv_close(cd);
++ return out;
++}
++
++/* Label for a name read from the disk */
++static char *fs_label(name)
++char *name;
++{
++ char *label;
++
++ if(fs_utf8())
++ {
++  if((label = fs_iconv("ISO-8859-1", "UTF-8", name)) != NULL) return label;
++  /* valid UTF-8 outside Latin-1: shown with '?' */
++  if((label = fs_iconv("ISO-8859-1//TRANSLIT", "UTF-8", name)) != NULL)
++   return label;
++  /* not UTF-8 (an old Latin-1 name): shown as is */
++ }
++ return Xc_strdup("filename", name);
++}
++
++/* Name on the disk for text typed in the interface */
++static char *fs_raw(text)
++char *text;
++{
++ char *raw;
++
++ if(fs_utf8() && ((raw = fs_iconv("UTF-8", "ISO-8859-1", text)) != NULL))
++  return raw;
++ return Xc_strdup("filename", text);
++}
++
++/* Name on the disk for the text field: a listed file keeps its own name
++** (even one whose label is not reversible), anything else is converted */
++static char *fs_text_to_raw(this, text)
++c_FileSelector *this;
++char *text;
++{
++ fs_file_t *file;
++ size_t len;
++
++ len = strlen(text);
++ for(file = this->files; file != NULL; file = file->next)
++ {
++  size_t n;
++
++  n = strlen(file->label);
++  if(file->type != XcFS_NORMAL) n--;
++  if((n == len) && !strncmp(file->label, text, n))
++  {
++   char *raw;
++
++   n = strlen(file->name);
++   if(file->type != XcFS_NORMAL) n--;
++   if((raw = Xc_malloc("filename", n + 1)) != NULL)
++   {
++    memcpy(raw, file->name, n);
++    raw[n] = 0;
++   }
++   return raw;
++  }
++ }
++ return fs_raw(text);
++}
++
+ sf_FileSelector fc_FileSelector =
+ {
+  constructor, destructor, copy,
+@@ -142,7 +257,7 @@ int h;
+   this->popup = NEW(c_ItemMenu)(this->form, manager, "imDirectory", 0, 0);
+   if(this->popup == NULL) break;
+   F(this->popup).setCallback(this->popup, (void *)cb_popup, this);
+-  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, name),
++  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, label),
+ 		     (void *)menu_sort, NULL);
+ 
+   /*--- ItemList ---*/
+@@ -150,7 +265,7 @@ int h;
+   if(this->list == NULL) break;
+   F(this->list).setCallback(this->list, (void *)cb_list, this);
+   F(this->list).set(this->list, XcIL_BROWSE_MODE,
+-		    TRUE, offsetof(fs_file_t, name), 0,
++		    TRUE, offsetof(fs_file_t, label), 0,
+ 		    (void *)sort_alpha, NULL);
+ 
+   /*--- TextField ---*/
+@@ -233,9 +348,15 @@ c_FileSelector *this;
+   fs_file_t *file;
+ 
+   for(file = this->files; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   for(file = this->path; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   Xc_destroyItem(this->item_h);
+  }
+ 
+@@ -361,6 +482,15 @@ c_FileSelector *this;
+   {
+    if((file = F(this->text_field).get(this->text_field)) != NULL)
+    {
++    char *raw;
++
++    raw = fs_text_to_raw(this, file);
++    Xc_free(file);
++    if((file = raw) == NULL)
++    {
++     Xc_free(path);
++     return NULL;
++    }
+     len = strlen(path) + strlen(file) + 1;
+     if((new = Xc_realloc("filename", path, len)) == NULL)
+     {
+@@ -420,6 +550,7 @@ char *path;
+     tmp = file;
+     file = file->next;
+     Xc_free(tmp->name);
++    Xc_free(tmp->label);
+     Xc_delete(this->item_h, tmp);
+    }
+    this->path = file;
+@@ -571,6 +702,7 @@ c_FileSelector *this;
+   tmp = file;
+   file = file->next;
+   Xc_free(tmp->name);
++  Xc_free(tmp->label);
+   Xc_delete(this->item_h, tmp);
+  }
+  this->files = NULL;
+@@ -646,9 +778,16 @@ c_FileSelector *this;
+     }
+     file->name[file_len] = 0;
+ 
++    if((file->label = fs_label(file->name)) == NULL)
++    {
++     Xc_free(file->name);
++     continue;
++    }
++
+     if(is_really_interresting(this, file) == FALSE)
+     {
+      Xc_free(file->name);
++     Xc_free(file->label);
+     }
+     else
+     {
+@@ -691,6 +830,12 @@ fs_file_t *folder;
+   Xc_delete(this->item_h, file);
+   return FALSE;
+  }
++ if((file->label = fs_label(file->name)) == NULL)
++ {
++  Xc_free(file->name);
++  Xc_delete(this->item_h, file);
++  return FALSE;
++ }
+ 
+  file->next = this->path;
+  this->path = file;
+@@ -731,7 +876,7 @@ int reason;
+   {
+    char *string;
+ 	  
+-   if((string = Xc_strdup("filename", selection[0]->name)) != NULL)
++   if((string = Xc_strdup("filename", selection[0]->label)) != NULL)
+    {
+     if((selection[0]->type == XcFS_LINK) ||
+        (selection[0]->type == XcFS_SPECIAL))
+@@ -779,6 +924,7 @@ fs_file_t *file;
+    tmp = ptr;
+    ptr = ptr->next;
+    Xc_free(tmp->name);
++   Xc_free(tmp->label);
+    Xc_delete(this->item_h, tmp);
+   }
+   this->path = ptr;
+@@ -826,9 +972,13 @@ c_FileSelector *this;
+   if((*ptr == '~') || (ptr[0] == '.' && ptr[1] == '.') || 
+      (strchr(ptr, '/') != NULL))
+   {
++   char *raw;
++
+    XcFS_END_UPDATE_PROC(this);
+-   if ((IsDirExist(ptr) || !strcmp(ptr, "~"))
+-       && F(this).setPath(this, ptr))
++   if((raw = fs_raw(ptr)) == NULL)
++    ;
++   else if ((IsDirExist(raw) || !strcmp(raw, "~"))
++       && F(this).setPath(this, raw))
+    {
+     ptr = NULL;
+     flag = TRUE;
+@@ -838,7 +988,7 @@ c_FileSelector *this;
+    {
+     char *dir;
+ 	      
+-    if ((dir = GetDirname(ptr, TRUE)) != NULL)
++    if ((dir = GetDirname(raw, TRUE)) != NULL)
+     {
+      if(F(this).setPath(this, dir))
+      {
+@@ -849,6 +999,7 @@ c_FileSelector *this;
+      change_directory = TRUE;
+     }
+    }
++   if(raw != NULL) Xc_free(raw);
+    XcFS_BEGIN_UPDATE_PROC(this);
+   }
+       
+diff --git a/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.h b/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.h
+index 1e38449..08ae2c3 100644
+--- a/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.h
++++ b/XAllWrite-2.0.1/Sources/FileSelector/FileSelector.h
+@@ -47,6 +47,7 @@ typedef struct fs_file_s fs_file_t;
+ struct fs_file_s
+ {
+  char *name;
++ char *label;	/* name as shown: Latin-1, like the interface */
+  fs_file_t *next;
+  struct stat stat;
+  enum filetype_e type;
+diff --git a/XMayday-2.0.1/Sources/FileSelector/FileSelector.c b/XMayday-2.0.1/Sources/FileSelector/FileSelector.c
+index a21c8a4..8978e3a 100644
+--- a/XMayday-2.0.1/Sources/FileSelector/FileSelector.c
++++ b/XMayday-2.0.1/Sources/FileSelector/FileSelector.c
+@@ -33,6 +33,8 @@
+ #include <Xm/LabelG.h>
+ #include "fnmatch.h"
+ #include <pwd.h>
++#include <stdlib.h>
++#include <iconv.h>
+ 
+ /*--- Constants ---*/
+ #define XcFS_TIMOUT_INTERVAL (unsigned long)8000
+@@ -75,6 +77,119 @@ ___INLINE static boolean is_really_interresting ___PROTO((c_FileSelector *this,
+ 							  fs_file_t *file));
+ static void cb_update ___PROTO((c_FileSelector *this));
+ 
++
++/*--- File name encoding ---*/
++/* The interface is Latin-1 (core iso8859-1 fonts, Latin-1 keyboard
++** input), but under a UTF-8 locale the file names on disk are UTF-8:
++** "Música/" was listed as "MÃºsica/".  The list and the folder menu show
++** a Latin-1 label; the name itself is kept as read from the disk, and
++** typed text is converted back to UTF-8. */
++static int fs_utf8_names = -1;
++
++static boolean fs_utf8()
++{
++ if(fs_utf8_names < 0)
++ {
++  char *loc;
++
++  if(((loc = getenv("LC_ALL")) == NULL) || !*loc)
++   if(((loc = getenv("LC_CTYPE")) == NULL) || !*loc)
++    loc = getenv("LANG");
++  fs_utf8_names = (loc && (strstr(loc, "UTF-8") || strstr(loc, "utf-8") ||
++			   strstr(loc, "UTF8") || strstr(loc, "utf8")))? 1 : 0;
++ }
++ return fs_utf8_names? TRUE : FALSE;
++}
++
++static char *fs_iconv(to, from, s)
++char *to;
++char *from;
++char *s;
++{
++ iconv_t cd;
++ size_t inl, outl;
++ char *in, *out, *o;
++
++ if((cd = iconv_open(to, from)) == (iconv_t)-1) return NULL;
++ inl = strlen(s);
++ outl = 2 * inl + 1;
++ if((out = Xc_malloc("filename", outl)) != NULL)
++ {
++  in = s;
++  o = out;
++  if(iconv(cd, &in, &inl, &o, &outl) == (size_t)-1)
++  {
++   Xc_free(out);
++   out = NULL;
++  }
++  else
++   *o = 0;
++ }
++ iconv_close(cd);
++ return out;
++}
++
++/* Label for a name read from the disk */
++static char *fs_label(name)
++char *name;
++{
++ char *label;
++
++ if(fs_utf8())
++ {
++  if((label = fs_iconv("ISO-8859-1", "UTF-8", name)) != NULL) return label;
++  /* valid UTF-8 outside Latin-1: shown with '?' */
++  if((label = fs_iconv("ISO-8859-1//TRANSLIT", "UTF-8", name)) != NULL)
++   return label;
++  /* not UTF-8 (an old Latin-1 name): shown as is */
++ }
++ return Xc_strdup("filename", name);
++}
++
++/* Name on the disk for text typed in the interface */
++static char *fs_raw(text)
++char *text;
++{
++ char *raw;
++
++ if(fs_utf8() && ((raw = fs_iconv("UTF-8", "ISO-8859-1", text)) != NULL))
++  return raw;
++ return Xc_strdup("filename", text);
++}
++
++/* Name on the disk for the text field: a listed file keeps its own name
++** (even one whose label is not reversible), anything else is converted */
++static char *fs_text_to_raw(this, text)
++c_FileSelector *this;
++char *text;
++{
++ fs_file_t *file;
++ size_t len;
++
++ len = strlen(text);
++ for(file = this->files; file != NULL; file = file->next)
++ {
++  size_t n;
++
++  n = strlen(file->label);
++  if(file->type != XcFS_NORMAL) n--;
++  if((n == len) && !strncmp(file->label, text, n))
++  {
++   char *raw;
++
++   n = strlen(file->name);
++   if(file->type != XcFS_NORMAL) n--;
++   if((raw = Xc_malloc("filename", n + 1)) != NULL)
++   {
++    memcpy(raw, file->name, n);
++    raw[n] = 0;
++   }
++   return raw;
++  }
++ }
++ return fs_raw(text);
++}
++
+ sf_FileSelector fc_FileSelector =
+ {
+  constructor, destructor, copy,
+@@ -142,7 +257,7 @@ int h;
+   this->popup = NEW(c_ItemMenu)(this->form, manager, "imDirectory", 0, 0);
+   if(this->popup == NULL) break;
+   F(this->popup).setCallback(this->popup, (void *)cb_popup, this);
+-  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, name),
++  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, label),
+ 		     (void *)menu_sort, NULL);
+ 
+   /*--- ItemList ---*/
+@@ -150,7 +265,7 @@ int h;
+   if(this->list == NULL) break;
+   F(this->list).setCallback(this->list, (void *)cb_list, this);
+   F(this->list).set(this->list, XcIL_BROWSE_MODE,
+-		    TRUE, offsetof(fs_file_t, name), 0,
++		    TRUE, offsetof(fs_file_t, label), 0,
+ 		    (void *)sort_alpha, NULL);
+ 
+   /*--- TextField ---*/
+@@ -233,9 +348,15 @@ c_FileSelector *this;
+   fs_file_t *file;
+ 
+   for(file = this->files; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   for(file = this->path; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   Xc_destroyItem(this->item_h);
+  }
+ 
+@@ -361,6 +482,15 @@ c_FileSelector *this;
+   {
+    if((file = F(this->text_field).get(this->text_field)) != NULL)
+    {
++    char *raw;
++
++    raw = fs_text_to_raw(this, file);
++    Xc_free(file);
++    if((file = raw) == NULL)
++    {
++     Xc_free(path);
++     return NULL;
++    }
+     len = strlen(path) + strlen(file) + 1;
+     if((new = Xc_realloc("filename", path, len)) == NULL)
+     {
+@@ -420,6 +550,7 @@ char *path;
+     tmp = file;
+     file = file->next;
+     Xc_free(tmp->name);
++    Xc_free(tmp->label);
+     Xc_delete(this->item_h, tmp);
+    }
+    this->path = file;
+@@ -571,6 +702,7 @@ c_FileSelector *this;
+   tmp = file;
+   file = file->next;
+   Xc_free(tmp->name);
++  Xc_free(tmp->label);
+   Xc_delete(this->item_h, tmp);
+  }
+  this->files = NULL;
+@@ -646,9 +778,16 @@ c_FileSelector *this;
+     }
+     file->name[file_len] = 0;
+ 
++    if((file->label = fs_label(file->name)) == NULL)
++    {
++     Xc_free(file->name);
++     continue;
++    }
++
+     if(is_really_interresting(this, file) == FALSE)
+     {
+      Xc_free(file->name);
++     Xc_free(file->label);
+     }
+     else
+     {
+@@ -691,6 +830,12 @@ fs_file_t *folder;
+   Xc_delete(this->item_h, file);
+   return FALSE;
+  }
++ if((file->label = fs_label(file->name)) == NULL)
++ {
++  Xc_free(file->name);
++  Xc_delete(this->item_h, file);
++  return FALSE;
++ }
+ 
+  file->next = this->path;
+  this->path = file;
+@@ -731,7 +876,7 @@ int reason;
+   {
+    char *string;
+ 	  
+-   if((string = Xc_strdup("filename", selection[0]->name)) != NULL)
++   if((string = Xc_strdup("filename", selection[0]->label)) != NULL)
+    {
+     if((selection[0]->type == XcFS_LINK) ||
+        (selection[0]->type == XcFS_SPECIAL))
+@@ -779,6 +924,7 @@ fs_file_t *file;
+    tmp = ptr;
+    ptr = ptr->next;
+    Xc_free(tmp->name);
++   Xc_free(tmp->label);
+    Xc_delete(this->item_h, tmp);
+   }
+   this->path = ptr;
+@@ -826,9 +972,13 @@ c_FileSelector *this;
+   if((*ptr == '~') || (ptr[0] == '.' && ptr[1] == '.') || 
+      (strchr(ptr, '/') != NULL))
+   {
++   char *raw;
++
+    XcFS_END_UPDATE_PROC(this);
+-   if ((IsDirExist(ptr) || !strcmp(ptr, "~"))
+-       && F(this).setPath(this, ptr))
++   if((raw = fs_raw(ptr)) == NULL)
++    ;
++   else if ((IsDirExist(raw) || !strcmp(raw, "~"))
++       && F(this).setPath(this, raw))
+    {
+     ptr = NULL;
+     flag = TRUE;
+@@ -838,7 +988,7 @@ c_FileSelector *this;
+    {
+     char *dir;
+ 	      
+-    if ((dir = GetDirname(ptr, TRUE)) != NULL)
++    if ((dir = GetDirname(raw, TRUE)) != NULL)
+     {
+      if(F(this).setPath(this, dir))
+      {
+@@ -849,6 +999,7 @@ c_FileSelector *this;
+      change_directory = TRUE;
+     }
+    }
++   if(raw != NULL) Xc_free(raw);
+    XcFS_BEGIN_UPDATE_PROC(this);
+   }
+       
+diff --git a/XMayday-2.0.1/Sources/FileSelector/FileSelector.h b/XMayday-2.0.1/Sources/FileSelector/FileSelector.h
+index 1e38449..08ae2c3 100644
+--- a/XMayday-2.0.1/Sources/FileSelector/FileSelector.h
++++ b/XMayday-2.0.1/Sources/FileSelector/FileSelector.h
+@@ -47,6 +47,7 @@ typedef struct fs_file_s fs_file_t;
+ struct fs_file_s
+ {
+  char *name;
++ char *label;	/* name as shown: Latin-1, like the interface */
+  fs_file_t *next;
+  struct stat stat;
+  enum filetype_e type;
+diff --git a/XQuad-2.0.1/Sources/FileSelector/FileSelector.c b/XQuad-2.0.1/Sources/FileSelector/FileSelector.c
+index a21c8a4..8978e3a 100644
+--- a/XQuad-2.0.1/Sources/FileSelector/FileSelector.c
++++ b/XQuad-2.0.1/Sources/FileSelector/FileSelector.c
+@@ -33,6 +33,8 @@
+ #include <Xm/LabelG.h>
+ #include "fnmatch.h"
+ #include <pwd.h>
++#include <stdlib.h>
++#include <iconv.h>
+ 
+ /*--- Constants ---*/
+ #define XcFS_TIMOUT_INTERVAL (unsigned long)8000
+@@ -75,6 +77,119 @@ ___INLINE static boolean is_really_interresting ___PROTO((c_FileSelector *this,
+ 							  fs_file_t *file));
+ static void cb_update ___PROTO((c_FileSelector *this));
+ 
++
++/*--- File name encoding ---*/
++/* The interface is Latin-1 (core iso8859-1 fonts, Latin-1 keyboard
++** input), but under a UTF-8 locale the file names on disk are UTF-8:
++** "Música/" was listed as "MÃºsica/".  The list and the folder menu show
++** a Latin-1 label; the name itself is kept as read from the disk, and
++** typed text is converted back to UTF-8. */
++static int fs_utf8_names = -1;
++
++static boolean fs_utf8()
++{
++ if(fs_utf8_names < 0)
++ {
++  char *loc;
++
++  if(((loc = getenv("LC_ALL")) == NULL) || !*loc)
++   if(((loc = getenv("LC_CTYPE")) == NULL) || !*loc)
++    loc = getenv("LANG");
++  fs_utf8_names = (loc && (strstr(loc, "UTF-8") || strstr(loc, "utf-8") ||
++			   strstr(loc, "UTF8") || strstr(loc, "utf8")))? 1 : 0;
++ }
++ return fs_utf8_names? TRUE : FALSE;
++}
++
++static char *fs_iconv(to, from, s)
++char *to;
++char *from;
++char *s;
++{
++ iconv_t cd;
++ size_t inl, outl;
++ char *in, *out, *o;
++
++ if((cd = iconv_open(to, from)) == (iconv_t)-1) return NULL;
++ inl = strlen(s);
++ outl = 2 * inl + 1;
++ if((out = Xc_malloc("filename", outl)) != NULL)
++ {
++  in = s;
++  o = out;
++  if(iconv(cd, &in, &inl, &o, &outl) == (size_t)-1)
++  {
++   Xc_free(out);
++   out = NULL;
++  }
++  else
++   *o = 0;
++ }
++ iconv_close(cd);
++ return out;
++}
++
++/* Label for a name read from the disk */
++static char *fs_label(name)
++char *name;
++{
++ char *label;
++
++ if(fs_utf8())
++ {
++  if((label = fs_iconv("ISO-8859-1", "UTF-8", name)) != NULL) return label;
++  /* valid UTF-8 outside Latin-1: shown with '?' */
++  if((label = fs_iconv("ISO-8859-1//TRANSLIT", "UTF-8", name)) != NULL)
++   return label;
++  /* not UTF-8 (an old Latin-1 name): shown as is */
++ }
++ return Xc_strdup("filename", name);
++}
++
++/* Name on the disk for text typed in the interface */
++static char *fs_raw(text)
++char *text;
++{
++ char *raw;
++
++ if(fs_utf8() && ((raw = fs_iconv("UTF-8", "ISO-8859-1", text)) != NULL))
++  return raw;
++ return Xc_strdup("filename", text);
++}
++
++/* Name on the disk for the text field: a listed file keeps its own name
++** (even one whose label is not reversible), anything else is converted */
++static char *fs_text_to_raw(this, text)
++c_FileSelector *this;
++char *text;
++{
++ fs_file_t *file;
++ size_t len;
++
++ len = strlen(text);
++ for(file = this->files; file != NULL; file = file->next)
++ {
++  size_t n;
++
++  n = strlen(file->label);
++  if(file->type != XcFS_NORMAL) n--;
++  if((n == len) && !strncmp(file->label, text, n))
++  {
++   char *raw;
++
++   n = strlen(file->name);
++   if(file->type != XcFS_NORMAL) n--;
++   if((raw = Xc_malloc("filename", n + 1)) != NULL)
++   {
++    memcpy(raw, file->name, n);
++    raw[n] = 0;
++   }
++   return raw;
++  }
++ }
++ return fs_raw(text);
++}
++
+ sf_FileSelector fc_FileSelector =
+ {
+  constructor, destructor, copy,
+@@ -142,7 +257,7 @@ int h;
+   this->popup = NEW(c_ItemMenu)(this->form, manager, "imDirectory", 0, 0);
+   if(this->popup == NULL) break;
+   F(this->popup).setCallback(this->popup, (void *)cb_popup, this);
+-  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, name),
++  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, label),
+ 		     (void *)menu_sort, NULL);
+ 
+   /*--- ItemList ---*/
+@@ -150,7 +265,7 @@ int h;
+   if(this->list == NULL) break;
+   F(this->list).setCallback(this->list, (void *)cb_list, this);
+   F(this->list).set(this->list, XcIL_BROWSE_MODE,
+-		    TRUE, offsetof(fs_file_t, name), 0,
++		    TRUE, offsetof(fs_file_t, label), 0,
+ 		    (void *)sort_alpha, NULL);
+ 
+   /*--- TextField ---*/
+@@ -233,9 +348,15 @@ c_FileSelector *this;
+   fs_file_t *file;
+ 
+   for(file = this->files; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   for(file = this->path; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   Xc_destroyItem(this->item_h);
+  }
+ 
+@@ -361,6 +482,15 @@ c_FileSelector *this;
+   {
+    if((file = F(this->text_field).get(this->text_field)) != NULL)
+    {
++    char *raw;
++
++    raw = fs_text_to_raw(this, file);
++    Xc_free(file);
++    if((file = raw) == NULL)
++    {
++     Xc_free(path);
++     return NULL;
++    }
+     len = strlen(path) + strlen(file) + 1;
+     if((new = Xc_realloc("filename", path, len)) == NULL)
+     {
+@@ -420,6 +550,7 @@ char *path;
+     tmp = file;
+     file = file->next;
+     Xc_free(tmp->name);
++    Xc_free(tmp->label);
+     Xc_delete(this->item_h, tmp);
+    }
+    this->path = file;
+@@ -571,6 +702,7 @@ c_FileSelector *this;
+   tmp = file;
+   file = file->next;
+   Xc_free(tmp->name);
++  Xc_free(tmp->label);
+   Xc_delete(this->item_h, tmp);
+  }
+  this->files = NULL;
+@@ -646,9 +778,16 @@ c_FileSelector *this;
+     }
+     file->name[file_len] = 0;
+ 
++    if((file->label = fs_label(file->name)) == NULL)
++    {
++     Xc_free(file->name);
++     continue;
++    }
++
+     if(is_really_interresting(this, file) == FALSE)
+     {
+      Xc_free(file->name);
++     Xc_free(file->label);
+     }
+     else
+     {
+@@ -691,6 +830,12 @@ fs_file_t *folder;
+   Xc_delete(this->item_h, file);
+   return FALSE;
+  }
++ if((file->label = fs_label(file->name)) == NULL)
++ {
++  Xc_free(file->name);
++  Xc_delete(this->item_h, file);
++  return FALSE;
++ }
+ 
+  file->next = this->path;
+  this->path = file;
+@@ -731,7 +876,7 @@ int reason;
+   {
+    char *string;
+ 	  
+-   if((string = Xc_strdup("filename", selection[0]->name)) != NULL)
++   if((string = Xc_strdup("filename", selection[0]->label)) != NULL)
+    {
+     if((selection[0]->type == XcFS_LINK) ||
+        (selection[0]->type == XcFS_SPECIAL))
+@@ -779,6 +924,7 @@ fs_file_t *file;
+    tmp = ptr;
+    ptr = ptr->next;
+    Xc_free(tmp->name);
++   Xc_free(tmp->label);
+    Xc_delete(this->item_h, tmp);
+   }
+   this->path = ptr;
+@@ -826,9 +972,13 @@ c_FileSelector *this;
+   if((*ptr == '~') || (ptr[0] == '.' && ptr[1] == '.') || 
+      (strchr(ptr, '/') != NULL))
+   {
++   char *raw;
++
+    XcFS_END_UPDATE_PROC(this);
+-   if ((IsDirExist(ptr) || !strcmp(ptr, "~"))
+-       && F(this).setPath(this, ptr))
++   if((raw = fs_raw(ptr)) == NULL)
++    ;
++   else if ((IsDirExist(raw) || !strcmp(raw, "~"))
++       && F(this).setPath(this, raw))
+    {
+     ptr = NULL;
+     flag = TRUE;
+@@ -838,7 +988,7 @@ c_FileSelector *this;
+    {
+     char *dir;
+ 	      
+-    if ((dir = GetDirname(ptr, TRUE)) != NULL)
++    if ((dir = GetDirname(raw, TRUE)) != NULL)
+     {
+      if(F(this).setPath(this, dir))
+      {
+@@ -849,6 +999,7 @@ c_FileSelector *this;
+      change_directory = TRUE;
+     }
+    }
++   if(raw != NULL) Xc_free(raw);
+    XcFS_BEGIN_UPDATE_PROC(this);
+   }
+       
+diff --git a/XQuad-2.0.1/Sources/FileSelector/FileSelector.h b/XQuad-2.0.1/Sources/FileSelector/FileSelector.h
+index 1e38449..08ae2c3 100644
+--- a/XQuad-2.0.1/Sources/FileSelector/FileSelector.h
++++ b/XQuad-2.0.1/Sources/FileSelector/FileSelector.h
+@@ -47,6 +47,7 @@ typedef struct fs_file_s fs_file_t;
+ struct fs_file_s
+ {
+  char *name;
++ char *label;	/* name as shown: Latin-1, like the interface */
+  fs_file_t *next;
+  struct stat stat;
+  enum filetype_e type;
+diff --git a/Xclamation-2.0.1/Sources/FileSelector/FileSelector.c b/Xclamation-2.0.1/Sources/FileSelector/FileSelector.c
+index a21c8a4..8978e3a 100644
+--- a/Xclamation-2.0.1/Sources/FileSelector/FileSelector.c
++++ b/Xclamation-2.0.1/Sources/FileSelector/FileSelector.c
+@@ -33,6 +33,8 @@
+ #include <Xm/LabelG.h>
+ #include "fnmatch.h"
+ #include <pwd.h>
++#include <stdlib.h>
++#include <iconv.h>
+ 
+ /*--- Constants ---*/
+ #define XcFS_TIMOUT_INTERVAL (unsigned long)8000
+@@ -75,6 +77,119 @@ ___INLINE static boolean is_really_interresting ___PROTO((c_FileSelector *this,
+ 							  fs_file_t *file));
+ static void cb_update ___PROTO((c_FileSelector *this));
+ 
++
++/*--- File name encoding ---*/
++/* The interface is Latin-1 (core iso8859-1 fonts, Latin-1 keyboard
++** input), but under a UTF-8 locale the file names on disk are UTF-8:
++** "Música/" was listed as "MÃºsica/".  The list and the folder menu show
++** a Latin-1 label; the name itself is kept as read from the disk, and
++** typed text is converted back to UTF-8. */
++static int fs_utf8_names = -1;
++
++static boolean fs_utf8()
++{
++ if(fs_utf8_names < 0)
++ {
++  char *loc;
++
++  if(((loc = getenv("LC_ALL")) == NULL) || !*loc)
++   if(((loc = getenv("LC_CTYPE")) == NULL) || !*loc)
++    loc = getenv("LANG");
++  fs_utf8_names = (loc && (strstr(loc, "UTF-8") || strstr(loc, "utf-8") ||
++			   strstr(loc, "UTF8") || strstr(loc, "utf8")))? 1 : 0;
++ }
++ return fs_utf8_names? TRUE : FALSE;
++}
++
++static char *fs_iconv(to, from, s)
++char *to;
++char *from;
++char *s;
++{
++ iconv_t cd;
++ size_t inl, outl;
++ char *in, *out, *o;
++
++ if((cd = iconv_open(to, from)) == (iconv_t)-1) return NULL;
++ inl = strlen(s);
++ outl = 2 * inl + 1;
++ if((out = Xc_malloc("filename", outl)) != NULL)
++ {
++  in = s;
++  o = out;
++  if(iconv(cd, &in, &inl, &o, &outl) == (size_t)-1)
++  {
++   Xc_free(out);
++   out = NULL;
++  }
++  else
++   *o = 0;
++ }
++ iconv_close(cd);
++ return out;
++}
++
++/* Label for a name read from the disk */
++static char *fs_label(name)
++char *name;
++{
++ char *label;
++
++ if(fs_utf8())
++ {
++  if((label = fs_iconv("ISO-8859-1", "UTF-8", name)) != NULL) return label;
++  /* valid UTF-8 outside Latin-1: shown with '?' */
++  if((label = fs_iconv("ISO-8859-1//TRANSLIT", "UTF-8", name)) != NULL)
++   return label;
++  /* not UTF-8 (an old Latin-1 name): shown as is */
++ }
++ return Xc_strdup("filename", name);
++}
++
++/* Name on the disk for text typed in the interface */
++static char *fs_raw(text)
++char *text;
++{
++ char *raw;
++
++ if(fs_utf8() && ((raw = fs_iconv("UTF-8", "ISO-8859-1", text)) != NULL))
++  return raw;
++ return Xc_strdup("filename", text);
++}
++
++/* Name on the disk for the text field: a listed file keeps its own name
++** (even one whose label is not reversible), anything else is converted */
++static char *fs_text_to_raw(this, text)
++c_FileSelector *this;
++char *text;
++{
++ fs_file_t *file;
++ size_t len;
++
++ len = strlen(text);
++ for(file = this->files; file != NULL; file = file->next)
++ {
++  size_t n;
++
++  n = strlen(file->label);
++  if(file->type != XcFS_NORMAL) n--;
++  if((n == len) && !strncmp(file->label, text, n))
++  {
++   char *raw;
++
++   n = strlen(file->name);
++   if(file->type != XcFS_NORMAL) n--;
++   if((raw = Xc_malloc("filename", n + 1)) != NULL)
++   {
++    memcpy(raw, file->name, n);
++    raw[n] = 0;
++   }
++   return raw;
++  }
++ }
++ return fs_raw(text);
++}
++
+ sf_FileSelector fc_FileSelector =
+ {
+  constructor, destructor, copy,
+@@ -142,7 +257,7 @@ int h;
+   this->popup = NEW(c_ItemMenu)(this->form, manager, "imDirectory", 0, 0);
+   if(this->popup == NULL) break;
+   F(this->popup).setCallback(this->popup, (void *)cb_popup, this);
+-  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, name),
++  F(this->popup).set(this->popup, TRUE, offsetof(fs_file_t, label),
+ 		     (void *)menu_sort, NULL);
+ 
+   /*--- ItemList ---*/
+@@ -150,7 +265,7 @@ int h;
+   if(this->list == NULL) break;
+   F(this->list).setCallback(this->list, (void *)cb_list, this);
+   F(this->list).set(this->list, XcIL_BROWSE_MODE,
+-		    TRUE, offsetof(fs_file_t, name), 0,
++		    TRUE, offsetof(fs_file_t, label), 0,
+ 		    (void *)sort_alpha, NULL);
+ 
+   /*--- TextField ---*/
+@@ -233,9 +348,15 @@ c_FileSelector *this;
+   fs_file_t *file;
+ 
+   for(file = this->files; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   for(file = this->path; file != NULL; file = file->next)
++  {
+    Xc_free(file->name);
++   Xc_free(file->label);
++  }
+   Xc_destroyItem(this->item_h);
+  }
+ 
+@@ -361,6 +482,15 @@ c_FileSelector *this;
+   {
+    if((file = F(this->text_field).get(this->text_field)) != NULL)
+    {
++    char *raw;
++
++    raw = fs_text_to_raw(this, file);
++    Xc_free(file);
++    if((file = raw) == NULL)
++    {
++     Xc_free(path);
++     return NULL;
++    }
+     len = strlen(path) + strlen(file) + 1;
+     if((new = Xc_realloc("filename", path, len)) == NULL)
+     {
+@@ -420,6 +550,7 @@ char *path;
+     tmp = file;
+     file = file->next;
+     Xc_free(tmp->name);
++    Xc_free(tmp->label);
+     Xc_delete(this->item_h, tmp);
+    }
+    this->path = file;
+@@ -571,6 +702,7 @@ c_FileSelector *this;
+   tmp = file;
+   file = file->next;
+   Xc_free(tmp->name);
++  Xc_free(tmp->label);
+   Xc_delete(this->item_h, tmp);
+  }
+  this->files = NULL;
+@@ -646,9 +778,16 @@ c_FileSelector *this;
+     }
+     file->name[file_len] = 0;
+ 
++    if((file->label = fs_label(file->name)) == NULL)
++    {
++     Xc_free(file->name);
++     continue;
++    }
++
+     if(is_really_interresting(this, file) == FALSE)
+     {
+      Xc_free(file->name);
++     Xc_free(file->label);
+     }
+     else
+     {
+@@ -691,6 +830,12 @@ fs_file_t *folder;
+   Xc_delete(this->item_h, file);
+   return FALSE;
+  }
++ if((file->label = fs_label(file->name)) == NULL)
++ {
++  Xc_free(file->name);
++  Xc_delete(this->item_h, file);
++  return FALSE;
++ }
+ 
+  file->next = this->path;
+  this->path = file;
+@@ -731,7 +876,7 @@ int reason;
+   {
+    char *string;
+ 	  
+-   if((string = Xc_strdup("filename", selection[0]->name)) != NULL)
++   if((string = Xc_strdup("filename", selection[0]->label)) != NULL)
+    {
+     if((selection[0]->type == XcFS_LINK) ||
+        (selection[0]->type == XcFS_SPECIAL))
+@@ -779,6 +924,7 @@ fs_file_t *file;
+    tmp = ptr;
+    ptr = ptr->next;
+    Xc_free(tmp->name);
++   Xc_free(tmp->label);
+    Xc_delete(this->item_h, tmp);
+   }
+   this->path = ptr;
+@@ -826,9 +972,13 @@ c_FileSelector *this;
+   if((*ptr == '~') || (ptr[0] == '.' && ptr[1] == '.') || 
+      (strchr(ptr, '/') != NULL))
+   {
++   char *raw;
++
+    XcFS_END_UPDATE_PROC(this);
+-   if ((IsDirExist(ptr) || !strcmp(ptr, "~"))
+-       && F(this).setPath(this, ptr))
++   if((raw = fs_raw(ptr)) == NULL)
++    ;
++   else if ((IsDirExist(raw) || !strcmp(raw, "~"))
++       && F(this).setPath(this, raw))
+    {
+     ptr = NULL;
+     flag = TRUE;
+@@ -838,7 +988,7 @@ c_FileSelector *this;
+    {
+     char *dir;
+ 	      
+-    if ((dir = GetDirname(ptr, TRUE)) != NULL)
++    if ((dir = GetDirname(raw, TRUE)) != NULL)
+     {
+      if(F(this).setPath(this, dir))
+      {
+@@ -849,6 +999,7 @@ c_FileSelector *this;
+      change_directory = TRUE;
+     }
+    }
++   if(raw != NULL) Xc_free(raw);
+    XcFS_BEGIN_UPDATE_PROC(this);
+   }
+       
+diff --git a/Xclamation-2.0.1/Sources/FileSelector/FileSelector.h b/Xclamation-2.0.1/Sources/FileSelector/FileSelector.h
+index 1e38449..08ae2c3 100644
+--- a/Xclamation-2.0.1/Sources/FileSelector/FileSelector.h
++++ b/Xclamation-2.0.1/Sources/FileSelector/FileSelector.h
+@@ -47,6 +47,7 @@ typedef struct fs_file_s fs_file_t;
+ struct fs_file_s
+ {
+  char *name;
++ char *label;	/* name as shown: Latin-1, like the interface */
+  fs_file_t *next;
+  struct stat stat;
+  enum filetype_e type;

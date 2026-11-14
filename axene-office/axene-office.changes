@@ -1,12 +1,15 @@
 -------------------------------------------------------------------
-Sat Nov 14 01:23:52 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+Sat Nov 14 02:00:27 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
-- Add axene-rendertable.awk: with an Xft "*renderTable" in the user's
-  X resources (as Motif 2.3 setups for anti-aliased text do), every
-  label lost its text from the first Latin-1 accent or symbol on
-  ("Authors: St", "XQuad" without "(R) - Spreadsheet", status bar
-  without "(C)1995-2000 Axene."), since Motif draws Xft text as UTF-8,
-  and the programs lost their own fonts. Each fontList in the
-  app-defaults now has a matching <Class>*...renderTable, which binds
-  more tightly than "*renderTable" and keeps the core iso8859-1 fonts.
+- UTF-8 file names in the Latin-1 interface: since the core-font
+  renderTables, names like "Música" showed as "MÃºsica".
+  * Add axene-office-utf8-filenames.patch: the file selector lists
+    and shows the folder menu with Latin-1 labels, keeps the names on
+    disk for files picked from the list, and converts typed names and
+    paths back to UTF-8.
+  * Add axene-latin1-labels.c, linked with ld --wrap around
+    XmStringCreate, XmStringCreateLtoR, XmStringCreateSimple and
+    XStoreName: text that is valid UTF-8 (file names in messages and
+    document window names) is shown in Latin-1; characters beyond
+    Latin-1 become '?' or a transliteration. Only under a UTF-8 locale.
 

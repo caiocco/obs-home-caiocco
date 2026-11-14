@@ -26,6 +26,7 @@ URL:            http://linuxmafia.com/pub/linux/apps/axene/
 Source0:        %{name}-%{version}.tar.xz
 Source1:        axene-launcher.in
 Source2:        axene-rendertable.awk
+Source3:        axene-latin1-labels.c
 Source99:       prune-nonfree-fonts.sh
 # PATCH-FIX-OPENSUSE axene-office-modern-toolchain.patch -- build with GCC 15/glibc 2.40 on LP64: varargs.h -> stdarg.h, ISO token pasting, <stdint.h> types, strerror, missing ';' and string continuation
 Patch0:         axene-office-modern-toolchain.patch
@@ -55,6 +56,8 @@ Patch11:        axene-office-xquad-header-font.patch
 Patch12:        axene-office-dialog-placement.patch
 # PATCH-FIX-OPENSUSE axene-office-window-placement.patch -- the help browser always opened at the right edge of the whole X screen: dock it beside the window that asked for help (same height); the launcher bar reopens where it was left, in its last layout and modes
 Patch13:        axene-office-window-placement.patch
+# PATCH-FIX-OPENSUSE axene-office-utf8-filenames.patch -- the file selector showed UTF-8 file names byte by byte in the Latin-1 interface ("MÃºsica/"): list and folder menu show Latin-1 labels, typed names are converted back to UTF-8, listed files keep their name on disk
+Patch14:        axene-office-utf8-filenames.patch
 BuildRequires:  desktop-file-utils
 BuildRequires:  ed
 BuildRequires:  fdupes
@@ -110,7 +113,9 @@ export CFLAGS="%{optflags} -std=gnu89 -fpermissive -fcommon -fno-strict-aliasing
 export CPPFLAGS="-D___PSEUDO_COMPOSE_MACRO -D___linux_glibc -D_NO_PROTO"
 export LDFLAGS="%{?build_ldflags}"
 export SOCK_LIBS=""
-export MOTIF_LIBS="-lXm -lXpm"
+# UTF-8 file names shown in the Latin-1 interface (see Source3)
+gcc %{optflags} -c %{SOURCE3} -o $PWD/axene-latin1-labels.o
+export MOTIF_LIBS="$PWD/axene-latin1-labels.o -Wl,--wrap=XmStringCreate,--wrap=XmStringCreateLtoR,--wrap=XmStringCreateSimple,--wrap=XStoreName -lXm -lXpm"
 export X11_LIBS="-lXt -lSM -lICE -lXext -lXinerama -lXmu -lX11"
 export X11CONFIG='-DXc_XTOP=\"%{axene_data}/X11\"'
 export ARFLAGS=rvs
