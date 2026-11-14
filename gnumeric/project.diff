@@ -1,0 +1,20 @@
+--- gnumeric.spec.orig
++++ gnumeric.spec
+@@ -47,8 +47,7 @@
+ #BuildRequires:  pkgconfig(gobject-introspection-1.0) >= 1.0.0
+ BuildRequires:  pkgconfig(gthread-2.0) >= 2.38.0
+ BuildRequires:  pkgconfig(gtk+-3.0) >= 3.20.0
+-BuildRequires:  pkgconfig(libgda-6.0) >= 6.0.0
+-BuildRequires:  pkgconfig(libgda-ui-6.0) >= 6.0.0
++# home:caiocco: no libgda on Leap 16.0; GDA plugin (EXECSQL/READDBTABLE) disabled
+ BuildRequires:  pkgconfig(libgoffice-0.10) >= 0.10.61
+ BuildRequires:  pkgconfig(libgsf-1) >= 1.14.45
+ BuildRequires:  pkgconfig(libxml-2.0) >= 2.4.12
+@@ -140,6 +139,7 @@
+ export CFLAGS="%{optflags} -fno-strict-aliasing"
+ %configure \
+ 	--disable-static \
++	--without-gda \
+ #	--enable-pdfdocs \
+ 	%{nil}
+ %make_build
