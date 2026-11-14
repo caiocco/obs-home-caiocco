@@ -61,6 +61,8 @@ declare -A REPOLOGY=(
 	[SheepShaver]=-
 	# upstream morto (última versão 8.0.2, 2008)
 	[bluecurve-cursor-theme]=-
+	# sem releases no upstream; snapshot git (conferir commits no GitHub)
+	[conflux-icon-theme]=-
 )
 
 # Pacotes que não devem ser comparados com o homônimo da Factory.
