@@ -25,6 +25,7 @@ URL:            http://linuxmafia.com/pub/linux/apps/axene/
 #   sh prune-nonfree-fonts.sh AxeneSDK-v2.0.1.tar.gz .
 Source0:        %{name}-%{version}.tar.xz
 Source1:        axene-launcher.in
+Source2:        axene-rendertable.awk
 Source99:       prune-nonfree-fonts.sh
 # PATCH-FIX-OPENSUSE axene-office-modern-toolchain.patch -- build with GCC 15/glibc 2.40 on LP64: varargs.h -> stdarg.h, ISO token pasting, <stdint.h> types, strerror, missing ';' and string continuation
 Patch0:         axene-office-modern-toolchain.patch
@@ -135,6 +136,13 @@ for app in %{axene_apps}; do
   install -m0755 $src/main %{buildroot}%{axene_exec}/$app
   install -m0644 $src/AD/$app.English.* $src/AD/$app.French \
     $src/AD/$app.German $src/AD/$app.Spanish %{buildroot}%{axene_data}/locale/
+  # Keep the Latin-1 interface on its core fonts even when the user's
+  # resources set an Xft "*renderTable" (see the comment in Source2)
+  for f in %{buildroot}%{axene_data}/locale/$app.*; do
+    LC_ALL=C awk -v cls=$app -f %{SOURCE2} $f > rt.tmp
+    cat rt.tmp >> $f
+  done
+  rm -f rt.tmp
   if [ -f $src/RC/${lc}rc.English.us ]; then
     install -m0644 $src/RC/${lc}rc.* %{buildroot}%{axene_data}/locale/
   fi
