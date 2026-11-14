@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Classic Colors
+GenericName=Paint Program
+Comment=Draw and edit raster images with a Motif paint program
+Exec=classic-colors %f
+Icon=classic-colors
+Terminal=false
+StartupWMClass=Paint
+Categories=Graphics;2DGraphics;RasterGraphics;Motif;
+MimeType=image/png;image/jpeg;image/bmp;image/gif;image/x-tga;

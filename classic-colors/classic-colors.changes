@@ -1,0 +1,11 @@
+-------------------------------------------------------------------
+Sat Nov 14 23:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of classic-colors 1.1.1
+  * Help menu opens the HTML manual from %{_datadir} instead of
+    the hardcoded /usr/local path
+  * About dialog shows the package version instead of v1.0.1
+  * Add classic-colors-gcc14.patch: fix incompatible pointer types
+    that GCC 14+ rejects; the save error dialog now frees its
+    XmString with XmStringFree instead of XtFree
+  * Add desktop file and hicolor icon
