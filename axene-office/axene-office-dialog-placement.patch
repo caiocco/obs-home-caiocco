@@ -1,0 +1,395 @@
+diff --git a/AxeneOffice-2.0.1/Sources/CustomDialog/CustomDialog.c b/AxeneOffice-2.0.1/Sources/CustomDialog/CustomDialog.c
+index b072d20..d44c8d4 100644
+--- a/AxeneOffice-2.0.1/Sources/CustomDialog/CustomDialog.c
++++ b/AxeneOffice-2.0.1/Sources/CustomDialog/CustomDialog.c
+@@ -405,6 +405,65 @@ void *cb_data;
+ }
+ 
+ 
++/* ----------------------------------------------------------------- ** 
++** place - Centre the dialog over its application window             ** 
++** ----------------------------------------------------------------- */
++/*
++** Motif's XmNdefaultPosition centres a dialog over the position its
++** parent shell had when the dialog was first managed, and the file
++** selectors and alerts are created once and reused: after the main
++** window moved (or when the parent is the unmapped shell that sits in
++** the middle of the whole X screen, i.e. on the second monitor) the
++** dialog came up far from the window it belongs to. Compute the place
++** at each popup instead: over the parent shell when it is mapped,
++** otherwise around the pointer, kept inside the screen.
++*/
++static void place(this)
++c_CustomDialog *this;
++{
++ Display	*dpy = XtDisplay(this->w_Main);
++ Window		root = DefaultRootWindow(dpy), child, rootret;
++ Widget		top;
++ XWindowAttributes wa;
++ Dimension	dw = 0, dh = 0;
++ int		px, py, pw, ph, wx, wy, x, y, sw, sh;
++ unsigned int	mask;
++
++ for (top = XtParent(this->w_Main); top && !XtIsShell(top);
++      top = XtParent(top))
++  ;
++ XtVaGetValues(WIDGET(this), XmNwidth, &dw, XmNheight, &dh, NULL);
++ if (!dw) dw = this->width;
++ if (!dh) dh = this->height;
++
++ if (top && XtIsRealized(top) &&
++     XGetWindowAttributes(dpy, XtWindow(top), &wa) &&
++     wa.map_state == IsViewable)
++ {
++  XTranslateCoordinates(dpy, XtWindow(top), root, 0, 0, &px, &py, &child);
++  pw = wa.width;
++  ph = wa.height;
++ }
++ else if (XQueryPointer(dpy, root, &rootret, &child, &px, &py,
++			&wx, &wy, &mask))
++  pw = ph = 0;
++ else
++  return;			/* keep Motif's default position */
++
++ x = px + (pw - (int)dw) / 2;
++ y = py + (ph - (int)dh) / 2;
++ sw = DisplayWidth(dpy, DefaultScreen(dpy));
++ sh = DisplayHeight(dpy, DefaultScreen(dpy));
++ if (x + (int)dw > sw) x = sw - dw;
++ if (y + (int)dh > sh) y = sh - dh;
++ if (x < 0) x = 0;
++ if (y < 0) y = 0;
++
++ XtVaSetValues(WIDGET(this), XmNdefaultPosition, False, NULL);
++ XtVaSetValues(this->w_Main, XmNx, (Position)x, XmNy, (Position)y, NULL);
++}
++
++
+ /* ----------------------------------------------------------------- ** 
+ ** map - Manage all widget and display it                            ** 
+ ** ----------------------------------------------------------------- */
+@@ -452,6 +511,8 @@ boolean modal_flag;
+   cb_resize(WIDGET(this), &event, parama, &nparam);
+  }
+ 
++ place(this);
++
+  /*--- Map ---*/
+  Xc_TRACE(("popup"));
+  XtPopup(this->w_Main, modal_flag? XtGrabExclusive : XtGrabNone);
+diff --git a/XAllWrite-2.0.1/Sources/CustomDialog/CustomDialog.c b/XAllWrite-2.0.1/Sources/CustomDialog/CustomDialog.c
+index b072d20..d44c8d4 100644
+--- a/XAllWrite-2.0.1/Sources/CustomDialog/CustomDialog.c
++++ b/XAllWrite-2.0.1/Sources/CustomDialog/CustomDialog.c
+@@ -405,6 +405,65 @@ void *cb_data;
+ }
+ 
+ 
++/* ----------------------------------------------------------------- ** 
++** place - Centre the dialog over its application window             ** 
++** ----------------------------------------------------------------- */
++/*
++** Motif's XmNdefaultPosition centres a dialog over the position its
++** parent shell had when the dialog was first managed, and the file
++** selectors and alerts are created once and reused: after the main
++** window moved (or when the parent is the unmapped shell that sits in
++** the middle of the whole X screen, i.e. on the second monitor) the
++** dialog came up far from the window it belongs to. Compute the place
++** at each popup instead: over the parent shell when it is mapped,
++** otherwise around the pointer, kept inside the screen.
++*/
++static void place(this)
++c_CustomDialog *this;
++{
++ Display	*dpy = XtDisplay(this->w_Main);
++ Window		root = DefaultRootWindow(dpy), child, rootret;
++ Widget		top;
++ XWindowAttributes wa;
++ Dimension	dw = 0, dh = 0;
++ int		px, py, pw, ph, wx, wy, x, y, sw, sh;
++ unsigned int	mask;
++
++ for (top = XtParent(this->w_Main); top && !XtIsShell(top);
++      top = XtParent(top))
++  ;
++ XtVaGetValues(WIDGET(this), XmNwidth, &dw, XmNheight, &dh, NULL);
++ if (!dw) dw = this->width;
++ if (!dh) dh = this->height;
++
++ if (top && XtIsRealized(top) &&
++     XGetWindowAttributes(dpy, XtWindow(top), &wa) &&
++     wa.map_state == IsViewable)
++ {
++  XTranslateCoordinates(dpy, XtWindow(top), root, 0, 0, &px, &py, &child);
++  pw = wa.width;
++  ph = wa.height;
++ }
++ else if (XQueryPointer(dpy, root, &rootret, &child, &px, &py,
++			&wx, &wy, &mask))
++  pw = ph = 0;
++ else
++  return;			/* keep Motif's default position */
++
++ x = px + (pw - (int)dw) / 2;
++ y = py + (ph - (int)dh) / 2;
++ sw = DisplayWidth(dpy, DefaultScreen(dpy));
++ sh = DisplayHeight(dpy, DefaultScreen(dpy));
++ if (x + (int)dw > sw) x = sw - dw;
++ if (y + (int)dh > sh) y = sh - dh;
++ if (x < 0) x = 0;
++ if (y < 0) y = 0;
++
++ XtVaSetValues(WIDGET(this), XmNdefaultPosition, False, NULL);
++ XtVaSetValues(this->w_Main, XmNx, (Position)x, XmNy, (Position)y, NULL);
++}
++
++
+ /* ----------------------------------------------------------------- ** 
+ ** map - Manage all widget and display it                            ** 
+ ** ----------------------------------------------------------------- */
+@@ -452,6 +511,8 @@ boolean modal_flag;
+   cb_resize(WIDGET(this), &event, parama, &nparam);
+  }
+ 
++ place(this);
++
+  /*--- Map ---*/
+  Xc_TRACE(("popup"));
+  XtPopup(this->w_Main, modal_flag? XtGrabExclusive : XtGrabNone);
+diff --git a/XMayday-2.0.1/Sources/CustomDialog/CustomDialog.c b/XMayday-2.0.1/Sources/CustomDialog/CustomDialog.c
+index b072d20..d44c8d4 100644
+--- a/XMayday-2.0.1/Sources/CustomDialog/CustomDialog.c
++++ b/XMayday-2.0.1/Sources/CustomDialog/CustomDialog.c
+@@ -405,6 +405,65 @@ void *cb_data;
+ }
+ 
+ 
++/* ----------------------------------------------------------------- ** 
++** place - Centre the dialog over its application window             ** 
++** ----------------------------------------------------------------- */
++/*
++** Motif's XmNdefaultPosition centres a dialog over the position its
++** parent shell had when the dialog was first managed, and the file
++** selectors and alerts are created once and reused: after the main
++** window moved (or when the parent is the unmapped shell that sits in
++** the middle of the whole X screen, i.e. on the second monitor) the
++** dialog came up far from the window it belongs to. Compute the place
++** at each popup instead: over the parent shell when it is mapped,
++** otherwise around the pointer, kept inside the screen.
++*/
++static void place(this)
++c_CustomDialog *this;
++{
++ Display	*dpy = XtDisplay(this->w_Main);
++ Window		root = DefaultRootWindow(dpy), child, rootret;
++ Widget		top;
++ XWindowAttributes wa;
++ Dimension	dw = 0, dh = 0;
++ int		px, py, pw, ph, wx, wy, x, y, sw, sh;
++ unsigned int	mask;
++
++ for (top = XtParent(this->w_Main); top && !XtIsShell(top);
++      top = XtParent(top))
++  ;
++ XtVaGetValues(WIDGET(this), XmNwidth, &dw, XmNheight, &dh, NULL);
++ if (!dw) dw = this->width;
++ if (!dh) dh = this->height;
++
++ if (top && XtIsRealized(top) &&
++     XGetWindowAttributes(dpy, XtWindow(top), &wa) &&
++     wa.map_state == IsViewable)
++ {
++  XTranslateCoordinates(dpy, XtWindow(top), root, 0, 0, &px, &py, &child);
++  pw = wa.width;
++  ph = wa.height;
++ }
++ else if (XQueryPointer(dpy, root, &rootret, &child, &px, &py,
++			&wx, &wy, &mask))
++  pw = ph = 0;
++ else
++  return;			/* keep Motif's default position */
++
++ x = px + (pw - (int)dw) / 2;
++ y = py + (ph - (int)dh) / 2;
++ sw = DisplayWidth(dpy, DefaultScreen(dpy));
++ sh = DisplayHeight(dpy, DefaultScreen(dpy));
++ if (x + (int)dw > sw) x = sw - dw;
++ if (y + (int)dh > sh) y = sh - dh;
++ if (x < 0) x = 0;
++ if (y < 0) y = 0;
++
++ XtVaSetValues(WIDGET(this), XmNdefaultPosition, False, NULL);
++ XtVaSetValues(this->w_Main, XmNx, (Position)x, XmNy, (Position)y, NULL);
++}
++
++
+ /* ----------------------------------------------------------------- ** 
+ ** map - Manage all widget and display it                            ** 
+ ** ----------------------------------------------------------------- */
+@@ -452,6 +511,8 @@ boolean modal_flag;
+   cb_resize(WIDGET(this), &event, parama, &nparam);
+  }
+ 
++ place(this);
++
+  /*--- Map ---*/
+  Xc_TRACE(("popup"));
+  XtPopup(this->w_Main, modal_flag? XtGrabExclusive : XtGrabNone);
+diff --git a/XQuad-2.0.1/Sources/CustomDialog/CustomDialog.c b/XQuad-2.0.1/Sources/CustomDialog/CustomDialog.c
+index b072d20..d44c8d4 100644
+--- a/XQuad-2.0.1/Sources/CustomDialog/CustomDialog.c
++++ b/XQuad-2.0.1/Sources/CustomDialog/CustomDialog.c
+@@ -405,6 +405,65 @@ void *cb_data;
+ }
+ 
+ 
++/* ----------------------------------------------------------------- ** 
++** place - Centre the dialog over its application window             ** 
++** ----------------------------------------------------------------- */
++/*
++** Motif's XmNdefaultPosition centres a dialog over the position its
++** parent shell had when the dialog was first managed, and the file
++** selectors and alerts are created once and reused: after the main
++** window moved (or when the parent is the unmapped shell that sits in
++** the middle of the whole X screen, i.e. on the second monitor) the
++** dialog came up far from the window it belongs to. Compute the place
++** at each popup instead: over the parent shell when it is mapped,
++** otherwise around the pointer, kept inside the screen.
++*/
++static void place(this)
++c_CustomDialog *this;
++{
++ Display	*dpy = XtDisplay(this->w_Main);
++ Window		root = DefaultRootWindow(dpy), child, rootret;
++ Widget		top;
++ XWindowAttributes wa;
++ Dimension	dw = 0, dh = 0;
++ int		px, py, pw, ph, wx, wy, x, y, sw, sh;
++ unsigned int	mask;
++
++ for (top = XtParent(this->w_Main); top && !XtIsShell(top);
++      top = XtParent(top))
++  ;
++ XtVaGetValues(WIDGET(this), XmNwidth, &dw, XmNheight, &dh, NULL);
++ if (!dw) dw = this->width;
++ if (!dh) dh = this->height;
++
++ if (top && XtIsRealized(top) &&
++     XGetWindowAttributes(dpy, XtWindow(top), &wa) &&
++     wa.map_state == IsViewable)
++ {
++  XTranslateCoordinates(dpy, XtWindow(top), root, 0, 0, &px, &py, &child);
++  pw = wa.width;
++  ph = wa.height;
++ }
++ else if (XQueryPointer(dpy, root, &rootret, &child, &px, &py,
++			&wx, &wy, &mask))
++  pw = ph = 0;
++ else
++  return;			/* keep Motif's default position */
++
++ x = px + (pw - (int)dw) / 2;
++ y = py + (ph - (int)dh) / 2;
++ sw = DisplayWidth(dpy, DefaultScreen(dpy));
++ sh = DisplayHeight(dpy, DefaultScreen(dpy));
++ if (x + (int)dw > sw) x = sw - dw;
++ if (y + (int)dh > sh) y = sh - dh;
++ if (x < 0) x = 0;
++ if (y < 0) y = 0;
++
++ XtVaSetValues(WIDGET(this), XmNdefaultPosition, False, NULL);
++ XtVaSetValues(this->w_Main, XmNx, (Position)x, XmNy, (Position)y, NULL);
++}
++
++
+ /* ----------------------------------------------------------------- ** 
+ ** map - Manage all widget and display it                            ** 
+ ** ----------------------------------------------------------------- */
+@@ -452,6 +511,8 @@ boolean modal_flag;
+   cb_resize(WIDGET(this), &event, parama, &nparam);
+  }
+ 
++ place(this);
++
+  /*--- Map ---*/
+  Xc_TRACE(("popup"));
+  XtPopup(this->w_Main, modal_flag? XtGrabExclusive : XtGrabNone);
+diff --git a/Xclamation-2.0.1/Sources/CustomDialog/CustomDialog.c b/Xclamation-2.0.1/Sources/CustomDialog/CustomDialog.c
+index b072d20..d44c8d4 100644
+--- a/Xclamation-2.0.1/Sources/CustomDialog/CustomDialog.c
++++ b/Xclamation-2.0.1/Sources/CustomDialog/CustomDialog.c
+@@ -405,6 +405,65 @@ void *cb_data;
+ }
+ 
+ 
++/* ----------------------------------------------------------------- ** 
++** place - Centre the dialog over its application window             ** 
++** ----------------------------------------------------------------- */
++/*
++** Motif's XmNdefaultPosition centres a dialog over the position its
++** parent shell had when the dialog was first managed, and the file
++** selectors and alerts are created once and reused: after the main
++** window moved (or when the parent is the unmapped shell that sits in
++** the middle of the whole X screen, i.e. on the second monitor) the
++** dialog came up far from the window it belongs to. Compute the place
++** at each popup instead: over the parent shell when it is mapped,
++** otherwise around the pointer, kept inside the screen.
++*/
++static void place(this)
++c_CustomDialog *this;
++{
++ Display	*dpy = XtDisplay(this->w_Main);
++ Window		root = DefaultRootWindow(dpy), child, rootret;
++ Widget		top;
++ XWindowAttributes wa;
++ Dimension	dw = 0, dh = 0;
++ int		px, py, pw, ph, wx, wy, x, y, sw, sh;
++ unsigned int	mask;
++
++ for (top = XtParent(this->w_Main); top && !XtIsShell(top);
++      top = XtParent(top))
++  ;
++ XtVaGetValues(WIDGET(this), XmNwidth, &dw, XmNheight, &dh, NULL);
++ if (!dw) dw = this->width;
++ if (!dh) dh = this->height;
++
++ if (top && XtIsRealized(top) &&
++     XGetWindowAttributes(dpy, XtWindow(top), &wa) &&
++     wa.map_state == IsViewable)
++ {
++  XTranslateCoordinates(dpy, XtWindow(top), root, 0, 0, &px, &py, &child);
++  pw = wa.width;
++  ph = wa.height;
++ }
++ else if (XQueryPointer(dpy, root, &rootret, &child, &px, &py,
++			&wx, &wy, &mask))
++  pw = ph = 0;
++ else
++  return;			/* keep Motif's default position */
++
++ x = px + (pw - (int)dw) / 2;
++ y = py + (ph - (int)dh) / 2;
++ sw = DisplayWidth(dpy, DefaultScreen(dpy));
++ sh = DisplayHeight(dpy, DefaultScreen(dpy));
++ if (x + (int)dw > sw) x = sw - dw;
++ if (y + (int)dh > sh) y = sh - dh;
++ if (x < 0) x = 0;
++ if (y < 0) y = 0;
++
++ XtVaSetValues(WIDGET(this), XmNdefaultPosition, False, NULL);
++ XtVaSetValues(this->w_Main, XmNx, (Position)x, XmNy, (Position)y, NULL);
++}
++
++
+ /* ----------------------------------------------------------------- ** 
+ ** map - Manage all widget and display it                            ** 
+ ** ----------------------------------------------------------------- */
+@@ -452,6 +511,8 @@ boolean modal_flag;
+   cb_resize(WIDGET(this), &event, parama, &nparam);
+  }
+ 
++ place(this);
++
+  /*--- Map ---*/
+  Xc_TRACE(("popup"));
+  XtPopup(this->w_Main, modal_flag? XtGrabExclusive : XtGrabNone);

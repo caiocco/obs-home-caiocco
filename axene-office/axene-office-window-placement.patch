@@ -1,0 +1,1621 @@
+diff --git a/AxeneOffice-2.0.1/Sources/Interface/Interface.c b/AxeneOffice-2.0.1/Sources/Interface/Interface.c
+index cb0e6ba..3318319 100644
+--- a/AxeneOffice-2.0.1/Sources/Interface/Interface.c
++++ b/AxeneOffice-2.0.1/Sources/Interface/Interface.c
+@@ -46,6 +46,7 @@ extern void cb_override();
+ extern void cb_transient();
+ extern void cb_flip();
+ extern void cb_launch();
++extern void launcher_restore();
+ 
+ #if XmUPDATE_LEVEL > 2
+ extern void _XmRegisterPixmapConverters();
+@@ -84,13 +85,14 @@ c_MainInterface *MainInterface;
+  create_interface(This);
+   
+  F(This->Manager).Manage_all(This->Manager, NULL);
+- F(This->MainInterface).map_TopLevel(This->MainInterface);
+-  
+- F(This->MainInterface).set_main_icon(This->MainInterface);
+- This->AppTitle[0] = '\0';
+  This->override = FALSE;
+  This->transient = TRUE;
+  This->flip = FALSE;
++ launcher_restore(This);	/* saved modes and position */
++ F(This->MainInterface).map_TopLevel(This->MainInterface);
++
++ F(This->MainInterface).set_main_icon(This->MainInterface);
++ This->AppTitle[0] = '\0';
+ 
+  This->Prev = This->Next = NULL;
+   
+diff --git a/AxeneOffice-2.0.1/Sources/Main/main.c b/AxeneOffice-2.0.1/Sources/Main/main.c
+index 186eb59..7614d6d 100644
+--- a/AxeneOffice-2.0.1/Sources/Main/main.c
++++ b/AxeneOffice-2.0.1/Sources/Main/main.c
+@@ -52,6 +52,9 @@
+ #include "file.h"
+ #include "check.h"
+ 
++#include <X11/Xatom.h>
++#include <X11/extensions/Xinerama.h>
++
+ #ifdef HAVE_XSHM
+ #include <X11/extensions/XShm.h>
+ extern Bool XShmQueryExtension();
+@@ -102,6 +105,28 @@ void cb_launch ___PROTO((Widget w, int softnum));
+ static void raise_win ___PROTO((c_Interface *This));
+ static void calcul_shape ___PROTO((c_Interface *This));
+ static void remove_shape ___PROTO((c_Interface *This));
++static void schedule_save ___PROTO((c_Interface *This));
++static void write_state ___PROTO((c_Interface *This));
++static void read_state ___PROTO((int argc, char **argv));
++static void launcher_mapped ___PROTO((c_Interface *This));
++
++/* launcher state saved in ~/.axeneofficerc (see the end of the file) */
++#define STATE_FILE ".axeneofficerc"
++
++static struct
++{
++ boolean loaded;
++ boolean have_pos;
++ int x, y;
++ boolean vertical;
++ boolean override;
++ boolean transient;
++} state = { FALSE, FALSE, 0, 0, FALSE, FALSE, TRUE };
++
++static char state_geometry[32];
++char *launcher_geometry = NULL;	/* read by MainInterface create_TopLevel */
++static XtIntervalId SaveTimeOutid = (XtIntervalId)0;
++static boolean state_restored = FALSE;
+ 
+ extern void XtResizeWidget ___PROTO((Widget w, Dimension width,
+ 				     Dimension height, Dimension borderwidth));
+@@ -129,7 +154,9 @@ char **argv;
+  Globprog_name = SearchFile(argv[0]);
+  
+  check_configuration();
+- 
++
++ read_state(argc, argv);
++
+  MainInterface = NEW(c_MainInterface)(argc, argv);
+ 
+  display = XtDisplay(MainInterface->w_Hidden);
+@@ -270,10 +297,15 @@ char **argv;
+  SET_HELPLINE(GlobHelpLine, 
+ 	      WIDGET(GlobInterface->Icon[3]),helpXMayday, XcR_NONE);
+ 
+- XtVaGetValues(WIDGET(GlobInterface->Icon[0]), XmNwidth, &iW,
+-	       XmNheight,  &iH, NULL);
+- XtVaGetValues(WIDGET(GlobInterface->rcMain), XmNmarginWidth, &mW,
+-	       XmNmarginHeight,  &mH, XmNspacing, &S, NULL);
++ if (iW == 0)
++ {
++  XtVaGetValues(WIDGET(GlobInterface->Icon[0]), XmNwidth, &iW,
++		XmNheight,  &iH, NULL);
++  XtVaGetValues(WIDGET(GlobInterface->rcMain), XmNmarginWidth, &mW,
++		XmNmarginHeight,  &mH, XmNspacing, &S, NULL);
++ }
++
++ launcher_mapped(GlobInterface);
+ 
+  SigErrorCount = 0;		/* can continue now */
+  app = XtWidgetToApplicationContext(wMainWindow);
+@@ -305,6 +337,10 @@ XEvent *event;
+   
+  if (!Interface) Interface = GlobInterface;
+  wMainWindow = WIDGET(Interface->MainInterface);
++
++ if (event->type == ConfigureNotify &&
++     event->xconfigure.window == XtWindow(Interface->MainInterface->w_Main))
++  schedule_save(Interface);
+  
+  XtDispatchEvent(event);
+ }
+@@ -317,6 +353,10 @@ void QuitApplication()
+ 
+  if (TimeOutid != (XtIntervalId)0)
+   XtRemoveTimeOut(TimeOutid);
++ if (SaveTimeOutid != (XtIntervalId)0)
++  XtRemoveTimeOut(SaveTimeOutid);
++ if (state_restored)
++  write_state(GlobInterface);
+ 
+  DELETE(c_Interface)(GlobInterface, TRUE);
+  
+@@ -573,8 +613,9 @@ c_Interface *This;
+   F(This->popup).ButtonFlag(This->popup, POPUP_TRANSIENT, False);
+  }
+  This->override ^= TRUE;
+- F(This->popup).ToggleButton(This->popup, POPUP_OVERRIDE, 
++ F(This->popup).ToggleButton(This->popup, POPUP_OVERRIDE,
+ 			     This->override ? False : True);
++ schedule_save(This);
+ }
+ 
+ /* ----------------------------------------------------------------- ** 
+@@ -632,6 +673,7 @@ c_Interface *This;
+  This->transient ^= TRUE;
+  F(This->popup).ToggleButton(This->popup, POPUP_TRANSIENT,
+ 			     This->transient ? False : True);
++ schedule_save(This);
+ }
+ 
+ /* ----------------------------------------------------------------- ** 
+@@ -702,6 +744,7 @@ c_Interface *This;
+ 
+  if (This->override)
+   calcul_shape(This);
++ schedule_save(This);
+ }
+ 
+ /* ----------------------------------------------------------------- ** 
+@@ -838,5 +881,304 @@ c_Interface *This;
+ #endif
+ }
+ 
++/* ************************************************************************ */
++/* **                 LAUNCHER STATE (~/.axeneofficerc)                  ** */
++/* ************************************************************************ */
++/* The bar reopens where it was left, in the same layout (vertical or
++   horizontal), shaped without window manager ("WM Activ" off) or not,
++   and with or without the window manager buttons ("WM Buttons").
++   The position is the frame's top left corner when the window manager
++   handles the bar, the window's own corner otherwise. */
++
++
++static char *state_filename()
++{
++ char *home = getenv("HOME");
++
++ return Xc_strconcat(home ? home : "", "/", STATE_FILE, NULL);
++}
++
++static void read_state(argc, argv)
++int argc;
++char **argv;
++{
++ FILE *f;
++ char *name, line[100];
++ int a, b, i;
++
++ if ((name = state_filename()) == NULL)
++  return;
++ f = fopen(name, "r");
++ Xc_free(name);
++ if (f == NULL)
++  return;
++ while (fgets(line, sizeof(line), f))
++ {
++  if (sscanf(line, "position %d %d", &a, &b) == 2)
++  {
++   state.have_pos = TRUE;
++   state.x = a;
++   state.y = b;
++  }
++  else if (sscanf(line, "vertical %d", &a) == 1)
++   state.vertical = a ? TRUE : FALSE;
++  else if (sscanf(line, "override %d", &a) == 1)
++   state.override = a ? TRUE : FALSE;
++  else if (sscanf(line, "transient %d", &a) == 1)
++   state.transient = a ? TRUE : FALSE;
++ }
++ fclose(f);
++ state.loaded = TRUE;
++
++ /* an explicit -geometry wins over the saved position */
++ for (i = 1; i < argc; i++)
++  if (!strcmp(argv[i], "-geom") || !strcmp(argv[i], "-geometry"))
++   state.have_pos = FALSE;
++
++ /* "-1" in a geometry means from the right edge: negative positions
++    are off the monitors anyway, launcher_restore resets them */
++ if (state.have_pos && state.x >= 0 && state.y >= 0)
++ {
++  sprintf(state_geometry, "+%d+%d", state.x, state.y);
++  launcher_geometry = state_geometry;
++ }
++}
++
++static long frame_extent(display, window, index)
++Display *display;
++Window window;
++int index;
++{
++ Atom type;
++ int format;
++ unsigned long nitems, after;
++ unsigned char *data = NULL;
++ long value = 0;
++
++ if (XGetWindowProperty(display, window,
++			XInternAtom(display, "_NET_FRAME_EXTENTS", False),
++			0, 4, False, XA_CARDINAL, &type, &format, &nitems,
++			&after, &data) == Success && data &&
++     type == XA_CARDINAL && format == 32 && nitems == 4)
++  value = ((long *)data)[index];
++ if (data)
++  XFree(data);
++ return value;
++}
+ 
++static void write_state(This)
++c_Interface *This;
++{
++ Widget shell = This->MainInterface->w_Main;
++ Display *display = XtDisplay(shell);
++ Window window = XtWindow(shell), child;
++ XWindowAttributes wa;
++ char *name, *tmp;
++ FILE *f;
++ int x, y;
++
++ if (window && XGetWindowAttributes(display, window, &wa) &&
++     wa.map_state == IsViewable)
++ {
++  XTranslateCoordinates(display, window, wa.root, 0, 0, &x, &y, &child);
++  if (!This->override)
++  {
++   x -= (int)frame_extent(display, window, 0);
++   y -= (int)frame_extent(display, window, 2);
++  }
++  state.have_pos = TRUE;
++  state.x = x;
++  state.y = y;
++ }
++ state.vertical = This->flip;
++ state.override = This->override;
++ state.transient = This->transient;
+ 
++ if ((name = state_filename()) == NULL)
++  return;
++ tmp = Xc_strconcat(name, "~new", NULL);
++ if (tmp && (f = fopen(tmp, "w")) != NULL)
++ {
++  fprintf(f, "# Axene Office launcher state, rewritten on every change\n");
++  if (state.have_pos)
++   fprintf(f, "position %d %d\n", state.x, state.y);
++  fprintf(f, "vertical %d\noverride %d\ntransient %d\n",
++	  state.vertical ? 1 : 0, state.override ? 1 : 0,
++	  state.transient ? 1 : 0);
++  if (fclose(f) == 0)
++   rename(tmp, name);
++ }
++ if (tmp)
++  Xc_free(tmp);
++ Xc_free(name);
++}
++
++static void save_timeout(This)
++c_Interface *This;
++{
++ SaveTimeOutid = (XtIntervalId)0;
++ write_state(This);
++}
++
++/* save once things settle (moves come as bursts of ConfigureNotify) */
++static void schedule_save(This)
++c_Interface *This;
++{
++ if (!state_restored)
++  return;
++ if (SaveTimeOutid != (XtIntervalId)0)
++  XtRemoveTimeOut(SaveTimeOutid);
++ SaveTimeOutid = XtAppAddTimeOut(XtWidgetToApplicationContext
++				 (This->MainInterface->w_Main), 800L,
++				 (XtTimerCallbackProc)save_timeout, This);
++}
++
++/* Is the w x h rectangle at x, y entirely on one monitor? */
++static boolean on_a_monitor(display, x, y, w, h)
++Display *display;
++int x, y, w, h;
++{
++ XineramaScreenInfo *mon;
++ int i, n;
++ boolean ok = FALSE;
++
++ if (XineramaIsActive(display) &&
++     (mon = XineramaQueryScreens(display, &n)) != NULL)
++ {
++  for (i = 0; i < n && !ok; i++)
++   ok = x >= mon[i].x_org && y >= mon[i].y_org &&
++	x + w <= mon[i].x_org + mon[i].width &&
++	y + h <= mon[i].y_org + mon[i].height;
++  XFree(mon);
++  return ok;
++ }
++ return x >= 0 && y >= 0 &&
++	x + w <= DisplayWidth(display, DefaultScreen(display)) &&
++	y + h <= DisplayHeight(display, DefaultScreen(display));
++}
++
++/* centre of the monitor under the pointer */
++static void safe_position(display, w, h, x, y)
++Display *display;
++int w, h, *x, *y;
++{
++ XineramaScreenInfo *mon;
++ Window root, child;
++ int px = 0, py = 0, wx, wy, i, n;
++ unsigned int mask;
++ int mx = 0, my = 0;
++ int mw = DisplayWidth(display, DefaultScreen(display));
++ int mh = DisplayHeight(display, DefaultScreen(display));
++
++ XQueryPointer(display, DefaultRootWindow(display), &root, &child,
++	       &px, &py, &wx, &wy, &mask);
++ if (XineramaIsActive(display) &&
++     (mon = XineramaQueryScreens(display, &n)) != NULL)
++ {
++  for (i = 0; i < n; i++)
++   if (px >= mon[i].x_org && px < mon[i].x_org + mon[i].width &&
++       py >= mon[i].y_org && py < mon[i].y_org + mon[i].height)
++    break;
++  if (i == n)
++   i = 0;
++  mx = mon[i].x_org;
++  my = mon[i].y_org;
++  mw = mon[i].width;
++  mh = mon[i].height;
++  XFree(mon);
++ }
++ *x = mx + (mw - w) / 2;
++ *y = my + (mh - h) / 2;
++}
++
++/* ----------------------------------------------------------------- **
++** launcher_restore - set the saved modes and check the saved        **
++** position before the bar is mapped (called by the Interface)       **
++** ----------------------------------------------------------------- */
++void launcher_restore(This)
++c_Interface *This;
++{
++ Widget shell = This->MainInterface->w_Main;
++ Display *display = XtDisplay(shell);
++ Dimension width, height;
++ int i, x, y;
++
++ XtVaGetValues(WIDGET(This->Icon[0]), XmNwidth, &iW, XmNheight, &iH, NULL);
++ XtVaGetValues(WIDGET(This->rcMain), XmNmarginWidth, &mW,
++	       XmNmarginHeight, &mH, XmNspacing, &S, NULL);
++
++ if (state.vertical)
++ {
++  This->flip = TRUE;
++  width = iW + 2*mW;
++  height = (This->nbIcon * iH) + ((This->nbIcon -1) * S) + 2*mH;
++  F(This->popup).ToggleManage(This->popup,
++			      POPUP_FLIP_VERTICAL, POPUP_FLIP_HORIZONTAL);
++  XtVaSetValues(shell, XmNminWidth, width,
++		XmNmaxWidth, width, XmNwidth, width,
++		XmNmaxHeight, height, XmNminHeight, height,
++		XmNheight, height, NULL);
++  XtVaSetValues(WIDGET(This->rcMain), XmNorientation, XmVERTICAL, NULL);
++ }
++ else
++ {
++  height = iH + 2*mH;
++  width = (This->nbIcon * iW) + ((This->nbIcon -1) * S) + 2*mW;
++ }
++
++ if (!state.transient)
++ {
++  This->transient = FALSE;
++  XtVaSetValues(shell, XmNtransient, False, NULL);
++  F(This->popup).ToggleButton(This->popup, POPUP_TRANSIENT, True);
++ }
++
++ if (state.override)
++ {
++  This->override = TRUE;
++  XtVaSetValues(shell, XmNoverrideRedirect, True, NULL);
++  for(i = 0; i < This->nbIcon; i++)
++   XtVaSetValues(WIDGET(This->Icon[i]), XmNhighlightThickness, 0, NULL);
++  XtVaSetValues(WIDGET(This->rcMain), XmNmarginWidth, mW+1,
++		XmNmarginHeight, mH+1, XmNspacing, S+2, NULL);
++  F(This->popup).ButtonFlag(This->popup, POPUP_TRANSIENT, False);
++  F(This->popup).ToggleButton(This->popup, POPUP_OVERRIDE, False);
++ }
++
++ /* a position off the monitors (one unplugged, resolution changed...)
++    is dropped: the bar goes to the middle of the pointer's monitor */
++ if (state.have_pos && !on_a_monitor(display, state.x, state.y,
++				     (int)width, (int)height))
++ {
++  Xc_WARNING(("saved launcher position %d,%d is off screen, reset",
++	      state.x, state.y));
++  state.have_pos = FALSE;
++  safe_position(display, (int)width, (int)height, &x, &y);
++  sprintf(state_geometry, "+%d+%d", MAX(x, 0), MAX(y, 0));
++  XtVaSetValues(shell, XmNgeometry, state_geometry,
++		XmNx, (Position)x, XmNy, (Position)y, NULL);
++ }
++ else if (!state.have_pos && state.override)
++ {
++  /* no window manager will place it */
++  safe_position(display, (int)width, (int)height, &x, &y);
++  XtVaSetValues(shell, XmNx, (Position)x, XmNy, (Position)y, NULL);
++ }
++
++ if (state.override)
++ {
++  XtRealizeWidget(shell);
++  calcul_shape(This);
++ }
++}
++
++/* ----------------------------------------------------------------- **
++** launcher_mapped - start tracking moves once the bar is up         **
++** ----------------------------------------------------------------- */
++static void launcher_mapped(This)
++c_Interface *This;
++{
++ state_restored = TRUE;
++ if (state.loaded && !state.have_pos)
++  schedule_save(This);		/* the reset position */
++}
+diff --git a/AxeneOffice-2.0.1/Sources/MainInterface/MainInterface.c b/AxeneOffice-2.0.1/Sources/MainInterface/MainInterface.c
+index 09e4926..16d4f06 100644
+--- a/AxeneOffice-2.0.1/Sources/MainInterface/MainInterface.c
++++ b/AxeneOffice-2.0.1/Sources/MainInterface/MainInterface.c
+@@ -302,6 +302,8 @@ c_MainInterface *this;
+  return copy;
+ }
+ 
++extern char *launcher_geometry;
++
+ static void create_TopLevel(this, ManageW)
+ c_MainInterface *this;
+ c_ManageWidget *ManageW;
+@@ -314,6 +316,10 @@ c_ManageWidget *ManageW;
+  XtSetArg(argsw[nargs], XmNtransient, True); nargs++;
+  XtSetArg(argsw[nargs], XmNoverrideRedirect, False); nargs++;
+  XtSetArg(argsw[nargs], XmNallowShellResize, True); nargs++;
++ if (launcher_geometry)		/* position saved in ~/.axeneofficerc */
++ {
++  XtSetArg(argsw[nargs], XmNgeometry, launcher_geometry); nargs++;
++ }
+ 
+  this->w_Main = XtCreatePopupShell(appName, topLevelShellWidgetClass,
+ 				   this->w_Hidden, argsw, nargs);
+diff --git a/XAllWrite-2.0.1/Sources/RegisterHelp/RegisterHelp.c b/XAllWrite-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+index 73cdcf2..b4dab0a 100644
+--- a/XAllWrite-2.0.1/Sources/RegisterHelp/RegisterHelp.c
++++ b/XAllWrite-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+@@ -74,6 +74,172 @@ extern boolean mozilla_remote_free_lock();
+ extern boolean mozilla_remote_command();
+ #endif
+ 
++#ifndef Xc_XMAYDAY
++#include <X11/Xatom.h>
++#include <X11/extensions/Xinerama.h>
++
++/* Client size of a help window docked next to the program */
++#define DOCK_WIDTH	620
++#define DOCK_MIN_WIDTH	420
++#define DOCK_MIN_HEIGHT	200	/* XMayday Toplevel minHeight */
++
++/* ----------------------------------------------------------------- **
++** get_cardinals - read a CARDINAL[] property (up to max values)     **
++** ----------------------------------------------------------------- */
++static int get_cardinals(dpy, win, name, values, max)
++Display *dpy;
++Window win;
++char *name;
++long *values;
++int max;
++{
++ Atom type;
++ int format, i, n = 0;
++ unsigned long nitems, after;
++ unsigned char *data = NULL;
++
++ if (XGetWindowProperty(dpy, win, XInternAtom(dpy, name, False), 0, max,
++			False, XA_CARDINAL, &type, &format, &nitems, &after,
++			&data) == Success && data && type == XA_CARDINAL &&
++     format == 32)
++ {
++  n = (int)nitems;
++  for (i = 0; i < n && i < max; i++)
++   values[i] = ((long *)data)[i];	/* Xlib returns format 32 as long */
++ }
++ if (data)
++  XFree(data);
++ return n;
++}
++
++/* ----------------------------------------------------------------- **
++** dock_geometry - geometry string that puts the help window right   **
++** beside the program's main window, with the same height.           **
++** It goes to the left when there is no room on the right, and over  **
++** the monitor's right edge when there is room on neither side.      **
++** ----------------------------------------------------------------- */
++static boolean dock_geometry(dpy, shell, buf)
++Display *dpy;
++Widget shell;
++char *buf;
++{
++ Window win, root, child;
++ XWindowAttributes wa;
++ long ext[4] = { 0, 0, 0, 0 };	/* left, right, top, bottom */
++ long desk = 0, area[4];
++ int cx, cy, fx, fy, fw, fh, ex, ey;
++ int mx, my, mw, mh, x, y, w, h, room;
++
++ if (shell == NULL || (win = XtWindow(shell)) == (Window)0 ||
++     !XGetWindowAttributes(dpy, win, &wa) || wa.map_state != IsViewable)
++  return FALSE;
++ root = wa.root;
++ XTranslateCoordinates(dpy, win, root, 0, 0, &cx, &cy, &child);
++ get_cardinals(dpy, win, "_NET_FRAME_EXTENTS", ext, 4);
++ ex = (int)(ext[0] + ext[1]);
++ ey = (int)(ext[2] + ext[3]);
++ fx = cx - (int)ext[0];
++ fy = cy - (int)ext[2];
++ fw = wa.width + ex;
++ fh = wa.height + ey;
++
++ /* the monitor holding most of the main window */
++ mx = my = 0;
++ mw = WidthOfScreen(wa.screen);
++ mh = HeightOfScreen(wa.screen);
++ {
++  XineramaScreenInfo *mon;
++  int i, n, best = -1;
++  long ov, best_ov = -1;
++
++  if (XineramaIsActive(dpy) && (mon = XineramaQueryScreens(dpy, &n)) != NULL)
++  {
++   for (i = 0; i < n; i++)
++   {
++    int ox = MIN(fx + fw, mon[i].x_org + mon[i].width) - MAX(fx, mon[i].x_org);
++    int oy = MIN(fy + fh, mon[i].y_org + mon[i].height) - MAX(fy, mon[i].y_org);
++
++    ov = (ox > 0 && oy > 0) ? (long)ox * oy : 0;
++    if (ov > best_ov)
++    {
++     best_ov = ov;
++     best = i;
++    }
++   }
++   if (best >= 0)
++   {
++    mx = mon[best].x_org;
++    my = mon[best].y_org;
++    mw = mon[best].width;
++    mh = mon[best].height;
++   }
++   XFree(mon);
++  }
++ }
++
++ /* keep clear of panels: intersect with the current desktop work area */
++ get_cardinals(dpy, root, "_NET_CURRENT_DESKTOP", &desk, 1);
++ if (desk >= 0 && desk < 64)
++ {
++  long all[256];
++  int n = get_cardinals(dpy, root, "_NET_WORKAREA", all, 256);
++
++  if (n >= 4 * (desk + 1))
++  {
++   area[0] = MAX(mx, all[4 * desk]);
++   area[1] = MAX(my, all[4 * desk + 1]);
++   area[2] = MIN(mx + mw, all[4 * desk] + all[4 * desk + 2]);
++   area[3] = MIN(my + mh, all[4 * desk + 1] + all[4 * desk + 3]);
++   if (area[2] - area[0] >= DOCK_MIN_WIDTH + ex &&
++       area[3] - area[1] >= DOCK_MIN_HEIGHT + ey)
++   {
++    mx = (int)area[0];
++    my = (int)area[1];
++    mw = (int)(area[2] - area[0]);
++    mh = (int)(area[3] - area[1]);
++   }
++  }
++ }
++
++ w = DOCK_WIDTH;
++ if ((room = mx + mw - (fx + fw)) >= DOCK_WIDTH + ex)
++  x = fx + fw;			/* right side */
++ else if (fx - mx >= DOCK_WIDTH + ex)
++  x = fx - DOCK_WIDTH - ex;	/* left side */
++ else if (room >= DOCK_MIN_WIDTH + ex && room >= fx - mx)
++ {
++  x = fx + fw;			/* narrower, on the right */
++  w = room - ex;
++ }
++ else if (fx - mx >= DOCK_MIN_WIDTH + ex)
++ {
++  x = mx;			/* narrower, on the left */
++  w = fx - mx - ex;
++ }
++ else
++ {
++  w = MIN(DOCK_WIDTH, mw - ex);	/* overlap, at the monitor's right edge */
++  x = mx + mw - w - ex;
++ }
++
++ y = fy;
++ h = wa.height;
++ if (y < my)
++  y = my;
++ if (y + h + ey > my + mh)
++  h = my + mh - y - ey;
++ if (h < DOCK_MIN_HEIGHT)
++ {
++  y = my;
++  h = MAX(DOCK_MIN_HEIGHT, mh - ey);
++ }
++
++ sprintf(buf, "%dx%d+%d+%d", w, h, x, y);
++ Xc_TRACE(("help window geometry %s", buf));
++ return TRUE;
++}
++#endif
++
+ sf_RegisterHelp fc_RegisterHelp =
+ {
+  cons_RegisterHelp,
+@@ -244,6 +410,8 @@ char *filename;
+  int		_err;
+ #ifndef Xc_XMAYDAY
+  int		height;
++ char		geom[64], dock_opt[80];
++ boolean	docked;
+ #endif
+  
+  full_filename = Xc_malloc("fulfn", strlen(filename) +
+@@ -325,10 +493,13 @@ char *filename;
+      boolean status;
+      char	*xmayday_cmd;
+ 	  
+-     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) + 
+-			     strlen(full_filename) + 28);
+-     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;RAISE",
+-	     This->base_location, full_filename);
++     docked = dock_geometry(This->display, MainInterface1->w_Main, geom);
++     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) +
++			     strlen(full_filename) + 28 + 80);
++     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;%s%s%sRAISE",
++	     This->base_location, full_filename,
++	     docked ? "GEOMETRY=" : "", docked ? geom : "",
++	     docked ? ";" : "");
+ 	  
+      status = xmayday_remote_command(This->display, This->xmayday_window,
+ 				     xmayday_cmd, TRUE);
+@@ -350,17 +521,21 @@ char *filename;
+     strcpy(index_filename, This->base_location);
+     strcat(index_filename, "index.html");
+ 	
+-    height = DisplayHeight(This->display, DefaultScreen(This->display));
+-	
++    /* Docked beside the main window; -dock only applies to the
++       first XMayday window, unlike -geom which every later window
++       of that process would inherit */
++    if (dock_geometry(This->display, MainInterface1->w_Main, geom))
++     sprintf(dock_opt, " -dock %s", geom);
++    else
++     dock_opt[0] = '\0';
++
+     if (MainInterface1->display_name && *MainInterface1->display_name)
+-     sprintf(command_line, "%s -display %s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  MainInterface1->display_name, 
+-	     height - 300, index_filename,
+-	     full_filename); /* XMayday Toplevel minHeight = 200 */
++     sprintf(command_line, "%s -display %s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command,  MainInterface1->display_name,
++	     dock_opt, index_filename, full_filename);
+     else
+-     sprintf(command_line, "%s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  height - 100, index_filename,
+-	     full_filename);
++     sprintf(command_line, "%s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command, dock_opt, index_filename, full_filename);
+     
+     _err = system(command_line);
+     if (_err != -1 && _err != 127)
+diff --git a/XMayday-2.0.1/Sources/Main/main.c b/XMayday-2.0.1/Sources/Main/main.c
+index 84b9d4f..568a8bd 100644
+--- a/XMayday-2.0.1/Sources/Main/main.c
++++ b/XMayday-2.0.1/Sources/Main/main.c
+@@ -85,6 +85,9 @@ Widget wMainWindow;
+ c_RowColumn      *MainDocument;
+ 
+ c_RemoteServer	*GlobRemoteServer;
++extern char *XcDockGeometry;
++extern void XcSetShellGeometry();
++extern void XcMapDockedShell();
+ c_RegisterHelp	*GlobRegHelp;
+ c_Colormap 	*GlobColormap;
+ c_DocIcon	*GlobDocIcon;
+@@ -282,6 +285,14 @@ char **argv;
+   DisplayIndex(WIDGET(GlobInterface->HelpWIndex), GlobInterface);
+   
+  F(GlobInterface->HelpWHelp).refresh(GlobInterface->HelpWHelp);
++ if (XcDockGeometry)		/* the index pane widened the window */
++ {
++  XcSetShellGeometry(GlobInterface->MainInterface->w_Main, XcDockGeometry);
++  XcMapDockedShell(GlobInterface->MainInterface);
++  /* the events of the mapping went through map_TopLevel's own loop:
++     ask again for the refresh that sets the title */
++  SendRefreshRequest(WIDGET(GlobInterface->MainInterface));
++ }
+  UNSET_WAIT_MODE_STATIC;
+   
+  SigErrorCount = 0;		/* can continue now */
+diff --git a/XMayday-2.0.1/Sources/MainInterface/MainInterface.c b/XMayday-2.0.1/Sources/MainInterface/MainInterface.c
+index ce61bf1..97b2cdb 100644
+--- a/XMayday-2.0.1/Sources/MainInterface/MainInterface.c
++++ b/XMayday-2.0.1/Sources/MainInterface/MainInterface.c
+@@ -95,9 +95,65 @@ static char appName[] = { 'X' - 'i', 'M' - '(', 'a' - ':',
+ 
+ static char *helpString[] = { "--help", "-help", "-h", NULL};
+ static char *versionString[] = { "--version", "-version", "-v", NULL};
+-static char *nosharedpixmapString[] = { "--nosharedpixmap", "-noshpxm", 
++static char *nosharedpixmapString[] = { "--nosharedpixmap", "-noshpxm",
+ 					 "-nsp", NULL};
+ 
++/* -dock <geometry>: geometry of the first window only (the programs
++   asking for help put it beside their main window).  -geom would be
++   inherited by every window that this process opens later. */
++static char *dock_geometry = NULL;
++char *XcDockGeometry = NULL;	/* applied again by main once the index
++				   pane is shown, as that widens the window */
++/* The docked window is only realized at creation and mapped by main
++   once the index and the page are loaded and the geometry applied:
++   mapped at once, it showed up, grew with the index pane and then
++   shrank back to the docked size */
++static boolean dock_map_deferred = FALSE;
++
++/* ----------------------------------------------------------------- **
++** XcSetShellGeometry - move and resize a mapped shell to WxH+X+Y    **
++** (+X+Y is the frame's top left corner, as for -geometry)           **
++** ----------------------------------------------------------------- */
++void XcSetShellGeometry(shell, geometry)
++Widget shell;
++char *geometry;
++{
++ Display *display = XtDisplay(shell);
++ int x, y, flags;
++ unsigned int width, height;
++ XSizeHints hints;
++ long supplied;
++
++ flags = XParseGeometry(geometry, &x, &y, &width, &height);
++ if (!(flags & XValue) || !(flags & YValue) ||
++     (flags & (XNegative | YNegative)))
++  return;
++ if (!(flags & WidthValue) || !(flags & HeightValue))
++ {
++  Dimension w, h;
++
++  XtVaGetValues(shell, XmNwidth, &w, XmNheight, &h, NULL);
++  if (!(flags & WidthValue)) width = w;
++  if (!(flags & HeightValue)) height = h;
++ }
++
++ /* a user-specified position, so the window manager doesn't re-place
++    the window if it maps it again */
++ if (XtWindow(shell) &&
++     XGetWMNormalHints(display, XtWindow(shell), &hints, &supplied))
++ {
++  hints.flags |= USPosition | USSize;
++  hints.x = x;
++  hints.y = y;
++  hints.width = width;
++  hints.height = height;
++  XSetWMNormalHints(display, XtWindow(shell), &hints);
++ }
++ XtVaSetValues(shell, XmNx, (Position)x, XmNy, (Position)y,
++	       XmNwidth, (Dimension)width, XmNheight, (Dimension)height,
++	       NULL);
++}
++
+ static XrmOptionDescRec options[] =
+ {
+  {"-font", "*fontList", XrmoptionSepArg, NULL},
+@@ -135,6 +191,15 @@ char           **argv;
+ 
+  for(i = 1; i < argc; i++)
+  {
++  if (strcmp(argv[i], "-dock") == 0 && i + 1 < argc)
++  {
++   XcDockGeometry = dock_geometry = argv[i + 1];
++   for (j = i; j + 2 <= argc; j++)
++    argv[j] = argv[j + 2];
++   argc -= 2;
++   i--;
++   continue;
++  }
+   j = 0;
+   while(helpString[j])
+   {
+@@ -366,6 +431,12 @@ c_ManageWidget *ManageW;
+  XtSetArg(argsw[nargs], XmNminWidth, 300); nargs++;
+  XtSetArg(argsw[nargs], XmNminHeight, 200); nargs++;
+  XtSetArg(argsw[nargs], XmNtitle, title); nargs++;
++ if (dock_geometry)
++ {
++  XtSetArg(argsw[nargs], XmNgeometry, dock_geometry); nargs++;
++  dock_geometry = NULL;
++  dock_map_deferred = TRUE;
++ }
+ 
+  this->w_Main = XtCreatePopupShell(appName, topLevelShellWidgetClass,
+ 				   this->w_Hidden, argsw, nargs);
+@@ -382,9 +453,27 @@ c_ManageWidget *ManageW;
+  Xc_TRACE(("Main shell"));
+ }
+ 
++/* ----------------------------------------------------------------- **
++** XcMapDockedShell - map the window held back by map_TopLevel       **
++** ----------------------------------------------------------------- */
++void XcMapDockedShell(this)
++c_MainInterface *this;
++{
++ if (dock_map_deferred)
++ {
++  dock_map_deferred = FALSE;
++  map_TopLevel(this);
++ }
++}
++
+ static void map_TopLevel(this)
+ c_MainInterface *this;
+ {
++ if (dock_map_deferred)
++ {
++  XtRealizeWidget(this->w_Main);
++  return;
++ }
+  XtPopup(this->w_Main, XtGrabNone);
+  shellMap(this, this->w_Main);
+  /*  wMainWindow = this->w_Main; */
+diff --git a/XMayday-2.0.1/Sources/RegisterHelp/RegisterHelp.c b/XMayday-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+index 73cdcf2..b4dab0a 100644
+--- a/XMayday-2.0.1/Sources/RegisterHelp/RegisterHelp.c
++++ b/XMayday-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+@@ -74,6 +74,172 @@ extern boolean mozilla_remote_free_lock();
+ extern boolean mozilla_remote_command();
+ #endif
+ 
++#ifndef Xc_XMAYDAY
++#include <X11/Xatom.h>
++#include <X11/extensions/Xinerama.h>
++
++/* Client size of a help window docked next to the program */
++#define DOCK_WIDTH	620
++#define DOCK_MIN_WIDTH	420
++#define DOCK_MIN_HEIGHT	200	/* XMayday Toplevel minHeight */
++
++/* ----------------------------------------------------------------- **
++** get_cardinals - read a CARDINAL[] property (up to max values)     **
++** ----------------------------------------------------------------- */
++static int get_cardinals(dpy, win, name, values, max)
++Display *dpy;
++Window win;
++char *name;
++long *values;
++int max;
++{
++ Atom type;
++ int format, i, n = 0;
++ unsigned long nitems, after;
++ unsigned char *data = NULL;
++
++ if (XGetWindowProperty(dpy, win, XInternAtom(dpy, name, False), 0, max,
++			False, XA_CARDINAL, &type, &format, &nitems, &after,
++			&data) == Success && data && type == XA_CARDINAL &&
++     format == 32)
++ {
++  n = (int)nitems;
++  for (i = 0; i < n && i < max; i++)
++   values[i] = ((long *)data)[i];	/* Xlib returns format 32 as long */
++ }
++ if (data)
++  XFree(data);
++ return n;
++}
++
++/* ----------------------------------------------------------------- **
++** dock_geometry - geometry string that puts the help window right   **
++** beside the program's main window, with the same height.           **
++** It goes to the left when there is no room on the right, and over  **
++** the monitor's right edge when there is room on neither side.      **
++** ----------------------------------------------------------------- */
++static boolean dock_geometry(dpy, shell, buf)
++Display *dpy;
++Widget shell;
++char *buf;
++{
++ Window win, root, child;
++ XWindowAttributes wa;
++ long ext[4] = { 0, 0, 0, 0 };	/* left, right, top, bottom */
++ long desk = 0, area[4];
++ int cx, cy, fx, fy, fw, fh, ex, ey;
++ int mx, my, mw, mh, x, y, w, h, room;
++
++ if (shell == NULL || (win = XtWindow(shell)) == (Window)0 ||
++     !XGetWindowAttributes(dpy, win, &wa) || wa.map_state != IsViewable)
++  return FALSE;
++ root = wa.root;
++ XTranslateCoordinates(dpy, win, root, 0, 0, &cx, &cy, &child);
++ get_cardinals(dpy, win, "_NET_FRAME_EXTENTS", ext, 4);
++ ex = (int)(ext[0] + ext[1]);
++ ey = (int)(ext[2] + ext[3]);
++ fx = cx - (int)ext[0];
++ fy = cy - (int)ext[2];
++ fw = wa.width + ex;
++ fh = wa.height + ey;
++
++ /* the monitor holding most of the main window */
++ mx = my = 0;
++ mw = WidthOfScreen(wa.screen);
++ mh = HeightOfScreen(wa.screen);
++ {
++  XineramaScreenInfo *mon;
++  int i, n, best = -1;
++  long ov, best_ov = -1;
++
++  if (XineramaIsActive(dpy) && (mon = XineramaQueryScreens(dpy, &n)) != NULL)
++  {
++   for (i = 0; i < n; i++)
++   {
++    int ox = MIN(fx + fw, mon[i].x_org + mon[i].width) - MAX(fx, mon[i].x_org);
++    int oy = MIN(fy + fh, mon[i].y_org + mon[i].height) - MAX(fy, mon[i].y_org);
++
++    ov = (ox > 0 && oy > 0) ? (long)ox * oy : 0;
++    if (ov > best_ov)
++    {
++     best_ov = ov;
++     best = i;
++    }
++   }
++   if (best >= 0)
++   {
++    mx = mon[best].x_org;
++    my = mon[best].y_org;
++    mw = mon[best].width;
++    mh = mon[best].height;
++   }
++   XFree(mon);
++  }
++ }
++
++ /* keep clear of panels: intersect with the current desktop work area */
++ get_cardinals(dpy, root, "_NET_CURRENT_DESKTOP", &desk, 1);
++ if (desk >= 0 && desk < 64)
++ {
++  long all[256];
++  int n = get_cardinals(dpy, root, "_NET_WORKAREA", all, 256);
++
++  if (n >= 4 * (desk + 1))
++  {
++   area[0] = MAX(mx, all[4 * desk]);
++   area[1] = MAX(my, all[4 * desk + 1]);
++   area[2] = MIN(mx + mw, all[4 * desk] + all[4 * desk + 2]);
++   area[3] = MIN(my + mh, all[4 * desk + 1] + all[4 * desk + 3]);
++   if (area[2] - area[0] >= DOCK_MIN_WIDTH + ex &&
++       area[3] - area[1] >= DOCK_MIN_HEIGHT + ey)
++   {
++    mx = (int)area[0];
++    my = (int)area[1];
++    mw = (int)(area[2] - area[0]);
++    mh = (int)(area[3] - area[1]);
++   }
++  }
++ }
++
++ w = DOCK_WIDTH;
++ if ((room = mx + mw - (fx + fw)) >= DOCK_WIDTH + ex)
++  x = fx + fw;			/* right side */
++ else if (fx - mx >= DOCK_WIDTH + ex)
++  x = fx - DOCK_WIDTH - ex;	/* left side */
++ else if (room >= DOCK_MIN_WIDTH + ex && room >= fx - mx)
++ {
++  x = fx + fw;			/* narrower, on the right */
++  w = room - ex;
++ }
++ else if (fx - mx >= DOCK_MIN_WIDTH + ex)
++ {
++  x = mx;			/* narrower, on the left */
++  w = fx - mx - ex;
++ }
++ else
++ {
++  w = MIN(DOCK_WIDTH, mw - ex);	/* overlap, at the monitor's right edge */
++  x = mx + mw - w - ex;
++ }
++
++ y = fy;
++ h = wa.height;
++ if (y < my)
++  y = my;
++ if (y + h + ey > my + mh)
++  h = my + mh - y - ey;
++ if (h < DOCK_MIN_HEIGHT)
++ {
++  y = my;
++  h = MAX(DOCK_MIN_HEIGHT, mh - ey);
++ }
++
++ sprintf(buf, "%dx%d+%d+%d", w, h, x, y);
++ Xc_TRACE(("help window geometry %s", buf));
++ return TRUE;
++}
++#endif
++
+ sf_RegisterHelp fc_RegisterHelp =
+ {
+  cons_RegisterHelp,
+@@ -244,6 +410,8 @@ char *filename;
+  int		_err;
+ #ifndef Xc_XMAYDAY
+  int		height;
++ char		geom[64], dock_opt[80];
++ boolean	docked;
+ #endif
+  
+  full_filename = Xc_malloc("fulfn", strlen(filename) +
+@@ -325,10 +493,13 @@ char *filename;
+      boolean status;
+      char	*xmayday_cmd;
+ 	  
+-     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) + 
+-			     strlen(full_filename) + 28);
+-     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;RAISE",
+-	     This->base_location, full_filename);
++     docked = dock_geometry(This->display, MainInterface1->w_Main, geom);
++     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) +
++			     strlen(full_filename) + 28 + 80);
++     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;%s%s%sRAISE",
++	     This->base_location, full_filename,
++	     docked ? "GEOMETRY=" : "", docked ? geom : "",
++	     docked ? ";" : "");
+ 	  
+      status = xmayday_remote_command(This->display, This->xmayday_window,
+ 				     xmayday_cmd, TRUE);
+@@ -350,17 +521,21 @@ char *filename;
+     strcpy(index_filename, This->base_location);
+     strcat(index_filename, "index.html");
+ 	
+-    height = DisplayHeight(This->display, DefaultScreen(This->display));
+-	
++    /* Docked beside the main window; -dock only applies to the
++       first XMayday window, unlike -geom which every later window
++       of that process would inherit */
++    if (dock_geometry(This->display, MainInterface1->w_Main, geom))
++     sprintf(dock_opt, " -dock %s", geom);
++    else
++     dock_opt[0] = '\0';
++
+     if (MainInterface1->display_name && *MainInterface1->display_name)
+-     sprintf(command_line, "%s -display %s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  MainInterface1->display_name, 
+-	     height - 300, index_filename,
+-	     full_filename); /* XMayday Toplevel minHeight = 200 */
++     sprintf(command_line, "%s -display %s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command,  MainInterface1->display_name,
++	     dock_opt, index_filename, full_filename);
+     else
+-     sprintf(command_line, "%s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  height - 100, index_filename,
+-	     full_filename);
++     sprintf(command_line, "%s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command, dock_opt, index_filename, full_filename);
+     
+     _err = system(command_line);
+     if (_err != -1 && _err != 127)
+diff --git a/XMayday-2.0.1/Sources/RemoteServer/RS_xmayday.h b/XMayday-2.0.1/Sources/RemoteServer/RS_xmayday.h
+index 5f70732..2fc0be2 100644
+--- a/XMayday-2.0.1/Sources/RemoteServer/RS_xmayday.h
++++ b/XMayday-2.0.1/Sources/RemoteServer/RS_xmayday.h
+@@ -50,6 +50,8 @@ static void after_cmd();
+ static boolean hs_index();
+ static boolean hs_url();
+ static boolean hs_raise();
++static boolean hs_geometry();
++extern void XcSetShellGeometry();
+ static boolean hs_exit();
+ 
+ static cmd_parse_t hs_parse[] = 
+@@ -57,6 +59,7 @@ static cmd_parse_t hs_parse[] =
+  { "INDEX", 1, hs_index },
+  { "URL", 1, hs_url },
+  { "RAISE", 0, hs_raise },
++ { "GEOMETRY", 1, hs_geometry },
+  { "EXIT", 1, hs_exit },
+  { "EXIT", 0, hs_exit },
+  { NULL, 0, NULL}
+@@ -159,6 +162,19 @@ char **argv;
+  return TRUE;
+ }
+ 
++/* GEOMETRY=WxH+X+Y: move the window beside the program that asked
++   for help */
++static boolean hs_geometry(This, Interface, argc, argv)
++c_RemoteServer *This;
++c_Interface *Interface;
++int argc;
++char **argv;
++{
++ Xc_TRACE(("GEOMETRY command: %s", argv[0]));
++ XcSetShellGeometry(XtParent(Interface->MainInterface->w_This), argv[0]);
++ return TRUE;
++}
++
+ static boolean hs_exit(This, Interface, argc, argv)
+ c_RemoteServer *This;
+ c_Interface *Interface;
+diff --git a/XQuad-2.0.1/Sources/RegisterHelp/RegisterHelp.c b/XQuad-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+index 73cdcf2..b4dab0a 100644
+--- a/XQuad-2.0.1/Sources/RegisterHelp/RegisterHelp.c
++++ b/XQuad-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+@@ -74,6 +74,172 @@ extern boolean mozilla_remote_free_lock();
+ extern boolean mozilla_remote_command();
+ #endif
+ 
++#ifndef Xc_XMAYDAY
++#include <X11/Xatom.h>
++#include <X11/extensions/Xinerama.h>
++
++/* Client size of a help window docked next to the program */
++#define DOCK_WIDTH	620
++#define DOCK_MIN_WIDTH	420
++#define DOCK_MIN_HEIGHT	200	/* XMayday Toplevel minHeight */
++
++/* ----------------------------------------------------------------- **
++** get_cardinals - read a CARDINAL[] property (up to max values)     **
++** ----------------------------------------------------------------- */
++static int get_cardinals(dpy, win, name, values, max)
++Display *dpy;
++Window win;
++char *name;
++long *values;
++int max;
++{
++ Atom type;
++ int format, i, n = 0;
++ unsigned long nitems, after;
++ unsigned char *data = NULL;
++
++ if (XGetWindowProperty(dpy, win, XInternAtom(dpy, name, False), 0, max,
++			False, XA_CARDINAL, &type, &format, &nitems, &after,
++			&data) == Success && data && type == XA_CARDINAL &&
++     format == 32)
++ {
++  n = (int)nitems;
++  for (i = 0; i < n && i < max; i++)
++   values[i] = ((long *)data)[i];	/* Xlib returns format 32 as long */
++ }
++ if (data)
++  XFree(data);
++ return n;
++}
++
++/* ----------------------------------------------------------------- **
++** dock_geometry - geometry string that puts the help window right   **
++** beside the program's main window, with the same height.           **
++** It goes to the left when there is no room on the right, and over  **
++** the monitor's right edge when there is room on neither side.      **
++** ----------------------------------------------------------------- */
++static boolean dock_geometry(dpy, shell, buf)
++Display *dpy;
++Widget shell;
++char *buf;
++{
++ Window win, root, child;
++ XWindowAttributes wa;
++ long ext[4] = { 0, 0, 0, 0 };	/* left, right, top, bottom */
++ long desk = 0, area[4];
++ int cx, cy, fx, fy, fw, fh, ex, ey;
++ int mx, my, mw, mh, x, y, w, h, room;
++
++ if (shell == NULL || (win = XtWindow(shell)) == (Window)0 ||
++     !XGetWindowAttributes(dpy, win, &wa) || wa.map_state != IsViewable)
++  return FALSE;
++ root = wa.root;
++ XTranslateCoordinates(dpy, win, root, 0, 0, &cx, &cy, &child);
++ get_cardinals(dpy, win, "_NET_FRAME_EXTENTS", ext, 4);
++ ex = (int)(ext[0] + ext[1]);
++ ey = (int)(ext[2] + ext[3]);
++ fx = cx - (int)ext[0];
++ fy = cy - (int)ext[2];
++ fw = wa.width + ex;
++ fh = wa.height + ey;
++
++ /* the monitor holding most of the main window */
++ mx = my = 0;
++ mw = WidthOfScreen(wa.screen);
++ mh = HeightOfScreen(wa.screen);
++ {
++  XineramaScreenInfo *mon;
++  int i, n, best = -1;
++  long ov, best_ov = -1;
++
++  if (XineramaIsActive(dpy) && (mon = XineramaQueryScreens(dpy, &n)) != NULL)
++  {
++   for (i = 0; i < n; i++)
++   {
++    int ox = MIN(fx + fw, mon[i].x_org + mon[i].width) - MAX(fx, mon[i].x_org);
++    int oy = MIN(fy + fh, mon[i].y_org + mon[i].height) - MAX(fy, mon[i].y_org);
++
++    ov = (ox > 0 && oy > 0) ? (long)ox * oy : 0;
++    if (ov > best_ov)
++    {
++     best_ov = ov;
++     best = i;
++    }
++   }
++   if (best >= 0)
++   {
++    mx = mon[best].x_org;
++    my = mon[best].y_org;
++    mw = mon[best].width;
++    mh = mon[best].height;
++   }
++   XFree(mon);
++  }
++ }
++
++ /* keep clear of panels: intersect with the current desktop work area */
++ get_cardinals(dpy, root, "_NET_CURRENT_DESKTOP", &desk, 1);
++ if (desk >= 0 && desk < 64)
++ {
++  long all[256];
++  int n = get_cardinals(dpy, root, "_NET_WORKAREA", all, 256);
++
++  if (n >= 4 * (desk + 1))
++  {
++   area[0] = MAX(mx, all[4 * desk]);
++   area[1] = MAX(my, all[4 * desk + 1]);
++   area[2] = MIN(mx + mw, all[4 * desk] + all[4 * desk + 2]);
++   area[3] = MIN(my + mh, all[4 * desk + 1] + all[4 * desk + 3]);
++   if (area[2] - area[0] >= DOCK_MIN_WIDTH + ex &&
++       area[3] - area[1] >= DOCK_MIN_HEIGHT + ey)
++   {
++    mx = (int)area[0];
++    my = (int)area[1];
++    mw = (int)(area[2] - area[0]);
++    mh = (int)(area[3] - area[1]);
++   }
++  }
++ }
++
++ w = DOCK_WIDTH;
++ if ((room = mx + mw - (fx + fw)) >= DOCK_WIDTH + ex)
++  x = fx + fw;			/* right side */
++ else if (fx - mx >= DOCK_WIDTH + ex)
++  x = fx - DOCK_WIDTH - ex;	/* left side */
++ else if (room >= DOCK_MIN_WIDTH + ex && room >= fx - mx)
++ {
++  x = fx + fw;			/* narrower, on the right */
++  w = room - ex;
++ }
++ else if (fx - mx >= DOCK_MIN_WIDTH + ex)
++ {
++  x = mx;			/* narrower, on the left */
++  w = fx - mx - ex;
++ }
++ else
++ {
++  w = MIN(DOCK_WIDTH, mw - ex);	/* overlap, at the monitor's right edge */
++  x = mx + mw - w - ex;
++ }
++
++ y = fy;
++ h = wa.height;
++ if (y < my)
++  y = my;
++ if (y + h + ey > my + mh)
++  h = my + mh - y - ey;
++ if (h < DOCK_MIN_HEIGHT)
++ {
++  y = my;
++  h = MAX(DOCK_MIN_HEIGHT, mh - ey);
++ }
++
++ sprintf(buf, "%dx%d+%d+%d", w, h, x, y);
++ Xc_TRACE(("help window geometry %s", buf));
++ return TRUE;
++}
++#endif
++
+ sf_RegisterHelp fc_RegisterHelp =
+ {
+  cons_RegisterHelp,
+@@ -244,6 +410,8 @@ char *filename;
+  int		_err;
+ #ifndef Xc_XMAYDAY
+  int		height;
++ char		geom[64], dock_opt[80];
++ boolean	docked;
+ #endif
+  
+  full_filename = Xc_malloc("fulfn", strlen(filename) +
+@@ -325,10 +493,13 @@ char *filename;
+      boolean status;
+      char	*xmayday_cmd;
+ 	  
+-     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) + 
+-			     strlen(full_filename) + 28);
+-     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;RAISE",
+-	     This->base_location, full_filename);
++     docked = dock_geometry(This->display, MainInterface1->w_Main, geom);
++     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) +
++			     strlen(full_filename) + 28 + 80);
++     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;%s%s%sRAISE",
++	     This->base_location, full_filename,
++	     docked ? "GEOMETRY=" : "", docked ? geom : "",
++	     docked ? ";" : "");
+ 	  
+      status = xmayday_remote_command(This->display, This->xmayday_window,
+ 				     xmayday_cmd, TRUE);
+@@ -350,17 +521,21 @@ char *filename;
+     strcpy(index_filename, This->base_location);
+     strcat(index_filename, "index.html");
+ 	
+-    height = DisplayHeight(This->display, DefaultScreen(This->display));
+-	
++    /* Docked beside the main window; -dock only applies to the
++       first XMayday window, unlike -geom which every later window
++       of that process would inherit */
++    if (dock_geometry(This->display, MainInterface1->w_Main, geom))
++     sprintf(dock_opt, " -dock %s", geom);
++    else
++     dock_opt[0] = '\0';
++
+     if (MainInterface1->display_name && *MainInterface1->display_name)
+-     sprintf(command_line, "%s -display %s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  MainInterface1->display_name, 
+-	     height - 300, index_filename,
+-	     full_filename); /* XMayday Toplevel minHeight = 200 */
++     sprintf(command_line, "%s -display %s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command,  MainInterface1->display_name,
++	     dock_opt, index_filename, full_filename);
+     else
+-     sprintf(command_line, "%s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  height - 100, index_filename,
+-	     full_filename);
++     sprintf(command_line, "%s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command, dock_opt, index_filename, full_filename);
+     
+     _err = system(command_line);
+     if (_err != -1 && _err != 127)
+diff --git a/Xclamation-2.0.1/Sources/RegisterHelp/RegisterHelp.c b/Xclamation-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+index 73cdcf2..b4dab0a 100644
+--- a/Xclamation-2.0.1/Sources/RegisterHelp/RegisterHelp.c
++++ b/Xclamation-2.0.1/Sources/RegisterHelp/RegisterHelp.c
+@@ -74,6 +74,172 @@ extern boolean mozilla_remote_free_lock();
+ extern boolean mozilla_remote_command();
+ #endif
+ 
++#ifndef Xc_XMAYDAY
++#include <X11/Xatom.h>
++#include <X11/extensions/Xinerama.h>
++
++/* Client size of a help window docked next to the program */
++#define DOCK_WIDTH	620
++#define DOCK_MIN_WIDTH	420
++#define DOCK_MIN_HEIGHT	200	/* XMayday Toplevel minHeight */
++
++/* ----------------------------------------------------------------- **
++** get_cardinals - read a CARDINAL[] property (up to max values)     **
++** ----------------------------------------------------------------- */
++static int get_cardinals(dpy, win, name, values, max)
++Display *dpy;
++Window win;
++char *name;
++long *values;
++int max;
++{
++ Atom type;
++ int format, i, n = 0;
++ unsigned long nitems, after;
++ unsigned char *data = NULL;
++
++ if (XGetWindowProperty(dpy, win, XInternAtom(dpy, name, False), 0, max,
++			False, XA_CARDINAL, &type, &format, &nitems, &after,
++			&data) == Success && data && type == XA_CARDINAL &&
++     format == 32)
++ {
++  n = (int)nitems;
++  for (i = 0; i < n && i < max; i++)
++   values[i] = ((long *)data)[i];	/* Xlib returns format 32 as long */
++ }
++ if (data)
++  XFree(data);
++ return n;
++}
++
++/* ----------------------------------------------------------------- **
++** dock_geometry - geometry string that puts the help window right   **
++** beside the program's main window, with the same height.           **
++** It goes to the left when there is no room on the right, and over  **
++** the monitor's right edge when there is room on neither side.      **
++** ----------------------------------------------------------------- */
++static boolean dock_geometry(dpy, shell, buf)
++Display *dpy;
++Widget shell;
++char *buf;
++{
++ Window win, root, child;
++ XWindowAttributes wa;
++ long ext[4] = { 0, 0, 0, 0 };	/* left, right, top, bottom */
++ long desk = 0, area[4];
++ int cx, cy, fx, fy, fw, fh, ex, ey;
++ int mx, my, mw, mh, x, y, w, h, room;
++
++ if (shell == NULL || (win = XtWindow(shell)) == (Window)0 ||
++     !XGetWindowAttributes(dpy, win, &wa) || wa.map_state != IsViewable)
++  return FALSE;
++ root = wa.root;
++ XTranslateCoordinates(dpy, win, root, 0, 0, &cx, &cy, &child);
++ get_cardinals(dpy, win, "_NET_FRAME_EXTENTS", ext, 4);
++ ex = (int)(ext[0] + ext[1]);
++ ey = (int)(ext[2] + ext[3]);
++ fx = cx - (int)ext[0];
++ fy = cy - (int)ext[2];
++ fw = wa.width + ex;
++ fh = wa.height + ey;
++
++ /* the monitor holding most of the main window */
++ mx = my = 0;
++ mw = WidthOfScreen(wa.screen);
++ mh = HeightOfScreen(wa.screen);
++ {
++  XineramaScreenInfo *mon;
++  int i, n, best = -1;
++  long ov, best_ov = -1;
++
++  if (XineramaIsActive(dpy) && (mon = XineramaQueryScreens(dpy, &n)) != NULL)
++  {
++   for (i = 0; i < n; i++)
++   {
++    int ox = MIN(fx + fw, mon[i].x_org + mon[i].width) - MAX(fx, mon[i].x_org);
++    int oy = MIN(fy + fh, mon[i].y_org + mon[i].height) - MAX(fy, mon[i].y_org);
++
++    ov = (ox > 0 && oy > 0) ? (long)ox * oy : 0;
++    if (ov > best_ov)
++    {
++     best_ov = ov;
++     best = i;
++    }
++   }
++   if (best >= 0)
++   {
++    mx = mon[best].x_org;
++    my = mon[best].y_org;
++    mw = mon[best].width;
++    mh = mon[best].height;
++   }
++   XFree(mon);
++  }
++ }
++
++ /* keep clear of panels: intersect with the current desktop work area */
++ get_cardinals(dpy, root, "_NET_CURRENT_DESKTOP", &desk, 1);
++ if (desk >= 0 && desk < 64)
++ {
++  long all[256];
++  int n = get_cardinals(dpy, root, "_NET_WORKAREA", all, 256);
++
++  if (n >= 4 * (desk + 1))
++  {
++   area[0] = MAX(mx, all[4 * desk]);
++   area[1] = MAX(my, all[4 * desk + 1]);
++   area[2] = MIN(mx + mw, all[4 * desk] + all[4 * desk + 2]);
++   area[3] = MIN(my + mh, all[4 * desk + 1] + all[4 * desk + 3]);
++   if (area[2] - area[0] >= DOCK_MIN_WIDTH + ex &&
++       area[3] - area[1] >= DOCK_MIN_HEIGHT + ey)
++   {
++    mx = (int)area[0];
++    my = (int)area[1];
++    mw = (int)(area[2] - area[0]);
++    mh = (int)(area[3] - area[1]);
++   }
++  }
++ }
++
++ w = DOCK_WIDTH;
++ if ((room = mx + mw - (fx + fw)) >= DOCK_WIDTH + ex)
++  x = fx + fw;			/* right side */
++ else if (fx - mx >= DOCK_WIDTH + ex)
++  x = fx - DOCK_WIDTH - ex;	/* left side */
++ else if (room >= DOCK_MIN_WIDTH + ex && room >= fx - mx)
++ {
++  x = fx + fw;			/* narrower, on the right */
++  w = room - ex;
++ }
++ else if (fx - mx >= DOCK_MIN_WIDTH + ex)
++ {
++  x = mx;			/* narrower, on the left */
++  w = fx - mx - ex;
++ }
++ else
++ {
++  w = MIN(DOCK_WIDTH, mw - ex);	/* overlap, at the monitor's right edge */
++  x = mx + mw - w - ex;
++ }
++
++ y = fy;
++ h = wa.height;
++ if (y < my)
++  y = my;
++ if (y + h + ey > my + mh)
++  h = my + mh - y - ey;
++ if (h < DOCK_MIN_HEIGHT)
++ {
++  y = my;
++  h = MAX(DOCK_MIN_HEIGHT, mh - ey);
++ }
++
++ sprintf(buf, "%dx%d+%d+%d", w, h, x, y);
++ Xc_TRACE(("help window geometry %s", buf));
++ return TRUE;
++}
++#endif
++
+ sf_RegisterHelp fc_RegisterHelp =
+ {
+  cons_RegisterHelp,
+@@ -244,6 +410,8 @@ char *filename;
+  int		_err;
+ #ifndef Xc_XMAYDAY
+  int		height;
++ char		geom[64], dock_opt[80];
++ boolean	docked;
+ #endif
+  
+  full_filename = Xc_malloc("fulfn", strlen(filename) +
+@@ -325,10 +493,13 @@ char *filename;
+      boolean status;
+      char	*xmayday_cmd;
+ 	  
+-     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) + 
+-			     strlen(full_filename) + 28);
+-     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;RAISE",
+-	     This->base_location, full_filename);
++     docked = dock_geometry(This->display, MainInterface1->w_Main, geom);
++     xmayday_cmd = Xc_malloc("xhlp cmd", strlen(This->base_location) +
++			     strlen(full_filename) + 28 + 80);
++     sprintf(xmayday_cmd, "INDEX=%sindex.html;URL=%s;%s%s%sRAISE",
++	     This->base_location, full_filename,
++	     docked ? "GEOMETRY=" : "", docked ? geom : "",
++	     docked ? ";" : "");
+ 	  
+      status = xmayday_remote_command(This->display, This->xmayday_window,
+ 				     xmayday_cmd, TRUE);
+@@ -350,17 +521,21 @@ char *filename;
+     strcpy(index_filename, This->base_location);
+     strcat(index_filename, "index.html");
+ 	
+-    height = DisplayHeight(This->display, DefaultScreen(This->display));
+-	
++    /* Docked beside the main window; -dock only applies to the
++       first XMayday window, unlike -geom which every later window
++       of that process would inherit */
++    if (dock_geometry(This->display, MainInterface1->w_Main, geom))
++     sprintf(dock_opt, " -dock %s", geom);
++    else
++     dock_opt[0] = '\0';
++
+     if (MainInterface1->display_name && *MainInterface1->display_name)
+-     sprintf(command_line, "%s -display %s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  MainInterface1->display_name, 
+-	     height - 300, index_filename,
+-	     full_filename); /* XMayday Toplevel minHeight = 200 */
++     sprintf(command_line, "%s -display %s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command,  MainInterface1->display_name,
++	     dock_opt, index_filename, full_filename);
+     else
+-     sprintf(command_line, "%s -geom x%d-20+50 -index %s %s 2> /dev/null &",
+-	     cmd_list->command,  height - 100, index_filename,
+-	     full_filename);
++     sprintf(command_line, "%s%s -index %s %s 2> /dev/null &",
++	     cmd_list->command, dock_opt, index_filename, full_filename);
+     
+     _err = system(command_line);
+     if (_err != -1 && _err != 127)

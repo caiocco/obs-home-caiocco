@@ -1,0 +1,27 @@
+--- a/XAllWrite-2.0.1/Sources/Undo/Undo.c	2026-11-12 17:42:32.768590706 -0300
++++ b/XAllWrite-2.0.1/Sources/Undo/Undo.c	2026-11-12 17:42:32.784591781 -0300
+@@ -114,16 +114,14 @@
+  This->pList = NULL;
+  This->gList = NULL;
+ 
+- if (getppid() == (pid_t)1)
+- {
+-  launcher = TRUE;
+-  Xc_TRACE(("Process launched by the Axene Launcher"));
+- }
+- else
+- {
+-  launcher = FALSE;
+-  Xc_TRACE(("Process launched by the shell"));
+- }
++ /* The Axene Launcher master process (Main/launcher.c) is not installed.
++  * The old "parent is init" test now also matches programs started by
++  * the AxeneOffice bar (system("... &")) or by any launcher that
++  * double-forks; the exit handler then ran killpg(0, SIGUSR1) on the
++  * launching process group and killed the window manager or the whole
++  * X session. */
++ launcher = FALSE;
++ Xc_TRACE(("Process launched by the shell"));
+  signal(SIGCHLD, SIG_IGN);
+ #ifdef HAVE_ON_EXIT
+  on_exit(kill_save_process2, (void *)getppid());

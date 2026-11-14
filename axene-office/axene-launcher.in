@@ -1,0 +1,37 @@
+#!/bin/sh
+# Launcher for Axene @APP@ (installed by axene-office)
+#
+# The original installer fixed one language per installation through
+# symlinks.  Here it follows the locale: French, German, Spanish and
+# English (en_GB gets English.uk), anything else falls back to English.us.
+# Set AXENE_LANGUAGE to one of English.us, English.uk, French, German or
+# Spanish to override.
+
+if [ -z "$AXENE_LANGUAGE" ]; then
+	loc=${LC_ALL:-${LC_MESSAGES:-$LANG}}
+	case $loc in
+	fr*) AXENE_LANGUAGE=French ;;
+	de*) AXENE_LANGUAGE=German ;;
+	es*) AXENE_LANGUAGE=Spanish ;;
+	en_GB*) AXENE_LANGUAGE=English.uk ;;
+	*) AXENE_LANGUAGE=English.us ;;
+	esac
+fi
+[ -d "@DATA@/lang/$AXENE_LANGUAGE" ] || AXENE_LANGUAGE=English.us
+
+AXENE_LIB=@DATA@/lang/$AXENE_LANGUAGE
+# The rc files locate the help pages through $<APP>_LIB.  Set it for
+# every program, not only this one: AxeneOffice (and the programs
+# that start each other) look for the executable next to themselves
+# first, so they run @EXEC@/<App> directly, bypassing this script.
+AXENEOFFICE_LIB=$AXENE_LIB XALLWRITE_LIB=$AXENE_LIB XCLAMATION_LIB=$AXENE_LIB
+XQUAD_LIB=$AXENE_LIB XMAYDAY_LIB=$AXENE_LIB
+XKEYSYMDB=${XKEYSYMDB:-@DATA@/X11/XKeysymDB}
+case ":$XFILESEARCHPATH:" in
+*":$AXENE_LIB/app-defaults/%N:"*) ;;
+*) XFILESEARCHPATH=$AXENE_LIB/app-defaults/%N${XFILESEARCHPATH:+:$XFILESEARCHPATH} ;;
+esac
+export AXENE_LANGUAGE AXENE_LIB XKEYSYMDB XFILESEARCHPATH \
+	AXENEOFFICE_LIB XALLWRITE_LIB XCLAMATION_LIB XQUAD_LIB XMAYDAY_LIB
+
+exec @EXEC@/@APP@ "$@"

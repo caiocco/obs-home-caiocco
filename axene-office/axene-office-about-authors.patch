@@ -1,0 +1,432 @@
+diff --git a/XAllWrite-2.0.1/Sources/AD/ADInside b/XAllWrite-2.0.1/Sources/AD/ADInside
+index 2fbbeaf..3d96475 100644
+--- a/XAllWrite-2.0.1/Sources/AD/ADInside
++++ b/XAllWrite-2.0.1/Sources/AD/ADInside
+@@ -337,10 +337,7 @@
+ 
+ *BoxInsertChar.geometry:			-0+0
+ 
+-*aboutCommentsMsg:	EMail: contact@axene.org\n\
+-Troubles: support@axene.org\n\
+-http://www.axene.org/\n\
+-ftp://ftp.axene.org/
++! aboutCommentsMsg is in ADTongue.<language> (translated authors line)
+ 
+ *lStartupMessage.labelString:  	 ©1997-1999 Axene.
+ 
+diff --git a/XAllWrite-2.0.1/Sources/AD/ADParameters b/XAllWrite-2.0.1/Sources/AD/ADParameters
+index 1159177..5eb47ee 100644
+--- a/XAllWrite-2.0.1/Sources/AD/ADParameters
++++ b/XAllWrite-2.0.1/Sources/AD/ADParameters
+@@ -28,8 +28,8 @@
+ *lBRegisterAdress.fontList:	-*-helvetica-medium-*-*-*-14-*-*-*-*-*-iso8859-1
+ *lTitleStartup.fontList:	-*-helvetica-*-*-*-*-24-*-*-*-*-*-iso8859-1
+ *lPleaseWait.fontList:		-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+-*lStartupMessage.fontList:	-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+-*BottomBar*fontList:		-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
++*lStartupMessage.fontList:	-*-helvetica-medium-o-*-*-18-*-*-*-*-*-iso8859-1
++*BottomBar*fontList:		-*-helvetica-medium-o-*-*-18-*-*-*-*-*-iso8859-1
+ *lAboutRelease.fontList:	-*-helvetica-*-*-*-*-18-*-*-*-*-*-iso8859-1
+ *lAboutEnd.fontList:		-*-helvetica-bold-o-*-*-14-*-*-*-*-*-iso8859-1
+ *lAboutTitle.fontList:		-*-helvetica-*-*-*-*-18-*-*-*-*-*-iso8859-1
+diff --git a/XAllWrite-2.0.1/Sources/AD/ADTongue.english b/XAllWrite-2.0.1/Sources/AD/ADTongue.english
+index 0a3584c..d1f8b07 100644
+--- a/XAllWrite-2.0.1/Sources/AD/ADTongue.english
++++ b/XAllWrite-2.0.1/Sources/AD/ADTongue.english
+@@ -664,3 +664,10 @@ You can download help files on ftp.axene.org /pub/xallwrite/doc/
+ *action_area.Continue.labelString:	Continue
+ *action_area.Quit.labelString:		Exit
+ *action_area.Save as.labelString:	Save as...
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Authors: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XAllWrite-2.0.1/Sources/AD/ADTongue.french b/XAllWrite-2.0.1/Sources/AD/ADTongue.french
+index 2788394..e4c6490 100644
+--- a/XAllWrite-2.0.1/Sources/AD/ADTongue.french
++++ b/XAllWrite-2.0.1/Sources/AD/ADTongue.french
+@@ -687,3 +687,10 @@ Vous pouvez t
+ *action_area.Quit.labelString:		Quitter
+ *action_area.Save as.labelString:	Sauver sous...
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Auteurs : Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XAllWrite-2.0.1/Sources/AD/ADTongue.german b/XAllWrite-2.0.1/Sources/AD/ADTongue.german
+index 4423ffe..9e42da0 100644
+--- a/XAllWrite-2.0.1/Sources/AD/ADTongue.german
++++ b/XAllWrite-2.0.1/Sources/AD/ADTongue.german
+@@ -403,3 +403,10 @@ Request a free demonstration key on http://www.axene.org/
+ *action_area.Continue.labelString:	Continue
+ *action_area.Quit.labelString:		Exit
+ *action_area.Save as.labelString:	Save as...
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Autoren: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XAllWrite-2.0.1/Sources/AD/ADTongue.spanish b/XAllWrite-2.0.1/Sources/AD/ADTongue.spanish
+index 61f32e3..da298f5 100644
+--- a/XAllWrite-2.0.1/Sources/AD/ADTongue.spanish
++++ b/XAllWrite-2.0.1/Sources/AD/ADTongue.spanish
+@@ -660,3 +660,10 @@ You can download help files on ftp.axene.org /pub/xallwrite/doc/
+ *action_area.Continue.labelString:	Continue
+ *action_area.Quit.labelString:		Exit
+ *action_area.Save as.labelString:	Save as...
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Autores: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XAllWrite-2.0.1/Sources/Box_about/Box_about.c b/XAllWrite-2.0.1/Sources/Box_about/Box_about.c
+index 43380c6..3c8d66a 100644
+--- a/XAllWrite-2.0.1/Sources/Box_about/Box_about.c
++++ b/XAllWrite-2.0.1/Sources/Box_about/Box_about.c
+@@ -177,7 +177,7 @@ char   *pszTitle;
+ 	 MAJOR, MINOR);
+ #endif
+ 
+- sprintf(pszVlabel, "%s   (%s/%s)" , pszVlabel, 
++ sprintf(pszVlabel + strlen(pszVlabel), "   (%s/%s)",
+ 	 MAKE_DATE_MONTH, MAKE_DATE_YEAR);
+ 
+  xmsBaratin = XmStringCreate(pszVlabel, XmSTRING_DEFAULT_CHARSET);
+diff --git a/XMayday-2.0.1/Sources/AD/ADInside b/XMayday-2.0.1/Sources/AD/ADInside
+index bc96efa..8fbef98 100644
+--- a/XMayday-2.0.1/Sources/AD/ADInside
++++ b/XMayday-2.0.1/Sources/AD/ADInside
+@@ -192,8 +192,5 @@
+ 
+ *XmPanedWindow.spacing:				14
+ 
+-*aboutCommentsMsg:	EMail: contact@axene.org\n\
+-Bug-report: support@axene.org\n\
+-http://www.axene.org/\n\
+-ftp://ftp.axene.org/
++! aboutCommentsMsg is in ADTongue.<language> (translated authors line)
+ 
+diff --git a/XMayday-2.0.1/Sources/AD/ADParameters b/XMayday-2.0.1/Sources/AD/ADParameters
+index 7054c8d..fbda09f 100644
+--- a/XMayday-2.0.1/Sources/AD/ADParameters
++++ b/XMayday-2.0.1/Sources/AD/ADParameters
+@@ -16,7 +16,7 @@
+ *FSTitle.fontList:		-*-helvetica-bold-o-*-*-14-*-*-*-*-*-iso8859-1
+ *FSList.fontList:		-*-lucidatypewriter-*-*-*-*-12-*-*-*-*-*-iso8859-1
+ *FSEditor.fontList:		-*-lucidatypewriter-*-*-*-*-12-*-*-*-*-*-iso8859-1
+-*BottomBar*fontList:		-*-helvetica-medium-*-*-*-14-*-*-*-*-*-iso8859-1
++*BottomBar*fontList:		-*-helvetica-medium-o-*-*-14-*-*-*-*-*-iso8859-1
+ *lAboutRelease.fontList:	-*-helvetica-*-*-*-*-18-*-*-*-*-*-iso8859-1
+ *lAboutEnd.fontList:		-*-helvetica-bold-o-*-*-14-*-*-*-*-*-iso8859-1
+ *lAboutTitle.fontList:		-*-helvetica-*-*-*-*-18-*-*-*-*-*-iso8859-1
+diff --git a/XMayday-2.0.1/Sources/AD/ADTongue.english b/XMayday-2.0.1/Sources/AD/ADTongue.english
+index 567994a..9bbe212 100644
+--- a/XMayday-2.0.1/Sources/AD/ADTongue.english
++++ b/XMayday-2.0.1/Sources/AD/ADTongue.english
+@@ -220,3 +220,10 @@ You can download help files on ftp.axene.org /pub/xmayday/doc/
+ 
+ 
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bug-report: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Authors: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XMayday-2.0.1/Sources/AD/ADTongue.french b/XMayday-2.0.1/Sources/AD/ADTongue.french
+index b7edaa6..79b1530 100644
+--- a/XMayday-2.0.1/Sources/AD/ADTongue.french
++++ b/XMayday-2.0.1/Sources/AD/ADTongue.french
+@@ -214,3 +214,10 @@ Vous pouvez t
+ 
+ 
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bug-report: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Auteurs : Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XMayday-2.0.1/Sources/AD/ADTongue.german b/XMayday-2.0.1/Sources/AD/ADTongue.german
+index 3ae8aac..fe5a2d0 100644
+--- a/XMayday-2.0.1/Sources/AD/ADTongue.german
++++ b/XMayday-2.0.1/Sources/AD/ADTongue.german
+@@ -210,3 +210,10 @@ Hilfe-Dateien k
+ 
+ 
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bug-report: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Autoren: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XMayday-2.0.1/Sources/AD/ADTongue.spanish b/XMayday-2.0.1/Sources/AD/ADTongue.spanish
+index c8b8011..ee864b1 100644
+--- a/XMayday-2.0.1/Sources/AD/ADTongue.spanish
++++ b/XMayday-2.0.1/Sources/AD/ADTongue.spanish
+@@ -207,3 +207,10 @@ Puede usted telecargar la ayuda a partir de ftp.axene.org /pub/xmayday/doc/
+ *helpPrintMsg:			Imprimir la página|Imprimir
+ 
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bug-report: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Autores: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XMayday-2.0.1/Sources/Box_about/Box_about.c b/XMayday-2.0.1/Sources/Box_about/Box_about.c
+index 43380c6..3c8d66a 100644
+--- a/XMayday-2.0.1/Sources/Box_about/Box_about.c
++++ b/XMayday-2.0.1/Sources/Box_about/Box_about.c
+@@ -177,7 +177,7 @@ char   *pszTitle;
+ 	 MAJOR, MINOR);
+ #endif
+ 
+- sprintf(pszVlabel, "%s   (%s/%s)" , pszVlabel, 
++ sprintf(pszVlabel + strlen(pszVlabel), "   (%s/%s)",
+ 	 MAKE_DATE_MONTH, MAKE_DATE_YEAR);
+ 
+  xmsBaratin = XmStringCreate(pszVlabel, XmSTRING_DEFAULT_CHARSET);
+diff --git a/XQuad-2.0.1/Sources/AD/ADInside b/XQuad-2.0.1/Sources/AD/ADInside
+index dcedb82..de03418 100644
+--- a/XQuad-2.0.1/Sources/AD/ADInside
++++ b/XQuad-2.0.1/Sources/AD/ADInside
+@@ -430,10 +430,7 @@
+ *XmToggleButton.indicatorOn:			False
+ 
+ *lStartupMessage.labelString:  ©1995-99 Axene.
+-*aboutCommentsMsg:	EMail: contact@axene.org\n\
+-Bugs-report: xquad-bugs@axene.org\n\
+-http://www.axene.org/\n\
+-ftp://www.axene.org/
++! aboutCommentsMsg is in ADTongue.<language> (translated authors line)
+ 
+ *gBLFrame2_1*marginHeight:			0
+ *gBLFrame2_1*marginWidth:			0
+diff --git a/XQuad-2.0.1/Sources/AD/ADParameters b/XQuad-2.0.1/Sources/AD/ADParameters
+index 1b2d9af..c0a8590 100644
+--- a/XQuad-2.0.1/Sources/AD/ADParameters
++++ b/XQuad-2.0.1/Sources/AD/ADParameters
+@@ -25,8 +25,8 @@
+ *XmFrame.XmToggleButtonGadget.fontList: -*-helvetica-medium-*-*-*-10-*-*-*-*-*-iso8859-1
+ *lTitleStartup.fontList:	-*-helvetica-*-*-*-*-24-*-*-*-*-*-iso8859-1
+ *lPleaseWait.fontList:		-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+-*lStartupMessage.fontList:	-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+-*BottomBar*fontList:		-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
++*lStartupMessage.fontList:	-*-helvetica-medium-o-*-*-18-*-*-*-*-*-iso8859-1
++*BottomBar*fontList:		-*-helvetica-medium-o-*-*-18-*-*-*-*-*-iso8859-1
+ *tfEditBar.fontList:		-*-lucidatypewriter-*-*-*-*-12-*-*-*-*-*-iso8859-1
+ *lPositionLabel.fontList:	-*-helvetica-medium-r-*-*-18-*-*-*-*-*-iso8859-1
+ *lAboutRelease.fontList:	-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+diff --git a/XQuad-2.0.1/Sources/AD/ADTongue.english b/XQuad-2.0.1/Sources/AD/ADTongue.english
+index a802ec0..e3bf8ec 100644
+--- a/XQuad-2.0.1/Sources/AD/ADTongue.english
++++ b/XQuad-2.0.1/Sources/AD/ADTongue.english
+@@ -1086,3 +1086,10 @@ Request a free demonstration key on http://www.axene.org/
+ *falseMsg:		False
+ 
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bugs-report: xquad-bugs@axene.org\n\
++http://www.axene.org/\n\
++ftp://www.axene.org/\n\
++Authors: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XQuad-2.0.1/Sources/AD/ADTongue.french b/XQuad-2.0.1/Sources/AD/ADTongue.french
+index 0c3a6c7..b8f9967 100644
+--- a/XQuad-2.0.1/Sources/AD/ADTongue.french
++++ b/XQuad-2.0.1/Sources/AD/ADTongue.french
+@@ -1085,3 +1085,10 @@ http://www.axene.org/french/freekey.html
+ *trueMsg:		Vrai
+ *falseMsg:		Faux
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bugs-report: xquad-bugs@axene.org\n\
++http://www.axene.org/\n\
++ftp://www.axene.org/\n\
++Auteurs : Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XQuad-2.0.1/Sources/AD/ADTongue.german b/XQuad-2.0.1/Sources/AD/ADTongue.german
+index d8aaa61..3ea6643 100644
+--- a/XQuad-2.0.1/Sources/AD/ADTongue.german
++++ b/XQuad-2.0.1/Sources/AD/ADTongue.german
+@@ -1075,3 +1075,10 @@ http://www.axene.org/german/freekey.html
+ *trueMsg:		Wahr
+ *falseMsg:		Falsch
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bugs-report: xquad-bugs@axene.org\n\
++http://www.axene.org/\n\
++ftp://www.axene.org/\n\
++Autoren: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XQuad-2.0.1/Sources/AD/ADTongue.spanish b/XQuad-2.0.1/Sources/AD/ADTongue.spanish
+index e3ad55c..ec7f9e6 100644
+--- a/XQuad-2.0.1/Sources/AD/ADTongue.spanish
++++ b/XQuad-2.0.1/Sources/AD/ADTongue.spanish
+@@ -1075,3 +1075,10 @@ http://www.axene.org/spanish/freekey.html
+ *trueMsg:		Verdadero
+ *falseMsg:		Falso
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Bugs-report: xquad-bugs@axene.org\n\
++http://www.axene.org/\n\
++ftp://www.axene.org/\n\
++Autores: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/XQuad-2.0.1/Sources/Box_about/Box_about.c b/XQuad-2.0.1/Sources/Box_about/Box_about.c
+index 43380c6..3c8d66a 100644
+--- a/XQuad-2.0.1/Sources/Box_about/Box_about.c
++++ b/XQuad-2.0.1/Sources/Box_about/Box_about.c
+@@ -177,7 +177,7 @@ char   *pszTitle;
+ 	 MAJOR, MINOR);
+ #endif
+ 
+- sprintf(pszVlabel, "%s   (%s/%s)" , pszVlabel, 
++ sprintf(pszVlabel + strlen(pszVlabel), "   (%s/%s)",
+ 	 MAKE_DATE_MONTH, MAKE_DATE_YEAR);
+ 
+  xmsBaratin = XmStringCreate(pszVlabel, XmSTRING_DEFAULT_CHARSET);
+diff --git a/Xclamation-2.0.1/Sources/AD/ADInside b/Xclamation-2.0.1/Sources/AD/ADInside
+index 6447bc0..deec4c2 100644
+--- a/Xclamation-2.0.1/Sources/AD/ADInside
++++ b/Xclamation-2.0.1/Sources/AD/ADInside
+@@ -351,10 +351,7 @@
+ *AEditor*XmText.cursorPositionVisible:		True
+ *BoxInsertChar.geometry:			-0+0
+ 
+-*aboutCommentsMsg:	EMail: contact@axene.org\n\
+-Troubles: support@axene.org\n\
+-http://www.axene.org/\n\
+-ftp://ftp.axene.org/
++! aboutCommentsMsg is in ADTongue.<language> (translated authors line)
+ 
+ *lStartupMessage.labelString:   ©1994-1999 Axene.
+ 
+diff --git a/Xclamation-2.0.1/Sources/AD/ADParameters b/Xclamation-2.0.1/Sources/AD/ADParameters
+index ed9af9a..7c8bdd5 100644
+--- a/Xclamation-2.0.1/Sources/AD/ADParameters
++++ b/Xclamation-2.0.1/Sources/AD/ADParameters
+@@ -34,8 +34,8 @@
+ *lBRegisterAdress.fontList:	-*-helvetica-medium-*-*-*-14-*-*-*-*-*-iso8859-1
+ *lTitleStartup.fontList:	-*-helvetica-*-*-*-*-24-*-*-*-*-*-iso8859-1
+ *lPleaseWait.fontList:		-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+-*lStartupMessage.fontList:	-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
+-*BottomBar*fontList:		-*-helvetica-medium-*-*-*-18-*-*-*-*-*-iso8859-1
++*lStartupMessage.fontList:	-*-helvetica-medium-o-*-*-18-*-*-*-*-*-iso8859-1
++*BottomBar*fontList:		-*-helvetica-medium-o-*-*-18-*-*-*-*-*-iso8859-1
+ *lAboutRelease.fontList:	-*-helvetica-*-*-*-*-18-*-*-*-*-*-iso8859-1
+ *lAboutEnd.fontList:		-*-helvetica-bold-o-*-*-14-*-*-*-*-*-iso8859-1
+ *lAboutTitle.fontList:		-*-helvetica-*-*-*-*-18-*-*-*-*-*-iso8859-1
+diff --git a/Xclamation-2.0.1/Sources/AD/ADTongue.english b/Xclamation-2.0.1/Sources/AD/ADTongue.english
+index 345087a..940c21c 100644
+--- a/Xclamation-2.0.1/Sources/AD/ADTongue.english
++++ b/Xclamation-2.0.1/Sources/AD/ADTongue.english
+@@ -765,3 +765,10 @@ You can download help files on ftp.axene.org /pub/xclamation/doc/
+ *action_area.Continue.labelString:	Continue
+ *action_area.Quit.labelString:		Exit
+ *action_area.Save as.labelString:	Save as...
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Authors: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/Xclamation-2.0.1/Sources/AD/ADTongue.french b/Xclamation-2.0.1/Sources/AD/ADTongue.french
+index 7698092..9bd510e 100644
+--- a/Xclamation-2.0.1/Sources/AD/ADTongue.french
++++ b/Xclamation-2.0.1/Sources/AD/ADTongue.french
+@@ -787,3 +787,10 @@ Vous pouvez t
+ 
+ 
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Auteurs : Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/Xclamation-2.0.1/Sources/AD/ADTongue.german b/Xclamation-2.0.1/Sources/AD/ADTongue.german
+index 36c97fa..d2f3f72 100644
+--- a/Xclamation-2.0.1/Sources/AD/ADTongue.german
++++ b/Xclamation-2.0.1/Sources/AD/ADTongue.german
+@@ -741,3 +741,10 @@ http://www.axene.org/german/freekey.html
+ *action_area.Quit.labelString:		Beenden
+ *action_area.Save as.labelString:	Speichern unter...
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Autoren: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/Xclamation-2.0.1/Sources/AD/ADTongue.spanish b/Xclamation-2.0.1/Sources/AD/ADTongue.spanish
+index ffdeed9..4fe1656 100644
+--- a/Xclamation-2.0.1/Sources/AD/ADTongue.spanish
++++ b/Xclamation-2.0.1/Sources/AD/ADTongue.spanish
+@@ -747,3 +747,10 @@ http://www.axene.org/spanish/freekey.html
+ *action_area.Quit.labelString:		Salir
+ *action_area.Save as.labelString:	Salvaguardar bajo...
+ 
++
++*aboutCommentsMsg:	EMail: contact@axene.org\n\
++Troubles: support@axene.org\n\
++http://www.axene.org/\n\
++ftp://ftp.axene.org/\n\
++Autores: Stéphane Boisson, Antoine Buat,\n\
++Robin Castanier, Emmanuel Paris
+diff --git a/Xclamation-2.0.1/Sources/Box_about/Box_about.c b/Xclamation-2.0.1/Sources/Box_about/Box_about.c
+index 43380c6..3c8d66a 100644
+--- a/Xclamation-2.0.1/Sources/Box_about/Box_about.c
++++ b/Xclamation-2.0.1/Sources/Box_about/Box_about.c
+@@ -177,7 +177,7 @@ char   *pszTitle;
+ 	 MAJOR, MINOR);
+ #endif
+ 
+- sprintf(pszVlabel, "%s   (%s/%s)" , pszVlabel, 
++ sprintf(pszVlabel + strlen(pszVlabel), "   (%s/%s)",
+ 	 MAKE_DATE_MONTH, MAKE_DATE_YEAR);
+ 
+  xmsBaratin = XmStringCreate(pszVlabel, XmSTRING_DEFAULT_CHARSET);
+diff --git a/Xclamation-2.0.1/Sources/Main/main.c b/Xclamation-2.0.1/Sources/Main/main.c
+index 5486347..22a9f54 100644
+--- a/Xclamation-2.0.1/Sources/Main/main.c
++++ b/Xclamation-2.0.1/Sources/Main/main.c
+@@ -1935,7 +1935,6 @@ char **argv;
+ 		   "mRegistration", MHel_MAILINGLIST,
+ 		   MENUSEPARATOR, MHel_SEP4,
+ 		   "mAbout", MHel_ABOUT,
+-		   "mAuthor", MHel_AUTHOR,
+ 		   NULL); 
+   
+  XtSetArg(args[0], XmNmenuHelpWidget, MenuHel->w_Cascade);
+@@ -1950,7 +1949,6 @@ char **argv;
+  F(MenuHel).AddCallback(MenuHel, MHel_LICENSE, MenuHelpLegal, NULL);
+  F(MenuHel).AddCallback(MenuHel, MHel_MAILINGLIST, MenuHelpRegistration, NULL);
+  F(MenuHel).AddCallback(MenuHel, MHel_ABOUT, MenuHelpAbout, NULL);
+- F(MenuHel).AddCallback(MenuHel, MHel_AUTHOR, MenuHelpAuthor, NULL);
+ 
+  XtAddCallback(WIDGET(MenuHel), XmNmapCallback,
+ 	       (XtCallbackProc)cb_focus_motif, NULL);

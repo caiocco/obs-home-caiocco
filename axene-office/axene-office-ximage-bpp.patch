@@ -1,0 +1,65 @@
+diff --git a/AxeneOffice-2.0.1/Sources/ImageManager/ImageManager.c b/AxeneOffice-2.0.1/Sources/ImageManager/ImageManager.c
+index 9263cec..59527de 100644
+--- a/AxeneOffice-2.0.1/Sources/ImageManager/ImageManager.c
++++ b/AxeneOffice-2.0.1/Sources/ImageManager/ImageManager.c
+@@ -231,7 +231,7 @@ boolean		xshm_flag;
+  if (this->real_depth > 8)
+  {
+   ximage = XCreateImage(display, None, this->real_depth, ZPixmap,
+-			0, NULL, 16, 16, 8, 2);
++			0, NULL, 16, 16, 8, 0);
+   if(ximage != NULL)
+   {
+    this->real_depth = ximage->bits_per_pixel;
+diff --git a/XAllWrite-2.0.1/Sources/ImageManager/ImageManager.c b/XAllWrite-2.0.1/Sources/ImageManager/ImageManager.c
+index 9263cec..59527de 100644
+--- a/XAllWrite-2.0.1/Sources/ImageManager/ImageManager.c
++++ b/XAllWrite-2.0.1/Sources/ImageManager/ImageManager.c
+@@ -231,7 +231,7 @@ boolean		xshm_flag;
+  if (this->real_depth > 8)
+  {
+   ximage = XCreateImage(display, None, this->real_depth, ZPixmap,
+-			0, NULL, 16, 16, 8, 2);
++			0, NULL, 16, 16, 8, 0);
+   if(ximage != NULL)
+   {
+    this->real_depth = ximage->bits_per_pixel;
+diff --git a/XMayday-2.0.1/Sources/ImageManager/ImageManager.c b/XMayday-2.0.1/Sources/ImageManager/ImageManager.c
+index 9263cec..59527de 100644
+--- a/XMayday-2.0.1/Sources/ImageManager/ImageManager.c
++++ b/XMayday-2.0.1/Sources/ImageManager/ImageManager.c
+@@ -231,7 +231,7 @@ boolean		xshm_flag;
+  if (this->real_depth > 8)
+  {
+   ximage = XCreateImage(display, None, this->real_depth, ZPixmap,
+-			0, NULL, 16, 16, 8, 2);
++			0, NULL, 16, 16, 8, 0);
+   if(ximage != NULL)
+   {
+    this->real_depth = ximage->bits_per_pixel;
+diff --git a/XQuad-2.0.1/Sources/ImageManager/ImageManager.c b/XQuad-2.0.1/Sources/ImageManager/ImageManager.c
+index 9263cec..59527de 100644
+--- a/XQuad-2.0.1/Sources/ImageManager/ImageManager.c
++++ b/XQuad-2.0.1/Sources/ImageManager/ImageManager.c
+@@ -231,7 +231,7 @@ boolean		xshm_flag;
+  if (this->real_depth > 8)
+  {
+   ximage = XCreateImage(display, None, this->real_depth, ZPixmap,
+-			0, NULL, 16, 16, 8, 2);
++			0, NULL, 16, 16, 8, 0);
+   if(ximage != NULL)
+   {
+    this->real_depth = ximage->bits_per_pixel;
+diff --git a/Xclamation-2.0.1/Sources/ImageManager/ImageManager.c b/Xclamation-2.0.1/Sources/ImageManager/ImageManager.c
+index 9263cec..59527de 100644
+--- a/Xclamation-2.0.1/Sources/ImageManager/ImageManager.c
++++ b/Xclamation-2.0.1/Sources/ImageManager/ImageManager.c
+@@ -231,7 +231,7 @@ boolean		xshm_flag;
+  if (this->real_depth > 8)
+  {
+   ximage = XCreateImage(display, None, this->real_depth, ZPixmap,
+-			0, NULL, 16, 16, 8, 2);
++			0, NULL, 16, 16, 8, 0);
+   if(ximage != NULL)
+   {
+    this->real_depth = ximage->bits_per_pixel;

@@ -1,0 +1,150 @@
+diff --git a/XAllWrite-2.0.1/Sources/RC/RC.FONTS b/XAllWrite-2.0.1/Sources/RC/RC.FONTS
+index ef1a204..4d59fae 100644
+--- a/XAllWrite-2.0.1/Sources/RC/RC.FONTS
++++ b/XAllWrite-2.0.1/Sources/RC/RC.FONTS
+@@ -56,6 +56,45 @@
+ \FONT{Utopia-BoldItalic \FULLNAME{Utopia Bold Italic} 
+ 	\FAMILY{Utopia} \BOLD_ITALIC \DOWNLOAD putbi.pfa}
+ 
++\FONT{Bookman-Light
++	\FULLNAME{ITC Bookman Light}
++	\FAMILY{ITC Bookman} \NORMAL
++	Bookman-Light.pfb}
++\FONT{Bookman-Demi
++	\FULLNAME{ITC Bookman Demi}
++	\FAMILY{ITC Bookman} \BOLD
++	Bookman-Demi.pfb}
++\FONT{Bookman-LightItalic
++	\FULLNAME{ITC Bookman Light Italic}
++	\FAMILY{ITC Bookman} \ITALIC
++	Bookman-LightItalic.pfb}
++\FONT{Bookman-DemiItalic
++	\FULLNAME{ITC Bookman Demi Italic}
++	\FAMILY{ITC Bookman} \BOLD_ITALIC
++	Bookman-DemiItalic.pfb}
++
++\FONT{Palatino-Roman
++	\FULLNAME{Palatino Roman}
++	\FAMILY{Palatino} \NORMAL
++	Palatino-Roman.pfb}
++\FONT{Palatino-Bold
++	\FULLNAME{Palatino Bold}
++	\FAMILY{Palatino} \BOLD
++	Palatino-Bold.pfb}
++\FONT{Palatino-Italic
++	\FULLNAME{Palatino Italic}
++	\FAMILY{Palatino} \ITALIC
++	Palatino-Italic.pfb}
++\FONT{Palatino-BoldItalic
++	\FULLNAME{Palatino Bold Italic}
++	\FAMILY{Palatino} \BOLD_ITALIC
++	Palatino-BoldItalic.pfb}
++
++\FONT{ZapfChancery-MediumItalic
++	\FULLNAME{ITC Zapf Chancery Medium Italic}
++	\FAMILY{ITC Zapf Chancery} \NORMAL
++	ZapfChancery-MediumItalic.pfb}
++
+ \FONT{Courier
+ 	\FULLNAME{Courier}
+ 	\FAMILY{Courier} \NORMAL
+diff --git a/XQuad-2.0.1/Sources/RC/RC.FONTS b/XQuad-2.0.1/Sources/RC/RC.FONTS
+index ef1a204..4d59fae 100644
+--- a/XQuad-2.0.1/Sources/RC/RC.FONTS
++++ b/XQuad-2.0.1/Sources/RC/RC.FONTS
+@@ -56,6 +56,45 @@
+ \FONT{Utopia-BoldItalic \FULLNAME{Utopia Bold Italic} 
+ 	\FAMILY{Utopia} \BOLD_ITALIC \DOWNLOAD putbi.pfa}
+ 
++\FONT{Bookman-Light
++	\FULLNAME{ITC Bookman Light}
++	\FAMILY{ITC Bookman} \NORMAL
++	Bookman-Light.pfb}
++\FONT{Bookman-Demi
++	\FULLNAME{ITC Bookman Demi}
++	\FAMILY{ITC Bookman} \BOLD
++	Bookman-Demi.pfb}
++\FONT{Bookman-LightItalic
++	\FULLNAME{ITC Bookman Light Italic}
++	\FAMILY{ITC Bookman} \ITALIC
++	Bookman-LightItalic.pfb}
++\FONT{Bookman-DemiItalic
++	\FULLNAME{ITC Bookman Demi Italic}
++	\FAMILY{ITC Bookman} \BOLD_ITALIC
++	Bookman-DemiItalic.pfb}
++
++\FONT{Palatino-Roman
++	\FULLNAME{Palatino Roman}
++	\FAMILY{Palatino} \NORMAL
++	Palatino-Roman.pfb}
++\FONT{Palatino-Bold
++	\FULLNAME{Palatino Bold}
++	\FAMILY{Palatino} \BOLD
++	Palatino-Bold.pfb}
++\FONT{Palatino-Italic
++	\FULLNAME{Palatino Italic}
++	\FAMILY{Palatino} \ITALIC
++	Palatino-Italic.pfb}
++\FONT{Palatino-BoldItalic
++	\FULLNAME{Palatino Bold Italic}
++	\FAMILY{Palatino} \BOLD_ITALIC
++	Palatino-BoldItalic.pfb}
++
++\FONT{ZapfChancery-MediumItalic
++	\FULLNAME{ITC Zapf Chancery Medium Italic}
++	\FAMILY{ITC Zapf Chancery} \NORMAL
++	ZapfChancery-MediumItalic.pfb}
++
+ \FONT{Courier
+ 	\FULLNAME{Courier}
+ 	\FAMILY{Courier} \NORMAL
+diff --git a/Xclamation-2.0.1/Sources/RC/RC.FONTS b/Xclamation-2.0.1/Sources/RC/RC.FONTS
+index ef1a204..4d59fae 100644
+--- a/Xclamation-2.0.1/Sources/RC/RC.FONTS
++++ b/Xclamation-2.0.1/Sources/RC/RC.FONTS
+@@ -56,6 +56,45 @@
+ \FONT{Utopia-BoldItalic \FULLNAME{Utopia Bold Italic} 
+ 	\FAMILY{Utopia} \BOLD_ITALIC \DOWNLOAD putbi.pfa}
+ 
++\FONT{Bookman-Light
++	\FULLNAME{ITC Bookman Light}
++	\FAMILY{ITC Bookman} \NORMAL
++	Bookman-Light.pfb}
++\FONT{Bookman-Demi
++	\FULLNAME{ITC Bookman Demi}
++	\FAMILY{ITC Bookman} \BOLD
++	Bookman-Demi.pfb}
++\FONT{Bookman-LightItalic
++	\FULLNAME{ITC Bookman Light Italic}
++	\FAMILY{ITC Bookman} \ITALIC
++	Bookman-LightItalic.pfb}
++\FONT{Bookman-DemiItalic
++	\FULLNAME{ITC Bookman Demi Italic}
++	\FAMILY{ITC Bookman} \BOLD_ITALIC
++	Bookman-DemiItalic.pfb}
++
++\FONT{Palatino-Roman
++	\FULLNAME{Palatino Roman}
++	\FAMILY{Palatino} \NORMAL
++	Palatino-Roman.pfb}
++\FONT{Palatino-Bold
++	\FULLNAME{Palatino Bold}
++	\FAMILY{Palatino} \BOLD
++	Palatino-Bold.pfb}
++\FONT{Palatino-Italic
++	\FULLNAME{Palatino Italic}
++	\FAMILY{Palatino} \ITALIC
++	Palatino-Italic.pfb}
++\FONT{Palatino-BoldItalic
++	\FULLNAME{Palatino Bold Italic}
++	\FAMILY{Palatino} \BOLD_ITALIC
++	Palatino-BoldItalic.pfb}
++
++\FONT{ZapfChancery-MediumItalic
++	\FULLNAME{ITC Zapf Chancery Medium Italic}
++	\FAMILY{ITC Zapf Chancery} \NORMAL
++	ZapfChancery-MediumItalic.pfb}
++
+ \FONT{Courier
+ 	\FULLNAME{Courier}
+ 	\FAMILY{Courier} \NORMAL

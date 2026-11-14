@@ -1,0 +1,26 @@
+diff --git a/AxeneOffice-2.0.1/Sources/Main/main.c b/AxeneOffice-2.0.1/Sources/Main/main.c
+index 7b9b134..186eb59 100644
+--- a/AxeneOffice-2.0.1/Sources/Main/main.c
++++ b/AxeneOffice-2.0.1/Sources/Main/main.c
+@@ -28,6 +28,7 @@
+ 
+ #include <X11/cursorfont.h>
+ #include <Xm/Frame.h>
++#include <Xm/Protocols.h>
+ #define SIGNALH
+ #define IOERRORH
+ #include "xcalibur.h"
+@@ -218,6 +219,13 @@ char **argv;
+  GlobInterface = (c_Interface *)NEW(c_Interface)(MainInterface);    
+  CurrentInterface = GlobInterface;
+ 
++ /* Closing the bar from the window manager destroyed the shell and
++    left the process running without a window: quit instead */
++ XtVaSetValues(MainInterface->w_Main, XmNdeleteResponse, XmDO_NOTHING, NULL);
++ XmAddWMProtocolCallback(MainInterface->w_Main,
++			 XmInternAtom(display, "WM_DELETE_WINDOW", False),
++			 (XtCallbackProc)cb_quit, (XtPointer)GlobInterface);
++
+  F(GlobCursor).enable_wait_mode(GlobCursor, XtWindow(WIDGET(MainInterface)));
+   
+  XGetWindowAttributes(display, XtWindow(WIDGET(MainInterface)), &get_attrib);

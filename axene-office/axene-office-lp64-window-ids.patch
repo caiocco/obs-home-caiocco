@@ -1,0 +1,500 @@
+--- a/XAllWrite-2.0.1/Sources/WinManager/WinManager.c
++++ b/XAllWrite-2.0.1/Sources/WinManager/WinManager.c
+@@ -204,6 +204,7 @@ Pixmap		pixmap;
+  int			x;
+  int 			y;
+  int			none;
++ Window			wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  unsigned int		width;
+  unsigned int		height;
+  unsigned int		border;
+@@ -415,7 +416,7 @@ Pixmap		pixmap;
+  listegwm->Normal_h = height + wmADDEDY;
+ 
+  listegwm->Type = D_MAXIMIZED;
+- XGetGeometry(display, m_win, (Window *)&none,
++ XGetGeometry(display, m_win, &wnone,
+ 	      &none, &none, &width, &height, &none, &none);
+  XMoveResizeWindow(display, MasterWin, 0, 0, width, height);
+  XReparentWindow(display, Win1, MasterWin, 0, 0);
+@@ -1095,7 +1096,9 @@ listmanaged	*listegwm;
+ boolean		wantPlace;
+ {
+  Window	WinTmp;
++ Window	*wchildren = NULL;
+  int	  	none;
++ Window	  	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -1109,9 +1112,11 @@ boolean		wantPlace;
+  ** ----------------------------------------------------------------- */
+  if (wantPlace)
+   listegwm->Iconplace = QueryIconPlace(This);
+- XQueryTree(display, listegwm->Icon, (Window *)&none, &WinTmp,
+-	    (Window **)&none, &none);
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XQueryTree(display, listegwm->Icon, &wnone, &WinTmp,
++	    &wchildren, (unsigned int *)&none);
++ if (wchildren)
++  XFree((char *)wchildren);
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none); 
+  nbrperline = deskX / (ICONW+ICON_SPACE);
+@@ -1121,7 +1126,7 @@ boolean		wantPlace;
+ 	     deskY-(ICONH+ICON_SPACEH)*(placeY+1));
+  if (listegwm->Icon_Name)
+  {
+-  XGetGeometry(display, listegwm->Icon_Name, (Window *)&none,
++  XGetGeometry(display, listegwm->Icon_Name, &wnone,
+ 	       &none, &none,
+ 	       &nameSX, &none, &none, &none); 
+   if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -1278,20 +1283,21 @@ listmanaged	*listegwm;
+ Window		window1;
+ {
+  int	none;
++ Window	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int 	height;
+  int	width;
+ 
+  /* ----------------------------------------------------------------- ** 
+  ** store old size                                                    ** 
+  ** ----------------------------------------------------------------- */
+- XGetGeometry(display, listegwm->Win, (Window *)&none,
++ XGetGeometry(display, listegwm->Win, &wnone,
+ 	      &(listegwm->Normal_x), &(listegwm->Normal_y),
+ 	      &(listegwm->Normal_w), &(listegwm->Normal_h), &none, &none);
+ 
+  /* ----------------------------------------------------------------- ** 
+  ** change window size                                                ** 
+  ** ----------------------------------------------------------------- */
+- XGetGeometry(display, window1, (Window *)&none,
++ XGetGeometry(display, window1, &wnone,
+ 	      &none, &none, &width, &height, &none, &none);
+  XMoveResizeWindow(display, listegwm->MainWin, 0, 0,
+ 		   width, height);
+@@ -2079,6 +2085,7 @@ listmanaged	*listegwm;
+  int	Ghost;
+  int	nameSX;
+  int	none;
++ Window	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+ 
+  Ghost = 1;
+  sortie = 0;
+@@ -2157,7 +2164,7 @@ listmanaged	*listegwm;
+  XMoveWindow(display, MWindow, (ICONW+ICON_SPACE)*placeX, Rheight-(ICONH+ICON_SPACEH)*(placeY+1));
+  if (listegwm->Icon_Name)
+  {
+-  XGetGeometry(display, listegwm->Icon_Name, (Window *)&none,
++  XGetGeometry(display, listegwm->Icon_Name, &wnone,
+ 	       &none, &none,
+ 	       &nameSX, &none, &none, &none); 
+   if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -2338,6 +2345,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2348,7 +2356,7 @@ Window		WinTmp;
+  int		nameSX;
+   
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+  nbrperline = deskX / (ICONW+ICON_SPACE);
+@@ -2366,7 +2374,7 @@ Window		WinTmp;
+ 	       deskY - (ICONH + ICON_SPACEH) * (placeY + 1));
+    if (Ptr->Icon_Name)
+    {
+-    XGetGeometry(display, Ptr->Icon_Name, (Window *)&none,
++    XGetGeometry(display, Ptr->Icon_Name, &wnone,
+ 		 &none, &none,
+ 		 &nameSX, &none, &none, &none); 
+     if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -2403,6 +2411,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2415,7 +2424,7 @@ Window		WinTmp;
+  int		maxwindow;
+   
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+ 
+@@ -2509,6 +2518,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2520,7 +2530,7 @@ Window		WinTmp;
+  int		height;
+ 
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+   
+@@ -2858,6 +2868,7 @@ listmanaged	*listegwm;
+   int		width;
+   int		height;
+   int		none;
++  Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+   Window		Wnone;
+       
+   XGetGeometry(display, listegwm->MainWin, &Wnone,
+--- a/XQuad-2.0.1/Sources/WinManager/WinManager.c
++++ b/XQuad-2.0.1/Sources/WinManager/WinManager.c
+@@ -202,6 +202,7 @@ Pixmap		pixmap;
+  int			x;
+  int 			y;
+  int			none;
++ Window			wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  unsigned int		width;
+  unsigned int		height;
+  unsigned int		border;
+@@ -401,13 +402,13 @@ Pixmap		pixmap;
+  F(This).addManaged(This, display, Win1, MasterWin, IconW, IconNameW, Use);
+ 
+  listegwm = This->ListManaged;
+- XGetGeometry(display, listegwm->Win, (Window *)&none,
++ XGetGeometry(display, listegwm->Win, &wnone,
+ 	      &(listegwm->Normal_x), &(listegwm->Normal_y),
+ 	      &(listegwm->Normal_w), &(listegwm->Normal_h), &none, &none);
+  if (This->nbrmanaged == 1)
+  {
+   listegwm->Type = D_MAXIMIZED;
+-  XGetGeometry(display, m_win, (Window *)&none,
++  XGetGeometry(display, m_win, &wnone,
+ 	       &none, &none, &width, &height, &none, &none);
+   XMoveResizeWindow(display, MasterWin, 0, 0, width, height);
+   XReparentWindow(display, Win1, MasterWin, 0, 0);
+@@ -1082,7 +1083,9 @@ Display		*display;
+ listmanaged	*listegwm;
+ {
+  Window	WinTmp;
++ Window	*wchildren = NULL;
+  int	  	none;
++ Window	  	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -1095,9 +1098,11 @@ listmanaged	*listegwm;
+  ** place the icon                                                    ** 
+  ** ----------------------------------------------------------------- */
+  listegwm->Iconplace = QueryIconPlace(This);
+- XQueryTree(display, listegwm->Icon, (Window *)&none, &WinTmp,
+-	    (Window **)&none, &none);
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XQueryTree(display, listegwm->Icon, &wnone, &WinTmp,
++	    &wchildren, (unsigned int *)&none);
++ if (wchildren)
++  XFree((char *)wchildren);
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none); 
+  nbrperline = deskX / (ICONW+ICON_SPACE);
+@@ -1107,7 +1112,7 @@ listmanaged	*listegwm;
+ 	     deskY-(ICONH+ICON_SPACEH)*(placeY+1));
+  if (listegwm->Icon_Name)
+  {
+-  XGetGeometry(display, listegwm->Icon_Name, (Window *)&none,
++  XGetGeometry(display, listegwm->Icon_Name, &wnone,
+ 	       &none, &none,
+ 	       &nameSX, &none, &none, &none); 
+   if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -1264,20 +1269,21 @@ listmanaged	*listegwm;
+ Window		window1;
+ {
+  int	none;
++ Window	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int 	height;
+  int	width;
+ 
+  /* ----------------------------------------------------------------- ** 
+  ** store old size                                                    ** 
+  ** ----------------------------------------------------------------- */
+- XGetGeometry(display, listegwm->Win, (Window *)&none,
++ XGetGeometry(display, listegwm->Win, &wnone,
+ 	      &(listegwm->Normal_x), &(listegwm->Normal_y),
+ 	      &(listegwm->Normal_w), &(listegwm->Normal_h), &none, &none);
+ 
+  /* ----------------------------------------------------------------- ** 
+  ** change window size                                                ** 
+  ** ----------------------------------------------------------------- */
+- XGetGeometry(display, window1, (Window *)&none,
++ XGetGeometry(display, window1, &wnone,
+ 	      &none, &none, &width, &height, &none, &none);
+  XMoveResizeWindow(display, listegwm->MainWin, 0, 0,
+ 		   width, height);
+@@ -2055,6 +2061,7 @@ listmanaged	*listegwm;
+  int	Ghost;
+  int	nameSX;
+  int	none;
++ Window	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+ 
+  Ghost = 1;
+  sortie = 0;
+@@ -2133,7 +2140,7 @@ listmanaged	*listegwm;
+  XMoveWindow(display, MWindow, (ICONW+ICON_SPACE)*placeX, Rheight-(ICONH+ICON_SPACEH)*(placeY+1));
+  if (listegwm->Icon_Name)
+  {
+-  XGetGeometry(display, listegwm->Icon_Name, (Window *)&none,
++  XGetGeometry(display, listegwm->Icon_Name, &wnone,
+ 	       &none, &none,
+ 	       &nameSX, &none, &none, &none); 
+   if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -2314,6 +2321,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2324,7 +2332,7 @@ Window		WinTmp;
+  int		nameSX;
+   
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+  nbrperline = deskX / (ICONW+ICON_SPACE);
+@@ -2342,7 +2350,7 @@ Window		WinTmp;
+ 	       deskY - (ICONH + ICON_SPACEH) * (placeY + 1));
+    if (Ptr->Icon_Name)
+    {
+-    XGetGeometry(display, Ptr->Icon_Name, (Window *)&none,
++    XGetGeometry(display, Ptr->Icon_Name, &wnone,
+ 		 &none, &none,
+ 		 &nameSX, &none, &none, &none); 
+     if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -2379,6 +2387,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2391,7 +2400,7 @@ Window		WinTmp;
+  int		maxwindow;
+   
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+ 
+@@ -2479,6 +2488,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2490,7 +2500,7 @@ Window		WinTmp;
+  int		height;
+ 
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+   
+@@ -2822,6 +2832,7 @@ listmanaged	*listegwm;
+   int		width;
+   int		height;
+   int		none;
++  Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+   Window		Wnone;
+       
+   XGetGeometry(display, listegwm->MainWin, &Wnone,
+--- a/Xclamation-2.0.1/Sources/WinManager/WinManager.c
++++ b/Xclamation-2.0.1/Sources/WinManager/WinManager.c
+@@ -202,6 +202,7 @@ Pixmap		pixmap;
+  int			x;
+  int 			y;
+  int			none;
++ Window			wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  unsigned int		width;
+  unsigned int		height;
+  unsigned int		border;
+@@ -401,13 +402,13 @@ Pixmap		pixmap;
+  F(This).addManaged(This, display, Win1, MasterWin, IconW, IconNameW, Use);
+ 
+  listegwm = This->ListManaged;
+- XGetGeometry(display, listegwm->Win, (Window *)&none,
++ XGetGeometry(display, listegwm->Win, &wnone,
+ 	      &(listegwm->Normal_x), &(listegwm->Normal_y),
+ 	      &(listegwm->Normal_w), &(listegwm->Normal_h), &none, &none);
+  if (This->nbrmanaged == 1)
+  {
+   listegwm->Type = D_MAXIMIZED;
+-  XGetGeometry(display, m_win, (Window *)&none,
++  XGetGeometry(display, m_win, &wnone,
+ 	       &none, &none, &width, &height, &none, &none);
+   XMoveResizeWindow(display, MasterWin, 0, 0, width, height);
+   XReparentWindow(display, Win1, MasterWin, 0, 0);
+@@ -1082,7 +1083,9 @@ Display		*display;
+ listmanaged	*listegwm;
+ {
+  Window	WinTmp;
++ Window	*wchildren = NULL;
+  int	  	none;
++ Window	  	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -1095,9 +1098,11 @@ listmanaged	*listegwm;
+  ** place the icon                                                    ** 
+  ** ----------------------------------------------------------------- */
+  listegwm->Iconplace = QueryIconPlace(This);
+- XQueryTree(display, listegwm->Icon, (Window *)&none, &WinTmp,
+-	    (Window **)&none, &none);
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XQueryTree(display, listegwm->Icon, &wnone, &WinTmp,
++	    &wchildren, (unsigned int *)&none);
++ if (wchildren)
++  XFree((char *)wchildren);
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none); 
+  nbrperline = deskX / (ICONW+ICON_SPACE);
+@@ -1107,7 +1112,7 @@ listmanaged	*listegwm;
+ 	     deskY-(ICONH+ICON_SPACEH)*(placeY+1));
+  if (listegwm->Icon_Name)
+  {
+-  XGetGeometry(display, listegwm->Icon_Name, (Window *)&none,
++  XGetGeometry(display, listegwm->Icon_Name, &wnone,
+ 	       &none, &none,
+ 	       &nameSX, &none, &none, &none); 
+   if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -1264,20 +1269,21 @@ listmanaged	*listegwm;
+ Window		window1;
+ {
+  int	none;
++ Window	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int 	height;
+  int	width;
+ 
+  /* ----------------------------------------------------------------- ** 
+  ** store old size                                                    ** 
+  ** ----------------------------------------------------------------- */
+- XGetGeometry(display, listegwm->Win, (Window *)&none,
++ XGetGeometry(display, listegwm->Win, &wnone,
+ 	      &(listegwm->Normal_x), &(listegwm->Normal_y),
+ 	      &(listegwm->Normal_w), &(listegwm->Normal_h), &none, &none);
+ 
+  /* ----------------------------------------------------------------- ** 
+  ** change window size                                                ** 
+  ** ----------------------------------------------------------------- */
+- XGetGeometry(display, window1, (Window *)&none,
++ XGetGeometry(display, window1, &wnone,
+ 	      &none, &none, &width, &height, &none, &none);
+  XMoveResizeWindow(display, listegwm->MainWin, 0, 0,
+ 		   width, height);
+@@ -2055,6 +2061,7 @@ listmanaged	*listegwm;
+  int	Ghost;
+  int	nameSX;
+  int	none;
++ Window	wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+ 
+  Ghost = 1;
+  sortie = 0;
+@@ -2133,7 +2140,7 @@ listmanaged	*listegwm;
+  XMoveWindow(display, MWindow, (ICONW+ICON_SPACE)*placeX, Rheight-(ICONH+ICON_SPACEH)*(placeY+1));
+  if (listegwm->Icon_Name)
+  {
+-  XGetGeometry(display, listegwm->Icon_Name, (Window *)&none,
++  XGetGeometry(display, listegwm->Icon_Name, &wnone,
+ 	       &none, &none,
+ 	       &nameSX, &none, &none, &none); 
+   if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -2314,6 +2321,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2324,7 +2332,7 @@ Window		WinTmp;
+  int		nameSX;
+   
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+  nbrperline = deskX / (ICONW+ICON_SPACE);
+@@ -2342,7 +2350,7 @@ Window		WinTmp;
+ 	       deskY - (ICONH + ICON_SPACEH) * (placeY + 1));
+    if (Ptr->Icon_Name)
+    {
+-    XGetGeometry(display, Ptr->Icon_Name, (Window *)&none,
++    XGetGeometry(display, Ptr->Icon_Name, &wnone,
+ 		 &none, &none,
+ 		 &nameSX, &none, &none, &none); 
+     if ((ICONW+ICON_SPACE)*placeX < (nameSX-(ICONW+ICON_SPACE))/2)
+@@ -2379,6 +2387,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2391,7 +2400,7 @@ Window		WinTmp;
+  int		maxwindow;
+   
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+ 
+@@ -2479,6 +2488,7 @@ Display		*display;
+ Window		WinTmp;
+ {
+  int		none;
++ Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+  int		deskX;
+  int		deskY;
+  int		placeY;
+@@ -2490,7 +2500,7 @@ Window		WinTmp;
+  int		height;
+ 
+  Ptr = This->ListManaged;
+- XGetGeometry(display, WinTmp, (Window *)&none,
++ XGetGeometry(display, WinTmp, &wnone,
+ 	      &none, &none,
+ 	      &deskX, &deskY, &none, &none);
+   
+@@ -2822,6 +2832,7 @@ listmanaged	*listegwm;
+   int		width;
+   int		height;
+   int		none;
++  Window		wnone;	/* root/parent results: a Window does not fit in an int on LP64 */
+   Window		Wnone;
+       
+   XGetGeometry(display, listegwm->MainWin, &Wnone,

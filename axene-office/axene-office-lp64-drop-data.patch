@@ -1,0 +1,45 @@
+diff --git axene-office-2.0.1.orig/XAllWrite-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h axene-office-2.0.1/XAllWrite-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h
+index db32859..965d2df 100644
+--- axene-office-2.0.1.orig/XAllWrite-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h
++++ axene-office-2.0.1/XAllWrite-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h
+@@ -61,7 +61,9 @@
+ #define DROP_DATA(a)	(a).xclient.data.l[4]
+ #define SET_DROP_DATA(a,b)      DROP_DATA1(a)=0; DROP_DATA2(a)=(int32_t)(b);
+ #else
+-#define DROP_DATA(a)	((((a).xclient.data.l[3])<<32)+ (a).xclient.data.l[4])
++/* Xlib sign-extends each 32-bit long of a ClientMessage: mask the low half */
++#define DROP_DATA(a)	((long)(((unsigned long)(a).xclient.data.l[3]<<32) | \
++			((unsigned long)(a).xclient.data.l[4] & 0xffffffffUL)))
+ #define SET_DROP_DATA(a,b)   \
+                 DROP_DATA1(a)=(int32_t)((long)(b)>>32); \
+ 		DROP_DATA2(a)=(int32_t)((long)(b)&0xffffffff);
+diff --git axene-office-2.0.1.orig/XQuad-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h axene-office-2.0.1/XQuad-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h
+index db32859..965d2df 100644
+--- axene-office-2.0.1.orig/XQuad-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h
++++ axene-office-2.0.1/XQuad-2.0.1/Sources/FrameManager/Drag_Cadre_Macros.h
+@@ -61,7 +61,9 @@
+ #define DROP_DATA(a)	(a).xclient.data.l[4]
+ #define SET_DROP_DATA(a,b)      DROP_DATA1(a)=0; DROP_DATA2(a)=(int32_t)(b);
+ #else
+-#define DROP_DATA(a)	((((a).xclient.data.l[3])<<32)+ (a).xclient.data.l[4])
++/* Xlib sign-extends each 32-bit long of a ClientMessage: mask the low half */
++#define DROP_DATA(a)	((long)(((unsigned long)(a).xclient.data.l[3]<<32) | \
++			((unsigned long)(a).xclient.data.l[4] & 0xffffffffUL)))
+ #define SET_DROP_DATA(a,b)   \
+                 DROP_DATA1(a)=(int32_t)((long)(b)>>32); \
+ 		DROP_DATA2(a)=(int32_t)((long)(b)&0xffffffff);
+diff --git axene-office-2.0.1.orig/Xclamation-2.0.1/Sources/Page/Drag_Cadre_Macros.h axene-office-2.0.1/Xclamation-2.0.1/Sources/Page/Drag_Cadre_Macros.h
+index 17cb9f9..4e62444 100644
+--- axene-office-2.0.1.orig/Xclamation-2.0.1/Sources/Page/Drag_Cadre_Macros.h
++++ axene-office-2.0.1/Xclamation-2.0.1/Sources/Page/Drag_Cadre_Macros.h
+@@ -78,7 +78,9 @@
+ #define DROP_DATA(a)	(a).xclient.data.l[4]
+ #define SET_DROP_DATA(a,b)      DROP_DATA1(a)=0; DROP_DATA2(a)=(int32_t)(b);
+ #else
+-#define DROP_DATA(a)	((((a).xclient.data.l[3])<<32)+ (a).xclient.data.l[4])
++/* Xlib sign-extends each 32-bit long of a ClientMessage: mask the low half */
++#define DROP_DATA(a)	((long)(((unsigned long)(a).xclient.data.l[3]<<32) | \
++			((unsigned long)(a).xclient.data.l[4] & 0xffffffffUL)))
+ #define SET_DROP_DATA(a,b)   \
+                 DROP_DATA1(a)=(int32_t)((long)(b)>>32); \
+ 		DROP_DATA2(a)=(int32_t)((long)(b)&0xffffffff);

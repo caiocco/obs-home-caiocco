@@ -1,0 +1,218 @@
+diff --git a/XAllWrite-2.0.1/Sources/Keyboard/Keyboard.c b/XAllWrite-2.0.1/Sources/Keyboard/Keyboard.c
+index 9986b8f..1606f25 100644
+--- a/XAllWrite-2.0.1/Sources/Keyboard/Keyboard.c
++++ b/XAllWrite-2.0.1/Sources/Keyboard/Keyboard.c
+@@ -177,6 +177,96 @@ c_Keyboard	This;
+  return NULL;
+ }
+ 
++/* ----------------------------------------------------------------- **
++** Dead keys (us-intl, ABNT2, ...): XLookupString does not compose   **
++** them, it returns the spacing accent.  Compose them here into      **
++** Latin-1, the encoding of the documents.                           **
++** ----------------------------------------------------------------- */
++static const struct
++{
++ KeySym		dead;
++ unsigned char	space;		/* accent followed by space */
++ unsigned char	twice;		/* accent typed twice */
++ const char	*base;
++ const char	*latin1;
++} dead_keys[] =
++{
++ { XK_dead_acute, '\'', 0xb4, "aeiouyAEIOUYcC",
++   "\xe1\xe9\xed\xf3\xfa\xfd\xc1\xc9\xcd\xd3\xda\xdd\xe7\xc7" },
++ { XK_dead_grave, '`', '`', "aeiouAEIOU",
++   "\xe0\xe8\xec\xf2\xf9\xc0\xc8\xcc\xd2\xd9" },
++ { XK_dead_circumflex, '^', '^', "aeiouAEIOU",
++   "\xe2\xea\xee\xf4\xfb\xc2\xca\xce\xd4\xdb" },
++ { XK_dead_tilde, '~', '~', "anoANO", "\xe3\xf1\xf5\xc3\xd1\xd5" },
++ { XK_dead_diaeresis, '"', 0xa8, "aeiouyAEIOU",
++   "\xe4\xeb\xef\xf6\xfc\xff\xc4\xcb\xcf\xd6\xdc" },
++ { XK_dead_cedilla, 0xb8, 0xb8, "cC", "\xe7\xc7" },
++ { XK_dead_abovering, 0xb0, 0xb0, "aA", "\xe5\xc5" },
++};
++#define NB_DEAD_KEYS (int)(sizeof(dead_keys) / sizeof(dead_keys[0]))
++
++static KeySym dead_pending = NoSymbol;
++
++static int dead_key_index(KeySym ks)
++{
++ int i;
++
++ for (i = 0; i < NB_DEAD_KEYS; i++)
++  if (dead_keys[i].dead == ks)
++   return i;
++ return -1;
++}
++
++static void dead_key_compose(c_Keyboard *This, KeySym *keysym)
++{
++ int		d = dead_key_index(*keysym);
++ const char	*pos;
++ unsigned char	c;
++
++ if (d >= 0)
++ {
++  if (dead_pending == *keysym)
++  {
++   This->buf_keyb[0] = dead_keys[d].twice;
++   This->buf_keyb[1] = '\0';
++   This->buf_length = 1;
++   dead_pending = NoSymbol;
++  }
++  else
++  {
++   dead_pending = *keysym;
++   This->buf_keyb[0] = '\0';
++   This->buf_length = 0;
++  }
++  return;
++ }
++ if (dead_pending == NoSymbol || IsModifierKey(*keysym))
++  return;
++ d = dead_key_index(dead_pending);
++ dead_pending = NoSymbol;
++ if (This->buf_length != 1)
++  return;			/* function key: drop the accent */
++ c = (unsigned char)This->buf_keyb[0];
++ if (c < ' ' || c == 127)
++  return;			/* BackSpace, Return...: drop it too */
++ if (c == ' ')
++  c = dead_keys[d].space;
++ else if ((pos = strchr(dead_keys[d].base, c)) != NULL)
++  c = (unsigned char)dead_keys[d].latin1[pos - dead_keys[d].base];
++ else
++ {
++  /* nothing to compose: keep the accent and the character */
++  This->buf_keyb[1] = c;
++  This->buf_keyb[2] = '\0';
++  This->buf_keyb[0] = dead_keys[d].space;
++  This->buf_length = 2;
++  return;
++ }
++ This->buf_keyb[0] = c;
++ This->buf_keyb[1] = '\0';
++ *keysym = c;
++}
++
+ static void eventlook_Keyboard(This, event)
+ c_Keyboard	*This;
+ XEvent		event;
+@@ -323,6 +413,7 @@ XEvent		event;
+     This->buf_keyb[nb_key] = '\0';
+    }
+   }
++  dead_key_compose(This, &keysym);
+   This->compose = FALSE;
+   if (This->start_comp && This->buf_length)
+   {
+diff --git a/Xclamation-2.0.1/Sources/Keyboard/Keyboard.c b/Xclamation-2.0.1/Sources/Keyboard/Keyboard.c
+index 9986b8f..1606f25 100644
+--- a/Xclamation-2.0.1/Sources/Keyboard/Keyboard.c
++++ b/Xclamation-2.0.1/Sources/Keyboard/Keyboard.c
+@@ -177,6 +177,96 @@ c_Keyboard	This;
+  return NULL;
+ }
+ 
++/* ----------------------------------------------------------------- **
++** Dead keys (us-intl, ABNT2, ...): XLookupString does not compose   **
++** them, it returns the spacing accent.  Compose them here into      **
++** Latin-1, the encoding of the documents.                           **
++** ----------------------------------------------------------------- */
++static const struct
++{
++ KeySym		dead;
++ unsigned char	space;		/* accent followed by space */
++ unsigned char	twice;		/* accent typed twice */
++ const char	*base;
++ const char	*latin1;
++} dead_keys[] =
++{
++ { XK_dead_acute, '\'', 0xb4, "aeiouyAEIOUYcC",
++   "\xe1\xe9\xed\xf3\xfa\xfd\xc1\xc9\xcd\xd3\xda\xdd\xe7\xc7" },
++ { XK_dead_grave, '`', '`', "aeiouAEIOU",
++   "\xe0\xe8\xec\xf2\xf9\xc0\xc8\xcc\xd2\xd9" },
++ { XK_dead_circumflex, '^', '^', "aeiouAEIOU",
++   "\xe2\xea\xee\xf4\xfb\xc2\xca\xce\xd4\xdb" },
++ { XK_dead_tilde, '~', '~', "anoANO", "\xe3\xf1\xf5\xc3\xd1\xd5" },
++ { XK_dead_diaeresis, '"', 0xa8, "aeiouyAEIOU",
++   "\xe4\xeb\xef\xf6\xfc\xff\xc4\xcb\xcf\xd6\xdc" },
++ { XK_dead_cedilla, 0xb8, 0xb8, "cC", "\xe7\xc7" },
++ { XK_dead_abovering, 0xb0, 0xb0, "aA", "\xe5\xc5" },
++};
++#define NB_DEAD_KEYS (int)(sizeof(dead_keys) / sizeof(dead_keys[0]))
++
++static KeySym dead_pending = NoSymbol;
++
++static int dead_key_index(KeySym ks)
++{
++ int i;
++
++ for (i = 0; i < NB_DEAD_KEYS; i++)
++  if (dead_keys[i].dead == ks)
++   return i;
++ return -1;
++}
++
++static void dead_key_compose(c_Keyboard *This, KeySym *keysym)
++{
++ int		d = dead_key_index(*keysym);
++ const char	*pos;
++ unsigned char	c;
++
++ if (d >= 0)
++ {
++  if (dead_pending == *keysym)
++  {
++   This->buf_keyb[0] = dead_keys[d].twice;
++   This->buf_keyb[1] = '\0';
++   This->buf_length = 1;
++   dead_pending = NoSymbol;
++  }
++  else
++  {
++   dead_pending = *keysym;
++   This->buf_keyb[0] = '\0';
++   This->buf_length = 0;
++  }
++  return;
++ }
++ if (dead_pending == NoSymbol || IsModifierKey(*keysym))
++  return;
++ d = dead_key_index(dead_pending);
++ dead_pending = NoSymbol;
++ if (This->buf_length != 1)
++  return;			/* function key: drop the accent */
++ c = (unsigned char)This->buf_keyb[0];
++ if (c < ' ' || c == 127)
++  return;			/* BackSpace, Return...: drop it too */
++ if (c == ' ')
++  c = dead_keys[d].space;
++ else if ((pos = strchr(dead_keys[d].base, c)) != NULL)
++  c = (unsigned char)dead_keys[d].latin1[pos - dead_keys[d].base];
++ else
++ {
++  /* nothing to compose: keep the accent and the character */
++  This->buf_keyb[1] = c;
++  This->buf_keyb[2] = '\0';
++  This->buf_keyb[0] = dead_keys[d].space;
++  This->buf_length = 2;
++  return;
++ }
++ This->buf_keyb[0] = c;
++ This->buf_keyb[1] = '\0';
++ *keysym = c;
++}
++
+ static void eventlook_Keyboard(This, event)
+ c_Keyboard	*This;
+ XEvent		event;
+@@ -323,6 +413,7 @@ XEvent		event;
+     This->buf_keyb[nb_key] = '\0';
+    }
+   }
++  dead_key_compose(This, &keysym);
+   This->compose = FALSE;
+   if (This->start_comp && This->buf_length)
+   {

@@ -1,0 +1,161 @@
+diff --git a/XQuad-2.0.1/Sources/Feuille/Draw_Feuille.c b/XQuad-2.0.1/Sources/Feuille/Draw_Feuille.c
+index 02c5811..ab4f6d3 100644
+--- a/XQuad-2.0.1/Sources/Feuille/Draw_Feuille.c
++++ b/XQuad-2.0.1/Sources/Feuille/Draw_Feuille.c
+@@ -24,6 +24,103 @@
+ */
+ 
+ #include "Feuille.h"
++#include <stdlib.h>
++
++/*
++** The row and column headers used to be drawn with the built-in Type 1
++** rasterizer (Helvetica 12 pt), which makes 1-bit glyphs with almost no
++** hinting: at ~12 px they look jagged next to the rest of the UI, which
++** uses the hand-tuned core X bitmap fonts. Draw them with the bitmap
++** Helvetica closest to the current (zoomed) size instead, and fall back
++** to the old path when the server has no such font.
++*/
++#define ORIG_XFONT_PATTERN \
++ "-adobe-helvetica-medium-r-normal--*-*-*-*-p-*-iso8859-1"
++
++static XFontStruct *orig_core_font(c_Feuille *This)
++{
++ char		**names;
++ int		count, i, best = -1, best_px = 0, target;
++
++ target = (int)(SCALE_TO_POINTS(This->orig_metrics->point_size) + 0.5);
++ if (target < 1) target = 1;
++ if (This->orig_xfont_px == target)
++  return This->orig_xfont;
++
++ if (This->orig_xfont)
++  XFreeFont(_display, This->orig_xfont);
++ This->orig_xfont = NULL;
++ This->orig_xfont_px = target;
++
++ names = XListFonts(_display, ORIG_XFONT_PATTERN, 200, &count);
++ if (names == NULL)
++  return NULL;
++ for (i = 0; i < count; i++)
++ {
++  /* field 7 is PIXEL_SIZE: -foundry-family-weight-slant-width-style-px- */
++  char	*p = names[i];
++  int	dash = 0, px;
++
++  while (*p && dash < 7)
++   if (*p++ == '-') dash++;
++  px = atoi(p);
++  if (px <= 0)
++   continue;			/* scalable entry: would be scaled bitmaps */
++  /* the largest size not above the target, else the smallest above it */
++  if (best < 0 ||
++      (px <= target && (best_px > target || px > best_px)) ||
++      (px > target && best_px > target && px < best_px))
++  {
++   best = i;
++   best_px = px;
++  }
++ }
++ if (best >= 0)
++  This->orig_xfont = XLoadQueryFont(_display, names[best]);
++ XFreeFontNames(names);
++ return This->orig_xfont;
++}
++
++static boolean draw_orig_label(This, window, x, y, width, height, aff, pnt)
++c_Feuille	*This;
++Window		window;
++int		x;
++int		y;
++int		width;
++int		height;
++char		*aff;
++int		pnt;
++{
++ XFontStruct	*font;
++ XCharStruct	ov;
++ XRectangle	rectangle;
++ XGCValues	saved;
++ int		dir, asc, desc;
++
++ if ((font = orig_core_font(This)) == NULL)
++  return FALSE;
++ if (width <= 2 || height <= 2)
++  return TRUE;
++
++ XTextExtents(font, aff, pnt, &dir, &asc, &desc, &ov);
++ rectangle.x = x + 1;
++ rectangle.y = y + 1;
++ rectangle.width = width - 2;
++ rectangle.height = height - 2;
++ XSetClipRectangles(_display, _gc_font_paint, 0, 0, &rectangle, 1, Unsorted);
++ /* the raster path may have left GXor here (mask + paint mode) */
++ XGetGCValues(_display, _gc_font_paint, GCFunction, &saved);
++ XSetFunction(_display, _gc_font_paint, GXcopy);
++ XSetFont(_display, _gc_font_paint, font->fid);
++ /* centre the ink: headers are digits and capitals, no descenders */
++ XDrawString(_display, window, _gc_font_paint,
++	     x + (width - (ov.rbearing - ov.lbearing)) / 2 - ov.lbearing,
++	     y + (height + ov.ascent - ov.descent) / 2,
++	     aff, pnt);
++ XSetClipMask(_display, _gc_font_paint, None);
++ XSetFunction(_display, _gc_font_paint, saved.function);
++ return TRUE;
++}
+ 
+ 
+ void focus_in_cellule(This, column, row)
+@@ -641,6 +738,8 @@ int		height;
+   XSetForeground(_display, _gc_font_paint, GlobColormap->Cblack);
+   
+  coltostr(column, &pnt, aff);
++ if (draw_orig_label(This, _C_window, x, y, width, height, aff, pnt))
++  return;
+   
+  sX = SCALE_FROM_POINTS(x);
+  sY = SCALE_FROM_POINTS(y);
+@@ -764,6 +863,8 @@ int		height;
+   XSetForeground(_display,_gc_font_paint, GlobColormap->Cblack);
+  sprintf(aff,"%d",row+1);
+  pnt=strlen(aff);
++ if (draw_orig_label(This, _R_window, x, y, width, height, aff, pnt))
++  return;
+   
+  sX = SCALE_FROM_POINTS(x);
+  sY = SCALE_FROM_POINTS(y);
+diff --git a/XQuad-2.0.1/Sources/Feuille/Feuille.c b/XQuad-2.0.1/Sources/Feuille/Feuille.c
+index 0924b42..dd3c1f4 100644
+--- a/XQuad-2.0.1/Sources/Feuille/Feuille.c
++++ b/XQuad-2.0.1/Sources/Feuille/Feuille.c
+@@ -174,6 +174,8 @@ boolean		*modified;
+  ObjTmp->orig_color	= NULL;
+  ObjTmp->orig_font	= NULL;
+  ObjTmp->orig_metrics	= NULL;
++ ObjTmp->orig_xfont	= NULL;
++ ObjTmp->orig_xfont_px	= 0;
+  ObjTmp->moteur		= NULL;
+  ObjTmp->sScale		= COORD_DEFAULT;
+  ObjTmp->sFactor	= SCALE_FROM_PERCENT(100);
+@@ -271,6 +273,8 @@ c_Feuille *This;
+   XFreeGC(This->X_info.display, This->gc_font_paint);
+   if (This->gc_font_mask != (GC)0)
+    XFreeGC(This->X_info.display, This->gc_font_mask);
++  if (This->orig_xfont)
++   XFreeFont(This->X_info.display, This->orig_xfont);
+   XDestroyWindow(This->X_info.display, This->X_info.window);
+   XDestroyWindow(This->X_info.display, This->X_info_O.window);
+   XDestroyWindow(This->X_info.display, This->X_info_C.window);
+diff --git a/XQuad-2.0.1/Sources/Feuille/Feuille.h b/XQuad-2.0.1/Sources/Feuille/Feuille.h
+index 47594e0..9c565d1 100644
+--- a/XQuad-2.0.1/Sources/Feuille/Feuille.h
++++ b/XQuad-2.0.1/Sources/Feuille/Feuille.h
+@@ -315,6 +315,8 @@ struct sc_Feuille
+   c_Color		*orig_color;
+   c_RasterFont		*orig_font;
+   c_CharMetrics		*orig_metrics;
++  XFontStruct		*orig_xfont;    /* core font for the headers */
++  int			orig_xfont_px;  /* pixel size it was chosen for */
+   
+   c_Cursor		*cursor;
+   c_Cursor		*cursor_O;
