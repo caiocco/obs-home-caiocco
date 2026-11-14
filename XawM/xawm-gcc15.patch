@@ -1,0 +1,113 @@
+diff -ru XawM-1.5u.orig/X11/XawM/laygram.c XawM-1.5u/X11/XawM/laygram.c
+--- XawM-1.5u.orig/X11/XawM/laygram.c	2000-02-20 16:02:39.000000000 -0200
++++ XawM-1.5u/X11/XawM/laygram.c	2026-11-13 10:28:47.859285953 -0300
+@@ -14,6 +14,9 @@
+ #include    <X11/Xmu/Converters.h>
+ #include    "LayoutP.h"
+ 
++int LayYYlex(void);
++void LayYYerror(char *s);
++
+ static LayoutPtr    *dest;
+ 
+ #line 17 "laygram.y"
+diff -ru XawM-1.5u.orig/X11/XawM/laygram.y XawM-1.5u/X11/XawM/laygram.y
+--- XawM-1.5u.orig/X11/XawM/laygram.y	1999-12-15 17:44:40.000000000 -0200
++++ XawM-1.5u/X11/XawM/laygram.y	2026-11-13 10:28:47.859285953 -0300
+@@ -10,6 +10,9 @@
+ #include    <X11/Xmu/Converters.h>
+ #include    "LayoutP.h"
+ 
++int yylex(void);
++void yyerror(char *s);
++
+ static LayoutPtr    *dest;
+ 
+ %}
+diff -ru XawM-1.5u.orig/X11/XawM/laylex.c XawM-1.5u/X11/XawM/laylex.c
+--- XawM-1.5u.orig/X11/XawM/laylex.c	2000-10-12 12:55:21.000000000 -0200
++++ XawM-1.5u/X11/XawM/laylex.c	2026-11-13 10:28:47.859285953 -0300
+@@ -1777,12 +1777,14 @@
+     return i;
+ }
+ 
++void
+ LayYYsetsource(s)
+     char    *s;
+ {
+     LayYYsourcebase = LayYYsource = s;
+ }
+ 
++void
+ LayYYerror(s)
+     char    *s;
+ {
+diff -ru XawM-1.5u.orig/X11/XawM/laylex.l XawM-1.5u/X11/XawM/laylex.l
+--- XawM-1.5u.orig/X11/XawM/laylex.l	1999-12-15 17:44:40.000000000 -0200
++++ XawM-1.5u/X11/XawM/laylex.l	2026-11-13 10:28:47.859285953 -0300
+@@ -86,12 +86,16 @@
+     return i;
+ }
+ 
++void
++void
+ yysetsource(s)
+     char    *s;
+ {
+     yysourcebase = yysource = s;
+ }
+ 
++int
++void
+ yyerror(s)
+     char    *s;
+ {
+diff -ru XawM-1.5u.orig/X11/XawM/List.c XawM-1.5u/X11/XawM/List.c
+--- XawM-1.5u.orig/X11/XawM/List.c	2000-10-12 12:55:13.000000000 -0200
++++ XawM-1.5u/X11/XawM/List.c	2026-11-13 10:28:29.601032129 -0300
+@@ -41,6 +41,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <ctype.h>
+ 
+ #include <X11/IntrinsicP.h>
+diff -ru XawM-1.5u.orig/X11/XawM/MultiSink.c XawM-1.5u/X11/XawM/MultiSink.c
+--- XawM-1.5u.orig/X11/XawM/MultiSink.c	2001-05-16 19:06:04.000000000 -0300
++++ XawM-1.5u/X11/XawM/MultiSink.c	2026-11-13 10:28:29.606032472 -0300
+@@ -85,6 +85,7 @@
+ #include "TextP.h"
+ #include "XawI18n.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <ctype.h>
+ 
+ #ifdef GETLASTPOS
+diff -ru XawM-1.5u.orig/X11/XawM/Text.c XawM-1.5u/X11/XawM/Text.c
+--- XawM-1.5u.orig/X11/XawM/Text.c	2001-05-16 19:14:00.000000000 -0300
++++ XawM-1.5u/X11/XawM/Text.c	2026-11-13 10:28:29.611032816 -0300
+@@ -59,6 +59,7 @@
+ #include <X11/Xutil.h>
+ #include "XawI18n.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ 
+ #include <X11/Xmu/Atoms.h>
+ #include <X11/Xmu/CharSet.h>
+diff -ru XawM-1.5u.orig/X11/XawM/XawIm.c XawM-1.5u/X11/XawM/XawIm.c
+--- XawM-1.5u.orig/X11/XawM/XawIm.c	2001-05-16 19:17:46.000000000 -0300
++++ XawM-1.5u/X11/XawM/XawIm.c	2026-11-13 10:28:47.859285953 -0300
+@@ -79,6 +79,12 @@
+ # define Va_start(a,b) va_start(a)
+ #endif
+ 
++/* Xt internals used below (exported by libXt, declared in its private VarargsI.h) */
++extern void _XtCopyFromArg(XtArgVal src, char *dst, unsigned int size);
++extern void _XtCountVaList(va_list var, int *total_count, int *typed_count);
++extern void _XtVaToArgList(Widget widget, va_list var, int max_count,
++			   ArgList *args_return, Cardinal *num_args_return);
++
+ #define maxAscentOfFontSet(fontset)     \
+         ( - (XExtentsOfFontSet((fontset)))->max_logical_extent.y)
+ 

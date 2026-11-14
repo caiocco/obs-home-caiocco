@@ -1,0 +1,16 @@
+--- a/X11/XawM/Traversal.c
++++ b/X11/XawM/Traversal.c
+@@ -47,7 +47,12 @@
+ 
+ 
+ 
+-static	XawFocusPolicy	policy = XawFocusPointer ;
++/* Explicit (click-to-type, the Motif default): entering or leaving a
++   widget must not move the X input focus. With XawFocusPointer every
++   LeaveWindow set the focus to PointerRoot, fighting click-to-focus
++   window managers: keys only reached the application while the
++   pointer was over it. Tab traversal and FocusTake still work. */
++static	XawFocusPolicy	policy = XawFocusExplicit ;
+ 
+ 
+ #if NeedFunctionPrototypes

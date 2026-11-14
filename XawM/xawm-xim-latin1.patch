@@ -1,0 +1,128 @@
+--- XawM-1.5u/X11/XawM/TextAction.c
++++ XawM-1.5u.xim/X11/XawM/TextAction.c
+@@ -45,6 +45,116 @@
+ #include <stdio.h>
+ #include <ctype.h>
+ #include <stdlib.h>
++#include <X11/Xresource.h>
++#include <wchar.h>
++
++/*
++ * 8-bit text with an input method: XLookupString does not compose
++ * dead keys, so read keys through an input context on the shell
++ * window and return ISO 8859-1. The context is shared with Mowitz
++ * through the same XContext quark, so both see the same composition.
++ */
++static XIM latin1_xim = NULL;
++static Boolean latin1_xim_tried = False;
++
++static XContext latin1_context(void)
++{
++	static XContext ctx = 0;
++	if (ctx == 0)
++		ctx = (XContext)XrmStringToQuark("MwLatin1InputContext");
++	return ctx;
++}
++
++static void latin1_destroy(Widget shell, XtPointer client_data,
++		XtPointer call_data)
++{
++	if (XtWindow(shell) != None)
++		XDeleteContext(XtDisplay(shell), XtWindow(shell),
++				latin1_context());
++	if (client_data) XDestroyIC((XIC)client_data);
++}
++
++static XIC latin1_ic(Widget w, Boolean *created)
++{
++	Widget shell = w;
++	Display *dpy = XtDisplay(w);
++	Window win;
++	XPointer p;
++	XIC xic = NULL;
++	XIMStyles *styles = NULL;
++	XIMStyle style = 0;
++	unsigned short i;
++
++	*created = False;
++	while (shell && !XtIsShell(shell)) shell = XtParent(shell);
++	if (shell == NULL || (win = XtWindow(shell)) == None) return NULL;
++	if (XFindContext(dpy, win, latin1_context(), &p) == 0)
++		return (XIC)p;
++	if (!latin1_xim_tried) {
++		String name, class;
++		latin1_xim_tried = True;
++		XtGetApplicationNameAndClass(dpy, &name, &class);
++		latin1_xim = XOpenIM(dpy, XtDatabase(dpy), name, class);
++	}
++	if (latin1_xim &&
++	    XGetIMValues(latin1_xim, XNQueryInputStyle, &styles, NULL) == NULL &&
++	    styles) {
++		for (i = 0; i < styles->count_styles; i++) {
++			XIMStyle s = styles->supported_styles[i];
++			if (s == (XIMPreeditNothing | XIMStatusNothing)) {
++				style = s;
++				break;
++			}
++			if (s == (XIMPreeditNone | XIMStatusNone))
++				style = s;
++		}
++		XFree(styles);
++	}
++	if (style)
++		xic = XCreateIC(latin1_xim, XNInputStyle, style,
++				XNClientWindow, win, XNFocusWindow, win, NULL);
++	if (xic) XSetICFocus(xic);
++	XSaveContext(dpy, win, latin1_context(), (XPointer)xic);
++	XtAddCallback(shell, XtNdestroyCallback, latin1_destroy, (XtPointer)xic);
++	*created = True;
++	return xic;
++}
++
++static int LookupLatin1(Widget w, XKeyEvent *ev, char *buf, int bufsiz,
++		KeySym *keysym, XComposeStatus *cs)
++{
++	XIC xic;
++	Window focus = None;
++	wchar_t wbuf[64];
++	KeySym ks = NoSymbol;
++	Status status;
++	Boolean created;
++	int i, n, len = 0;
++
++	*keysym = NoSymbol;
++	if (ev->type != KeyPress || (xic = latin1_ic(w, &created)) == NULL)
++		return XLookupString(ev, buf, bufsiz, keysym, cs);
++	/* XtDispatchEvent filters only events sent to the shell itself */
++	XGetICValues(xic, XNFocusWindow, &focus, NULL);
++	if ((created || ev->window != focus) &&
++	    XFilterEvent((XEvent *)ev, focus))
++		return 0;
++	n = XwcLookupString(xic, ev, wbuf, sizeof wbuf / sizeof wbuf[0],
++			&ks, &status);
++	if (status != XLookupChars && status != XLookupBoth) n = 0;
++	for (i = 0; i < n && len < bufsiz; i++)
++		if (wbuf[i] > 0 && wbuf[i] < 256) buf[len++] = (char)wbuf[i];
++	/* in the C locale a composed letter comes back as a keysym only;
++	   Latin-1 keysyms equal their character codes */
++	if (status == XLookupKeySym && bufsiz > 0) {
++		if (ks >= 0x1000000 + 0xa0 && ks <= 0x10000ff)
++			ks -= 0x1000000;
++		if (ks >= 0xa0 && ks <= 0xff)
++			buf[len++] = (char)ks;
++	}
++	*keysym = ks;
++	return len;
++}
+ 
+ #define SrcScan                XawTextSourceScan
+ #define FindDist               XawTextSinkFindDistance
+@@ -1594,7 +1704,7 @@
+     text.length = _XawImWcLookupString (w, &event->xkey,
+ 		(wchar_t*) strbuf, BUFSIZ, &keysym, (Status*) &compose_status);
+   else
+-    text.length = XLookupString ((XKeyEvent*)event, strbuf, BUFSIZ, &keysym, &compose_status);
++    text.length = LookupLatin1 (w, (XKeyEvent*)event, strbuf, BUFSIZ, &keysym, &compose_status);
+ 
+   if (text.length == 0)
+       return;

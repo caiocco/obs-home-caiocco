@@ -1,0 +1,35 @@
+-------------------------------------------------------------------
+Sat Nov 14 00:19:04 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add xawm-focus-explicit.patch: the traversal code defaulted to
+  XawFocusPointer, so the EnterWindow/LeaveWindow translations of
+  List, Command, Toggle, Repeater, Scrollbar, Panner and Text took the
+  X input focus on enter and set it to PointerRoot on leave. Under a
+  click-to-focus window manager the application then only received
+  keys while the pointer was over it (Egon after the pointer crossed
+  its object list). The default is now XawFocusExplicit, the Motif
+  default; Tab traversal and FocusTake are unchanged
+
+-------------------------------------------------------------------
+Fri Nov 13 19:18:59 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add xawm-delete-key.patch: the default Text translations bound Delete and KP_Delete to delete-previous-character, so Delete erased backwards like BackSpace; they now delete the next character (Meta+Delete deletes the next word)
+
+-------------------------------------------------------------------
+Fri Nov 13 16:53:20 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add xawm-xim-latin1.patch: 8-bit Text read keys with XLookupString,
+  which does not compose dead keys (xedplus typed the bare accent).
+  Keys now go through an XIM context on the shell window, shared with
+  Mowitz, and come back as ISO 8859-1, also in the C locale
+
+-------------------------------------------------------------------
+Fri Nov 13 13:33:18 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of XawM 1.5u, the Motif-like Athena widget set
+  used by Siag Office
+- Add xawm-gcc15.patch: missing stdlib.h, prototypes for the Xt
+  varargs internals and implicit int in the layout lexer/parser
+- Add xawm-link-libs.patch: link libXawM against libXmu/Xt/Xext/X11
+- Ship an X11/Xaw -> X11/XawM include symlink in /usr/include/XawM
+  so <X11/Xaw/...> programs compile against the XawM structures

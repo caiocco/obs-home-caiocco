@@ -1,0 +1,12 @@
+--- XawM-1.5u.orig/X11/XawM/Makefile.am	2001-12-11 15:16:23.000000000 -0200
++++ XawM-1.5u/X11/XawM/Makefile.am	2026-11-13 10:29:42.611045849 -0300
+@@ -132,7 +132,8 @@
+ 	TraversalP.h \
+ 	xutil.h
+ 
+-libXawM_la_LDFLAGS = -version-info 1:0:0
++libXawM_la_LDFLAGS = -version-info 1:0:0 -no-undefined
++libXawM_la_LIBADD = @X_LIBS@ -lXmu -lXt -lXext -lX11 @X_EXTRA_LIBS@
+ 
+ INCLUDES = $(DEBUG) @X_CFLAGS@ -DNARROWPROTO -DARROW_SCROLLBAR -DUSEGRAY \
+ 	-DNeedFunctionPrototypes -I../..
