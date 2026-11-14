@@ -23,6 +23,7 @@ Source1:        %{name}.desktop
 Patch0:         %{name}-gcc14.patch
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc
+BuildRequires:  hicolor-icon-theme
 BuildRequires:  make
 BuildRequires:  motif-devel
 BuildRequires:  pkgconfig
