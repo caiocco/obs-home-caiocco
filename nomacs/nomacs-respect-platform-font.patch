@@ -1,0 +1,125 @@
+diff -ruN nomacs-3.23.3.orig/ImageLounge/src/DkCore/DkThemeManager.cpp nomacs-3.23.3/ImageLounge/src/DkCore/DkThemeManager.cpp
+--- nomacs-3.23.3.orig/ImageLounge/src/DkCore/DkThemeManager.cpp	2026-07-21 12:17:14.000000000 -0300
++++ nomacs-3.23.3/ImageLounge/src/DkCore/DkThemeManager.cpp	2026-11-15 13:33:30.145218694 -0300
+@@ -34,6 +34,7 @@
+ #include <QApplication>
+ // #include <QDebug>
+ #include <QDir>
++#include <QRegularExpression>
+ #include <QStyle>
+ #include <QStyleFactory>
+ #include <QStyleHints>
+@@ -680,6 +681,27 @@
+     cssString = replaceMacros(cssString, colors);
+     cssString = replaceColors(cssString, colors); // must follow macro replacement
+ 
++    // openSUSE home:caiocco: stylesheet.css forces an 11pt UI font (and sizes relative to it),
++    // which overrides the system font size. Scale all font sizes to the platform font.
++    {
++        const double scale = DkUtils::platformFontScale();
++        if (scale != 1.0) {
++            static const QRegularExpression re(QStringLiteral(R"((font-size\s*:\s*)(\d+(?:\.\d+)?)\s*(pt|px))"));
++            QString out;
++            qsizetype last = 0;
++            auto it = re.globalMatch(cssString);
++            while (it.hasNext()) {
++                const auto m = it.next();
++                const double size = qMax(1.0, std::round(m.captured(2).toDouble() * scale));
++                out += QStringView(cssString).mid(last, m.capturedStart() - last);
++                out += m.captured(1) + QString::number(size) + m.captured(3);
++                last = m.capturedEnd();
++            }
++            out += QStringView(cssString).mid(last);
++            cssString = out;
++        }
++    }
++
+     const DkSettings::Display &d = DkSettingsManager::param().display();
+ 
+     // we always modify the palette, either for system theme, fallback for broken CSS,
+diff -ruN nomacs-3.23.3.orig/ImageLounge/src/DkCore/DkUtils.cpp nomacs-3.23.3/ImageLounge/src/DkCore/DkUtils.cpp
+--- nomacs-3.23.3.orig/ImageLounge/src/DkCore/DkUtils.cpp	2026-07-21 12:17:14.000000000 -0300
++++ nomacs-3.23.3/ImageLounge/src/DkCore/DkUtils.cpp	2026-11-15 13:33:30.144218626 -0300
+@@ -1062,6 +1062,20 @@
+     return hex.toUpper();
+ }
+ 
++double DkUtils::platformFontScale()
++{
++    // QApplication::font() is not affected by style sheets, so this is the platform font
++    const double pt = QApplication::font().pointSizeF();
++    if (pt <= 0)
++        return 1.0;
++    return pt / 11.0; // nomacs designs its sizes around an 11pt UI font
++}
++
++int DkUtils::scaledFontSize(int designSize)
++{
++    return qMax(1, qRound(designSize * platformFontScale()));
++}
++
+ QString DkUtils::colorToString(const QColor &col)
+ {
+     return "rgba(" + QString::number(col.red()) + "," + QString::number(col.green()) + "," + QString::number(col.blue())
+diff -ruN nomacs-3.23.3.orig/ImageLounge/src/DkCore/DkUtils.h nomacs-3.23.3/ImageLounge/src/DkCore/DkUtils.h
+--- nomacs-3.23.3.orig/ImageLounge/src/DkCore/DkUtils.h	2026-07-21 12:17:14.000000000 -0300
++++ nomacs-3.23.3/ImageLounge/src/DkCore/DkUtils.h	2026-11-15 13:33:30.144218626 -0300
+@@ -174,6 +174,14 @@
+     static QString nowString();
+     static QString colorToCssHex(const QColor &color, bool alpha);
+     static QString colorToString(const QColor &col);
++
++    /**
++     * Scale a font size designed for nomacs' reference UI font (11pt, see stylesheet.css)
++     * to the platform font size (e.g. as set by qt5ct/qt6ct or the desktop).
++     * openSUSE home:caiocco: respect the system font size.
++     */
++    static double platformFontScale();
++    static int scaledFontSize(int designSize);
+     static QString readableByte(float bytes);
+     static QStringList filterStringList(const QString &query, const QStringList &list);
+     static bool moveToTrash(const QStringList &files);
+diff -ruN nomacs-3.23.3.orig/ImageLounge/src/DkGui/DkBaseWidgets.cpp nomacs-3.23.3/ImageLounge/src/DkGui/DkBaseWidgets.cpp
+--- nomacs-3.23.3.orig/ImageLounge/src/DkGui/DkBaseWidgets.cpp	2026-07-21 12:17:14.000000000 -0300
++++ nomacs-3.23.3/ImageLounge/src/DkGui/DkBaseWidgets.cpp	2026-11-15 13:33:30.145218694 -0300
+@@ -29,6 +29,7 @@
+ 
+ #include "DkActionManager.h"
+ #include "DkSettings.h"
++#include "DkUtils.h"
+ 
+ #include <QAction>
+ #include <QEvent>
+@@ -254,7 +255,7 @@
+ {
+     mTime = -1;
+     mFixedWidth = -1;
+-    mFontSize = 13; // two sizes larger than default font see:stylesheet.css
++    mFontSize = DkUtils::scaledFontSize(13); // two sizes larger than default font see:stylesheet.css
+     mTextCol = DkSettingsManager::param().display().hudFgdColor;
+     mBlocked = false;
+ 
+diff -ruN nomacs-3.23.3.orig/ImageLounge/src/DkGui/DkBatch.cpp nomacs-3.23.3/ImageLounge/src/DkGui/DkBatch.cpp
+--- nomacs-3.23.3.orig/ImageLounge/src/DkGui/DkBatch.cpp	2026-07-21 12:17:14.000000000 -0300
++++ nomacs-3.23.3/ImageLounge/src/DkGui/DkBatch.cpp	2026-11-15 13:33:30.145218694 -0300
+@@ -103,7 +103,7 @@
+     // style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+ 
+     QFont f;
+-    f.setPointSize(10); // one size smaller than default font see:stylesheet.css
++    f.setPointSize(DkUtils::scaledFontSize(10)); // one size smaller than default font see:stylesheet.css
+     f.setItalic(true);
+     p.setFont(f);
+ 
+diff -ruN nomacs-3.23.3.orig/ImageLounge/src/DkGui/DkThumbsWidgets.cpp nomacs-3.23.3/ImageLounge/src/DkGui/DkThumbsWidgets.cpp
+--- nomacs-3.23.3.orig/ImageLounge/src/DkGui/DkThumbsWidgets.cpp	2026-07-21 12:17:14.000000000 -0300
++++ nomacs-3.23.3/ImageLounge/src/DkGui/DkThumbsWidgets.cpp	2026-11-15 13:33:30.145218694 -0300
+@@ -945,7 +945,7 @@
+ 
+     QFont font;
+     font.setBold(false);
+-    font.setPointSize(9); // two sizes smaller than default font see:stylesheet.css
++    font.setPointSize(DkUtils::scaledFontSize(9)); // two sizes smaller than default font see:stylesheet.css
+     mText.setFont(font);
+     mText.setDefaultTextColor(QColor(255, 255, 255));
+     mText.hide();

@@ -1,0 +1,5 @@
+<link project="openSUSE:Factory" package="nomacs">
+  <patches>
+    <apply name="project.diff"/>
+  </patches>
+</link>

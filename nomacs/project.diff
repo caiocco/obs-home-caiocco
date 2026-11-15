@@ -1,0 +1,58 @@
+--- a/nomacs.spec	2026-11-15 13:34:52.153839080 -0300
++++ b/nomacs.spec	2026-11-15 13:34:52.168840108 -0300
+@@ -25,6 +25,8 @@
+ Group:          Productivity/Graphics/Viewers
+ URL:            https://nomacs.org/
+ Source0:        https://github.com/nomacs/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
++# PATCH-FIX-OPENSUSE nomacs-respect-platform-font.patch caiocco@yahoo.com.br -- scale nomacs' fixed 11pt-based font sizes to the system Qt font size (qt5ct/qt6ct)
++Patch0:         nomacs-respect-platform-font.patch
+ BuildRequires:  cmake >= 2.8
+ BuildRequires:  fdupes
+ %if 0%{?suse_version} < 1600
+@@ -34,7 +36,7 @@
+ %endif
+ BuildRequires:  hicolor-icon-theme
+ BuildRequires:  pkgconfig
+-BuildRequires:  update-desktop-files
++BuildRequires:  desktop-file-utils
+ BuildRequires:  cmake(OpenCV)
+ BuildRequires:  cmake(Qt6Core)
+ BuildRequires:  cmake(Qt6Core5Compat)
+@@ -101,7 +103,6 @@
+ popd
+ 
+ rm %{buildroot}%{_libdir}/lib%{name}*.so
+-%suse_update_desktop_file org.%{name}.ImageLounge
+ %find_lang %{name} --with-qt
+ # find_lang doesn't escape paths, but language paths contain "Image Lounge" with space,
+ # we'll escape the paths manually
+@@ -111,6 +112,9 @@
+ # fix zero-length
+ rm %{buildroot}%{_datadir}/nomacs/Image\ Lounge/themes/System.css
+ 
++%check
++desktop-file-validate %{buildroot}%{_datadir}/applications/org.%{name}.ImageLounge.desktop
++
+ %post -p /sbin/ldconfig
+ 
+ %postun -p /sbin/ldconfig
+--- a/nomacs.changes	2026-11-15 13:34:52.153839080 -0300
++++ b/nomacs.changes	2026-11-15 13:34:52.180840930 -0300
+@@ -1,4 +1,17 @@
+ -------------------------------------------------------------------
++Sun Nov 15 16:34:52 UTC 2026 - caiocco <caiocco@yahoo.com.br>
++
++- home:caiocco: add nomacs-respect-platform-font.patch: nomacs'
++  base stylesheet forces an 11pt UI font (and widgets hardcode
++  sizes relative to it), overriding the system Qt font size set in
++  qt5ct/qt6ct. All style sheet font sizes and the hardcoded ones
++  are now scaled by (system font size / 11pt).
++- Drop %suse_update_desktop_file: merging desktop-translations
++  duplicated the Comment[de] and Comment[pt] keys already in the
++  upstream .desktop (rpmlint invalid-desktopfile). Validate the
++  file with desktop-file-validate in %check instead.
++
++-------------------------------------------------------------------
+ Wed Jul 22 17:46:35 UTC 2026 - Muhammad Akbar Yanuar Mantari <mantarimay@pm.me>
+ 
+ - Update to version 3.23.3
