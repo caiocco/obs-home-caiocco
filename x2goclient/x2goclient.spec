@@ -147,15 +147,18 @@ You can use it to connect to running sessions and start new sessions.
 # Fix up install issues
 sed -i -e 's/-o root -g root//' Makefile
 # GNU make >= 4.4 treats the variable names assigned to MAKEOVERRIDES as goals
-# in sub-makes ("No rule to make target 'SHELL'"); command-line variables are
-# passed down through MAKEFLAGS anyway.
+# in sub-makes ("No rule to make target 'SHELL'"), so drop those lines. Without
+# them, variables given on the make command line reach the qmake-generated
+# Makefile and override its CXXFLAGS (losing $(DEFINES), i.e. -DCFGCLIENT: the
+# binary then exits at once without a window). %%build therefore passes the
+# variables through the environment, which the qmake Makefile does override.
 sed -i -E '/^\.?MAKE(OVERRIDES|FLAGS) = /d' Makefile
 test -f ChangeLog && cp ChangeLog res/txt/changelog || test -f debian/changelog && cp debian/changelog res/txt/changelog || true
 test -f ChangeLog.gitlog && cp ChangeLog.gitlog res/txt/git-info || true
 
 
 %build
-%define make_call make %{?_smp_mflags} CXXFLAGS='%{optflags}' QMAKE_OPTS='QMAKE_STRIP=:' QT_VERSION='%{qt_version}'
+%define make_call CXXFLAGS='%{optflags}' QMAKE_OPTS='QMAKE_STRIP=:' QT_VERSION='%{qt_version}' make %{?_smp_mflags}
 %if %{qt_version} == 4
 %if 0%{?_qt4_bindir:1}
 export 'PATH=%{_qt4_bindir}:'"${PATH}"
