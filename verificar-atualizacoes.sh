@@ -80,6 +80,8 @@ declare -A IGNORAR=(
 	# snapshot da Factory (2024) é mais velho que a tag 1.3.0-alpha.2 (2026-09);
 	# o rpm acha ~git > ~alpha
 	[lmms]="1.3.0~git2024.09.21"
+	# ebuild "live" do Gentoo (git master)
+	[yggdrasil-go]="9999"
 )
 
 ignorado() { # pacote versão

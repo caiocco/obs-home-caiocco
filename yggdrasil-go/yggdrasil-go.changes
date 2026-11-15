@@ -1,0 +1,12 @@
+-------------------------------------------------------------------
+Sun Nov 15 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of yggdrasil-go 0.5.15 for openSUSE Leap 16.0
+  * Own spec; Go modules vendored from the v0.5.15 tag (vendor.tar.zst)
+  * Upstream systemd units: yggdrasil.service plus
+    yggdrasil-default-config.service, which generates /etc/yggdrasil.conf
+    on first start; the service is not enabled by default
+  * yggdrasil group via sysusers.d; members can use yggdrasilctl
+    (admin socket /run/yggdrasil.sock is 0660 root:yggdrasil)
+  * 0.5.15: routing fixes (stale ancestry, looping parents, bloom filter
+    cleanup), QUIC/WebSocket SNI and timeout fixes, admin socket limits
