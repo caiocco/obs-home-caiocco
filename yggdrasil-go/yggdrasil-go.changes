@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Sun Nov 15 12:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Build with CGO_ENABLED=1 (BuildRequires gcc): CGO_ENABLED=0 with
+  -buildmode=pie produced static-pie binaries (rpmlint
+  statically-linked-binary); now linked against glibc
+
+-------------------------------------------------------------------
 Sun Nov 15 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Initial package of yggdrasil-go 0.5.15 for openSUSE Leap 16.0

@@ -21,6 +21,7 @@ Source0:        https://github.com/yggdrasil-network/yggdrasil-go/archive/refs/t
 # "go mod vendor" of the tag above (OBS builds have no network access)
 Source1:        vendor.tar.zst
 Source2:        %{name}.sysusers
+BuildRequires:  gcc
 BuildRequires:  go >= 1.26
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  sysuser-tools
@@ -48,7 +49,7 @@ use yggdrasilctl through the admin socket without root.
 
 %build
 %sysusers_generate_pre %{SOURCE2} %{name} %{name}.conf
-export CGO_ENABLED=0
+export CGO_ENABLED=1
 for cmd in %{appname} %{appname}ctl; do
   go build -mod=vendor -trimpath -buildmode=pie -v \
     -ldflags "-s -w \
