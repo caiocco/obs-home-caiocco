@@ -1,9 +1,0 @@
--------------------------------------------------------------------
-Sat Nov 14 23:20:07 UTC 2026 - caiocco <caiocco@yahoo.com.br>
-
-- Initial package of git snapshot f380841 (2026-11-14); upstream
-  has no releases.
-- Install only the theme directories and index.theme; leave out
-  Workspace/ (Inkscape sources), images/ and the update.sh helper,
-  plus the optimize.sh links into Workspace/ (dangling once installed).
-- Rename the kcalc and org.kde.kcalc aliases to *.svg so they resolve.
