@@ -1,0 +1,55 @@
+Yggdrasil on openSUSE
+=====================
+
+First start
+-----------
+
+  sudo systemctl start yggdrasil
+
+On first start, yggdrasil-default-config.service writes /etc/yggdrasil.conf.
+Add peers to it (public list: https://github.com/yggdrasil-network/public-peers),
+then:
+
+  sudo systemctl enable --now yggdrasil
+
+Members of the "yggdrasil" group can run yggdrasilctl without root:
+
+  sudo usermod -aG yggdrasil <user>
+
+Firewall
+--------
+
+Your Yggdrasil address (200::/7) can be reached by every node of the public
+network. Unless told otherwise, firewalld puts the TUN interface in the
+default zone (usually "public"), which may expose services such as ssh or
+cockpit to all of them.
+
+This package ships a firewalld zone "yggdrasil" (target DROP, no services).
+It is not bound to any interface until you bind it:
+
+1. Give the TUN interface a fixed name in /etc/yggdrasil.conf:
+
+     IfName: ygg0
+
+2. Bind it to the zone and restart:
+
+     sudo firewall-cmd --permanent --zone=yggdrasil --add-interface=ygg0
+     sudo firewall-cmd --reload
+     sudo systemctl restart yggdrasil
+
+To offer a service to your peers, e.g. ssh:
+
+     sudo firewall-cmd --permanent --zone=yggdrasil --add-service=ssh
+     sudo firewall-cmd --reload
+
+Multicast and VPNs
+------------------
+
+The default MulticastInterfaces regex ".*" also matches VPN interfaces such
+as tailscale0 or wg0, which report multicast support but do not carry it.
+To limit discovery to the LAN, use something like:
+
+  MulticastInterfaces: [{ Regex: "^(en|eth|wl)", Beacon: true, Listen: true, Port: 0 }]
+
+Yggdrasil and Tailscale can run side by side: they use separate interfaces
+and address ranges (200::/7 vs. 100.64.0.0/10 and fd7a:115c:a1e0::/48).

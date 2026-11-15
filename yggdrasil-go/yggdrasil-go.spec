@@ -21,6 +21,13 @@ Source0:        https://github.com/yggdrasil-network/yggdrasil-go/archive/refs/t
 # "go mod vendor" of the tag above (OBS builds have no network access)
 Source1:        vendor.tar.zst
 Source2:        %{name}.sysusers
+# firewalld zone for the TUN interface, bound by hand (see README.SUSE)
+Source3:        %{appname}.xml
+Source4:        README.SUSE
+# PATCH-FEATURE-OPENSUSE: -genconf comments mention VPN interfaces in
+# MulticastInterfaces and a fixed IfName for the firewalld zone
+Patch0:         %{name}-config-comments.patch
+BuildRequires:  firewall-macros
 BuildRequires:  gcc
 BuildRequires:  go >= 1.26
 BuildRequires:  systemd-rpm-macros
@@ -44,8 +51,12 @@ generates /etc/yggdrasil.conf (add Peers there), then:
 "systemctl enable --now yggdrasil". Members of the yggdrasil group can
 use yggdrasilctl through the admin socket without root.
 
+A firewalld zone "yggdrasil" (drop all incoming) is included; bind it to
+the TUN interface as described in README.SUSE.
+
 %prep
 %autosetup -p1 -a1
+cp %{SOURCE4} .
 
 %build
 %sysusers_generate_pre %{SOURCE2} %{name} %{name}.conf
@@ -71,10 +82,12 @@ mkdir -p %{buildroot}%{_sbindir}
 ln -s service %{buildroot}%{_sbindir}/rc%{appname}
 mkdir -p %{buildroot}%{_sysconfdir}
 touch %{buildroot}%{_sysconfdir}/%{appname}.conf
+install -Dpm 0644 %{SOURCE3} %{buildroot}%{_prefix}/lib/firewalld/zones/%{appname}.xml
 
 %check
 ./%{appname} -version | grep -F %{version}
 ./%{appname} -genconf > test.conf
+grep -q tailscale0 test.conf
 ./%{appname} -useconffile test.conf -normaliseconf > /dev/null
 go test -mod=vendor ./src/...
 
@@ -83,6 +96,7 @@ go test -mod=vendor ./src/...
 
 %post
 %service_add_post %{appname}.service %{appname}-default-config.service
+%firewalld_reload
 
 %preun
 %service_del_preun %{appname}.service %{appname}-default-config.service
@@ -92,7 +106,10 @@ go test -mod=vendor ./src/...
 
 %files
 %license LICENSE
-%doc CHANGELOG.md README.md
+%doc CHANGELOG.md README.md README.SUSE
+%dir %{_prefix}/lib/firewalld
+%dir %{_prefix}/lib/firewalld/zones
+%{_prefix}/lib/firewalld/zones/%{appname}.xml
 %{_bindir}/%{appname}
 %{_bindir}/%{appname}ctl
 %{_sbindir}/rc%{appname}

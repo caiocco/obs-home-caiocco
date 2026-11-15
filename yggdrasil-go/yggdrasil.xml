@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="DROP">
+  <short>Yggdrasil</short>
+  <description>For the Yggdrasil overlay network interface. Every node of the public Yggdrasil network can reach your 200::/7 address, so all incoming connections are dropped; replies to outgoing connections still pass. Add only the services you want to offer to your peers. No interface is bound by default: see /usr/share/doc/packages/yggdrasil-go/README.SUSE.</description>
+</zone>

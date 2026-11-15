@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Sun Nov 15 13:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add firewalld zone "yggdrasil" (target DROP, no services, no
+  interface bound) and README.SUSE explaining how to bind it to a
+  fixed IfName such as ygg0
+- Add yggdrasil-go-config-comments.patch: the comments written by
+  -genconf now say that VPN interfaces (tailscale0, wg0) match the
+  default multicast regex without carrying multicast, and suggest a
+  fixed IfName for the firewall zone
+
+-------------------------------------------------------------------
 Sun Nov 15 12:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Build with CGO_ENABLED=1 (BuildRequires gcc): CGO_ENABLED=0 with
