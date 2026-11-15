@@ -1,0 +1,95 @@
+diff --git a/src/launcher/apps-common.c b/src/launcher/apps-common.c
+index cada063..3019fd6 100644
+--- a/src/launcher/apps-common.c
++++ b/src/launcher/apps-common.c
+@@ -54,66 +54,49 @@ void expand_exec(DesktopEntry *entry, const char *path)
+     // %c -> Name
+     // %k -> path
+     if (entry->exec) {
+-        size_t buf_size = strlen(entry->exec)
+-                        + (entry->name ? strlen(entry->name) : 1)
+-                        + (entry->icon ? strlen(entry->icon) : 1) + 100;
+-        char *exec2 = calloc(buf_size, 1);
+-        char *p, *q;
+-        // p will never point to an escaped char
+-        for (p = entry->exec, q = exec2; *p; p++, q++)
++        // Build the result in a GString: the old fixed-size buffer could
++        // overflow (several %c/%i, long paths) and its snprintf() size argument
++        // did not shrink as q advanced, which aborts with _FORTIFY_SOURCE=3.
++        GString *exec2 = g_string_sized_new(strlen(entry->exec) + 64);
++        for (const char *p = entry->exec; *p; p++)
+         {
+-            *q = *p; // Copy
+             if (*p == '\\') {
+-                p++, q++;
+-                // Copy the escaped char
+-                if (*p == '%') // For % we delete the backslash, i.e. write % over it
+-                    q--;
+-                *q = *p;
+-                if (!*p)
++                p++;
++                if (!*p) {
++                    g_string_append_c(exec2, '\\');
+                     break;
++                }
++                // For % we delete the backslash, otherwise keep the escape
++                if (*p != '%')
++                    g_string_append_c(exec2, '\\');
++                g_string_append_c(exec2, *p);
+                 continue;
+             }
+             if (*p == '%') {
+                 p++;
+                 switch (*p) {
+-                case 'i':   if (entry->icon) {
+-                                snprintf(q, buf_size-1, "--icon '%s'", entry->icon);
+-                                char *old = q;
+-                                q += strlen_const("--icon ''");
+-                                q += strlen(entry->icon);
+-                                buf_size -= (size_t)(q - old);
+-                            }
++                case 'i':   if (entry->icon)
++                                g_string_append_printf(exec2, "--icon '%s'", entry->icon);
+                             break;
+-                case 'c':   if (entry->name) {
+-                                snprintf(q, buf_size-1, "'%s'", entry->name);
+-                                char *old = q;
+-                                q += strlen_const("''");
+-                                q += strlen(entry->name);
+-                                buf_size -= (size_t)(q - old);
+-                            } else {
+-                                snprintf(q, buf_size-1, "'%s'", path);
+-                                char *old = q;
+-                                q += strlen_const("''");
+-                                q += strlen(path);
+-                                buf_size -= (size_t)(q - old);
+-                            }
++                case 'c':   g_string_append_printf(exec2, "'%s'", entry->name ? entry->name : path);
+                             break;
+                 case 'F':
+-                case 'f':   snprintf(q, buf_size-1, "%c%c", '%', *p);
+-                            q += 2;
+-                            buf_size -= 2;
++                case 'f':   g_string_append_c(exec2, '%');
++                            g_string_append_c(exec2, *p);
++                            break;
++                case '%':   g_string_append_c(exec2, '%');
+                             break;
+                 case '\0':  goto endloop;
+                 }
+-                q--; // To balance the q++ in the for
+-                     // Or delete the last % from q
++                // Other expansions are deleted
+                 continue;
+             }
++            g_string_append_c(exec2, *p);
+         }
+     endloop:
+-        *q = '\0';
+         free(entry->exec);
+-        entry->exec = exec2;
++        entry->exec = strdup(exec2->str);
++        g_string_free(exec2, TRUE);
+     }
+ }
+ 

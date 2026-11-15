@@ -1,0 +1,36 @@
+diff --git a/src/main.c b/src/main.c
+index 6741f6f..8edfbd0 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -448,6 +448,10 @@ void handle_x_event(XEvent *e)
+         return;
+ 
+     Panel *panel = get_panel(e->xany.window);
++    if(e->type>=KeyPress && e->type<=LeaveNotify && panel == NULL) {
++        return;
++    }
++
+     switch (e->type) {
+     case ButtonPress: {
+         handle_mouse_press_event(e);
+@@ -469,7 +473,7 @@ void handle_x_event(XEvent *e)
+             handle_mouse_move_event(e);
+ 
+         Area *area = find_area_under_mouse(panel, e->xmotion.x, e->xmotion.y);
+-        if (area->_get_tooltip_text)
++        if (area && area->_get_tooltip_text)
+             tooltip_trigger_show(area, panel, e);
+         else
+             tooltip_trigger_hide();
+diff --git a/src/util/area.c b/src/util/area.c
+index a33dc96..f3a146f 100644
+--- a/src/util/area.c
++++ b/src/util/area.c
+@@ -833,6 +833,7 @@ gboolean full_width_area_is_under_mouse(void *obj, int x, int y)
+ 
+ Area *find_area_under_mouse(void *root, int x, int y)
+ {
++    if (root == NULL) return NULL;
+     Area *result = root;
+ deeper:
+     for (GList *it = result->children; it; it = it->next)

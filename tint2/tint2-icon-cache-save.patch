@@ -1,0 +1,62 @@
+diff --git a/src/util/cache.c b/src/util/cache.c
+index ff526d1..cbcda32 100644
+--- a/src/util/cache.c
++++ b/src/util/cache.c
+@@ -82,7 +82,9 @@ void load_cache(Cache *cache, const gchar *cache_path)
+             g_hash_table_insert(cache->_table, strdup(key), strdup(value));
+     }
+     free(line);
++    // fclose() closes fd, which also releases the lock
+     fclose(f);
++    return;
+ 
+ unlock:
+     flock(fd, LOCK_UN);
+@@ -100,14 +102,16 @@ void write_cache_line(gpointer key, gpointer value, gpointer user_data)
+ 
+ void save_cache(Cache *cache, const gchar *cache_path)
+ {
+-    int fd = open (cache_path, O_RDONLY | O_CREAT, 0600);
++    // The file must be opened for writing: fdopen(fd, "w") fails on an
++    // O_RDONLY descriptor, so the cache was never saved.
++    int fd = open (cache_path, O_WRONLY | O_CREAT, 0600);
+     if (fd == -1) {
+         // Temporary delimit for existing path without new allocation
+         gchar *file_sep = strrchr (cache_path, G_DIR_SEPARATOR_S[0]);
+         *file_sep = '\0';
+         g_mkdir_with_parents (cache_path, 0700);
+         *file_sep = G_DIR_SEPARATOR_S[0];
+-        fd = open (cache_path, O_RDONLY | O_CREAT, 0600);
++        fd = open (cache_path, O_WRONLY | O_CREAT, 0600);
+     }
+     if (fd == -1) {
+         fprintf(stderr, RED "tint2: Could not save icon theme cache!" RESET "\n");
+@@ -115,18 +119,20 @@ void save_cache(Cache *cache, const gchar *cache_path)
+     }
+     flock(fd, LOCK_EX);
+ 
+-    FILE *f = fdopen(fd, "w");
++    // Truncate only once the lock is held
++    FILE *f = ftruncate(fd, 0) == 0 ? fdopen(fd, "w") : NULL;
+     if (!f) {
+         fprintf(stderr, RED "tint2: Could not save icon theme cache!" RESET "\n");
+-        goto unlock;
++        flock(fd, LOCK_UN);
++        close(fd);
++        return;
+     }
+     g_hash_table_foreach(cache->_table, write_cache_line, f);
+-    fclose(f);
+-    cache->dirty = FALSE;
+-
+-unlock:
+-    flock(fd, LOCK_UN);
+-    close(fd);
++    // fclose() closes fd, which also releases the lock
++    if (fclose(f) == 0)
++        cache->dirty = FALSE;
++    else
++        fprintf(stderr, RED "tint2: Could not save icon theme cache!" RESET "\n");
+ }
+ 
+ const gchar *get_from_cache(Cache *cache, const gchar *key)

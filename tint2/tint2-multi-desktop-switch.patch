@@ -1,0 +1,13 @@
+diff --git a/src/mouse_actions.c b/src/mouse_actions.c
+index f8ebb70..263189f 100644
+--- a/src/mouse_actions.c
++++ b/src/mouse_actions.c
+@@ -253,7 +253,7 @@ void handle_mouse_release_event(XEvent *e)
+             } else
+                 task_handle_mouse_event(task, action);
+         }
+-        else if (diff_desktop)
++        if (diff_desktop)
+             change_desktop( taskbar->desktop);
+     } else
+         task_handle_mouse_event(click_task(panel, e->xbutton.x, e->xbutton.y), action);

@@ -1,0 +1,23 @@
+-------------------------------------------------------------------
+Sun Nov 15 05:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of tint2 17.1.3 (nick87720z continuation) for
+  home:caiocco; openSUSE:Factory dropped tint2, so Leap 16.0 has none
+- Collected fixes from openSUSE, Debian, Arch and upstream issues:
+  * tint2-glib-list-copy.patch: copy lists before iterating when the
+    callbacks modify them (segfault with glib >= 2.76, issue #4)
+  * tint2-cmake4.patch: cmake_minimum_required ranges for CMake 4
+  * tint2conf-libm.patch: link tint2conf with libm
+  * tint2-null-x-events.patch: ignore pointer/key events for windows
+    that are not a panel (crashes with Conky, issue #5)
+  * tint2-expand-exec-overflow.patch: build the launcher Exec
+    expansion in a GString; the fixed buffer could overflow and its
+    snprintf() size aborted with _FORTIFY_SOURCE=3; %% now gives %
+  * tint2-systray-workarea-fixes.patch: read the tray _NET_WM_PID as
+    a format 32 property, free names of filtered tray icons, check
+    _NET_WORKAREA/_NET_DESKTOP_GEOMETRY sizes (no division by zero)
+  * tint2-icon-cache-save.patch: open the icon cache for writing (it
+    was never saved, issue #6); truncate under the lock; stop closing
+    file descriptors twice
+  * tint2-multi-desktop-switch.patch: revert fd30b3ad so clicking a
+    task on another desktop switches to that desktop (issue #2)

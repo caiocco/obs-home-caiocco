@@ -1,0 +1,60 @@
+diff --git a/src/systray/systraybar.c b/src/systray/systraybar.c
+index cb3a2f3..2f42496 100644
+--- a/src/systray/systraybar.c
++++ b/src/systray/systraybar.c
+@@ -580,8 +580,10 @@ gboolean reject_icon(Window win)
+         char *name = get_window_name(win);
+         if (regexec(systray_hide_name_regex, name, 0, NULL, 0) == 0) {
+             fprintf(stderr, GREEN "tint2: Filtering out systray icon '%s'" RESET "\n", name);
++            free(name);
+             return TRUE;
+         }
++        free(name);
+     }
+     return FALSE;
+ }
+@@ -634,7 +636,9 @@ gboolean add_icon(Window win)
+                                      &bytes_after,
+                                      &prop);
+         if (ret == Success && prop) {
+-            pid = (int)prop[1] * 256 + prop[0];
++            // format 32 properties are returned as an array of long
++            if (actual_format == 32 && nitems > 0)
++                pid = (int)*(unsigned long *)prop;
+             XFree( prop);
+         }
+     }
+diff --git a/src/util/server.c b/src/util/server.c
+index 3b76d08..7bc1961 100644
+--- a/src/util/server.c
++++ b/src/util/server.c
+@@ -443,16 +443,27 @@ void server_get_number_of_desktops()
+     if (server.num_desktops > 1)
+         return;
+ 
+-    long *work_area_size = get_property(server.root_win, server.atom [_NET_WORKAREA], XA_CARDINAL, NULL);
++    int num_results = 0;
++    long *work_area_size = get_property(server.root_win, server.atom [_NET_WORKAREA], XA_CARDINAL, &num_results);
+     if (!work_area_size)
+         return;
++    if (num_results < 4) {
++        XFree(work_area_size);
++        return;
++    }
+     int work_area_width = work_area_size[0] + work_area_size[2];
+     int work_area_height = work_area_size[1] + work_area_size[3];
+     XFree(work_area_size);
++    if (work_area_width <= 0 || work_area_height <= 0)
++        return;
+ 
+-    long *x_screen_size = get_property(server.root_win, server.atom [_NET_DESKTOP_GEOMETRY], XA_CARDINAL, NULL);
++    long *x_screen_size = get_property(server.root_win, server.atom [_NET_DESKTOP_GEOMETRY], XA_CARDINAL, &num_results);
+     if (!x_screen_size)
+         return;
++    if (num_results < 2) {
++        XFree(x_screen_size);
++        return;
++    }
+     int x_screen_width = x_screen_size[0];
+     int x_screen_height = x_screen_size[1];
+     XFree(x_screen_size);
