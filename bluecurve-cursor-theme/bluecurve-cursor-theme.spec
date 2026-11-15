@@ -1,9 +1,18 @@
-#To the extent possible under law, the person who associated CC0 with
-#this spec file has waived all copyright and related or neighboring rights
-#to this spec file.
 #
-#You should have received a copy of the CC0 legalcode along with this
-#work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+# spec file for package bluecurve-cursor-theme
+#
+# Packaging based on the bluecurve-icon-theme spec by Phantom X
+# (https://github.com/PhantomX/chinforpms).
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+#
 
 # Bluecurve cursors from Red Hat's bluecurve-icon-theme (the last release,
 # packaged by Fedora until F25). Packaging and the cursor alias list follow
