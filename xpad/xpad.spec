@@ -2,6 +2,8 @@
 # spec file for package xpad
 #
 # Copyright (c) 2026 Caio
+# Based on the Fedora xpad spec (https://src.fedoraproject.org/rpms/xpad),
+# MIT License.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
