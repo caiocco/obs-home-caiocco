@@ -1,0 +1,5 @@
+<link project="openSUSE:Factory" package="qutebrowser">
+  <patches>
+    <apply name="project.diff"/>
+  </patches>
+</link>
