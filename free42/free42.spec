@@ -10,7 +10,7 @@
 #
 
 Name:           free42
-Version:        3.5.2
+Version:        3.5.3
 Release:        0
 Summary:        HP-42S calculator simulator
 License:        GPL-2.0-only AND BSD-3-Clause

@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Mon Nov 16 12:48:09 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- update to 2.0.3
+  * Added Preferences > Appearance > Square corners
+  * Sensitive input prompts are not backed up or restored
+  * Identity files are forced to owner-only permissions (600)
+  * Fixed potential crash in text renderer with C0 control characters
+  * Fixed glitches with stepped mouse wheel scrolling, feeds list and
+    Books sidebar
+  * Linux: improved system dark mode detection, per-pixel scroll
+    events, workaround for repeated keys on Wayland
+- lagrange-sdl3-gamepad-init.patch is still needed (not fixed upstream)
+
+-------------------------------------------------------------------
 Tue Nov 10 05:01:43 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
 
 - update to 2.0.2

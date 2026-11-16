@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Mon Nov 16 12:48:09 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- update to 3.5.3
+  * Fixed Internal Error when pressing unassigned up/down keys in the
+    programmable menu (regression from 3.5)
+  * Copy and Paste handles linefeeds consistently and no longer loses
+    text embedded in matrices and lists
+  * Functions invoked via direct XEQ mapping in skins leave the program
+    counter in place and no longer cancel the programmable menu
+
+-------------------------------------------------------------------
 Sun Nov  8 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Initial package of Free42 3.5.2 for openSUSE Leap 16.0
