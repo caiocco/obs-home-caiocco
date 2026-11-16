@@ -61,6 +61,8 @@ declare -A REPOLOGY=(
 	[SheepShaver]=-
 	# upstream morto (última versão 8.0.2, 2008)
 	[bluecurve-cursor-theme]=-
+	# pgmodeler2 é a série 2.x do mesmo projeto (ver RAMO)
+	[pgmodeler2]=pgmodeler
 )
 
 # Pacotes que não devem ser comparados com o homônimo da Factory.
@@ -84,8 +86,16 @@ declare -A IGNORAR=(
 	[yggdrasil-go]="9999"
 )
 
+# Série a acompanhar (prefixo de versão), para pacotes que fixam um ramo;
+# versões de outras séries são desconsideradas como as de IGNORAR.
+declare -A RAMO=(
+	# a série 2.x é empacotada à parte como pgmodeler2
+	[pgmodeler]=1
+)
+
 ignorado() { # pacote versão
-	[[ " ${IGNORAR[$1]} " == *" $2 "* ]]
+	[[ " ${IGNORAR[$1]} " == *" $2 "* ]] && return 0
+	[ -n "${RAMO[$1]}" ] && [[ $2 != "${RAMO[$1]}" && $2 != "${RAMO[$1]}".* ]]
 }
 
 mostrar_tudo=0
