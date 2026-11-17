@@ -1,4 +1,21 @@
 -------------------------------------------------------------------
+Mon Nov 16 23:25:01 UTC 2026 - Giacomo Comes <gcomes.obs@gmail.com>
+
+- remove Leap 15.x dependencies in the spec file
+- allow seamonkey to be built on Leap 16.x provided that
+  Python 3.11 is available
+
+-------------------------------------------------------------------
+Mon Nov 16 21:25:42 UTC 2026 - Tristan Miller <psychonaut@nothingisreal.com>
+
+- Update source URLs
+
+-------------------------------------------------------------------
+Thu Oct  1 07:06:05 UTC 2026 - Richard Biener <rguenther@suse.com>
+
+- Use default GCC (GCC 16) on openSUSE Tumbleweed again.
+
+-------------------------------------------------------------------
 Wed Aug 12 22:43:53 UTC 2026 - Tristan Miller <psychonaut@nothingisreal.com>
 
 - update to SeaMonkey 2.53.24

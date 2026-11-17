@@ -39,6 +39,8 @@ Source2:        https://github.com/DOCGroup/ACE_TAO/releases/download/ACE%%2BTAO
 Source3:        https://github.com/Genivia/RE-flex/archive/v%{reflex_ver}.tar.gz#/RE-flex-%{reflex_ver}.tar.gz
 
 BuildRequires:  bison
+# lldb-devel -> clang-tools needs /usr/bin/clang; pin the same LLVM as lldb-devel (19)
+BuildRequires:  clang19
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc-c++
 BuildRequires:  gd-devel

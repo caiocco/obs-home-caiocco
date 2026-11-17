@@ -1,7 +1,7 @@
 #
 # spec file for package seamonkey
 #
-# Copyright (c) 2018 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2026 SUSE LLC and contributors
 #               2006-2018 Wolfgang Rosenauer
 #               2018-2026 Tristan Miller
 #
@@ -17,9 +17,7 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
-### build options
 
-# Components to include/exclude
 %bcond_without	dominspector
 %bcond_without	irc
 %bcond_without	localizations
@@ -33,10 +31,7 @@
 %bcond_without	system_nspr
 %bcond_without	system_nss
 %bcond_without	system_zlib
-# Disable system AV1 on Leap; as of 15.6 dav1d is not yet packaged for it
-%if 0%{?suse_version} > 1600
 %bcond_without	system_av1
-%endif
 %bcond_with     system_jpeg
 %bcond_with     system_png
 
@@ -44,7 +39,6 @@
 %bcond_with     clang
 %bcond_without  lto
 %bcond_with     gold
-
 
 %define progname       %{name}
 %define sources_subdir %{name}-%{version}
@@ -62,8 +56,8 @@ License:        MPL-2.0
 Group:          Productivity/Networking/Web/Browsers
 URL:            https://www.seamonkey-project.org/
 
-Source0:        https://archive.mozilla.org/pub/seamonkey/releases/%{version}/source/seamonkey-%{version}.source.tar.xz
-Source1:        https://archive.mozilla.org/pub/seamonkey/releases/%{version}/source/seamonkey-%{version}.source-l10n.tar.xz
+Source0:        https://archive.seamonkey-project.org/releases/%{version}/source/seamonkey-%{version}.source.tar.xz
+Source1:        https://archive.seamonkey-project.org/releases/%{version}/source/seamonkey-%{version}.source-l10n.tar.xz
 Source2:        spellcheck.js
 Source3:        mozilla.sh.in
 Source4:        suse-default-prefs.js
@@ -89,7 +83,7 @@ Patch6:         seamonkey-2.53.17.1-bmo531915.patch
 Patch8:         seamonkey-2.53.20-mach-use-python-311.patch
 Patch9:         seamonkey-2.53.21-bmo1862601.patch
 Patch10:        seamonkey-2.53.21-bmo1927380.patch
-Patch11:	seamonkey-2.53.20-system-av1.patch
+Patch11:        seamonkey-2.53.20-system-av1.patch
 Patch13:        seamonkey-2.53.21-bmo1662867.patch
 Patch14:        seamonkey-2.53.24-bmo1882209.patch
 Patch15:        seamonkey-2.53.24-bmo1866191.patch
@@ -104,8 +98,8 @@ BuildRequires:  dbus-1-glib-devel
 BuildRequires:  fdupes
 BuildRequires:  hunspell-devel
 %if 0%{?suse_version} > 1600 && %{with system_av1}
-BuildRequires:  libaom-devel
 BuildRequires:  dav1d-devel
+BuildRequires:  libaom-devel
 %endif
 BuildRequires:  libiw-devel
 BuildRequires:  libnotify-devel
@@ -113,9 +107,7 @@ BuildRequires:  libproxy-devel
 %if %{with system_libvpx}
 BuildRequires:  libvpx-devel >= 1.10.0
 %endif
-%if 0%{?suse_version} > 1500 || 0%{?sle_version} >= 150200 && 0%{?is_opensuse}
 BuildRequires:  libwebp-devel >= 1.0.0
-%endif
 %if %{with system_icu}
 BuildRequires:  libicu-devel >= 67.1
 %endif
@@ -124,9 +116,7 @@ BuildRequires:  memory-constraints
 BuildRequires:  python311-base
 BuildRequires:  startup-notification-devel
 BuildRequires:  unzip
-%if 0%{?suse_version} > 1560
 BuildRequires:  translate-suse-desktop
-%endif
 BuildRequires:  xorg-x11-libXt-devel
 BuildRequires:  yasm
 BuildRequires:  zip
@@ -142,36 +132,28 @@ BuildRequires:  pkgconfig(libffi) > 3.0.9
 %endif
 BuildRequires:  pkgconfig(libpulse)
 BuildRequires:  pkgconfig(xcomposite)
-%if 0%{?suse_version} >= 1600
 BuildRequires:  cargo1.84
 BuildRequires:  rust1.84
-%else
-BuildRequires:  cargo
-BuildRequires:  rust >= 1.76
-%endif
-BuildRequires:  rust-cbindgen
+BuildRequires:  clang-devel
 BuildRequires:  git
 BuildRequires:  nasm >= 2.13
-BuildRequires:  clang-devel
+BuildRequires:  rust-cbindgen
 %if %{with clang}
 BuildRequires:  clang
 %else
-# Use GCC 14 on Tumbleweed because builds of 2.53.21 fail with GCC 15
-%if 0%{?suse_version} > 1600
-%define gcc_version 14
-%endif
 BuildRequires:  gcc%{?gcc_version:%gcc_version}-c++
 %if %{with gold}
 BuildRequires:  binutils-gold
 %endif
 %endif
 
-PreReq:         /bin/sh coreutils
+PreReq:         /bin/sh
+PreReq:         coreutils
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
+Provides:       seamonkey-mail = %{version}
 Provides:       web_browser
 Provides:       browser(npapi)
-Provides:       seamonkey-mail = %{version}
 Obsoletes:      seamonkey-mail <= 2.0
 Provides:       seamonkey-spellchecker = %{version}
 Obsoletes:      seamonkey-spellchecker <= 2.0
@@ -225,7 +207,6 @@ Firefox and Thunderbird) retains Mozilla's more traditional-looking
 interface.  Many Thunderbird and (legacy) Firefox extensions are
 compatible with SeaMonkey.
 
-
 %package irc
 Summary:        IRC for SeaMonkey
 Group:          Productivity/Networking/IRC
@@ -241,7 +222,6 @@ PreReq:         %{name} = %{version}
 
 %description venkman
 A JavaScript debugger for the SeaMonkey web browser.
-
 
 %package dom-inspector
 Summary:        The SeaMonkey DOM Inspector
@@ -265,7 +245,6 @@ PreReq:         %{name} = %{version}
 This package contains several optional languages for the user interface
 of SeaMonkey.
 
-
 %package translations-other
 Summary:        Extra translations for SeaMonkey
 Group:          System/Localization
@@ -276,7 +255,6 @@ PreReq:         %{name} = %{version}
 This package contains several optional languages for the user interface
 of SeaMonkey.
 %endif
-
 
 %prep
 %setup -q -b 6 -c
@@ -301,13 +279,11 @@ cp %{SOURCE7} GNUmakefile
 %patch -P 8 -p1
 
 %if %{with system_icu}
-%if 0%{?suse_version} >= 1600
 %patch -P 9 -p1
 %patch -P 10 -p1
 %endif
-%endif
 
-%if 0%{?suse_version} > 1600 && %{with system_av1}
+%if %{with system_av1}
 %patch -P 11 -p1
 %endif
 
@@ -348,7 +324,6 @@ ac_add_options --enable-alsa
 ac_add_options --enable-default-toolkit=cairo-gtk3
 ac_add_options --enable-libproxy
 
-
 ### Features
 
 ### Components to include
@@ -361,7 +336,6 @@ ac_add_options --disable-updater
 # Calendar is always enabled as it's required to build various
 # components and addons
 ac_add_options --enable-calendar
-
 
 ### System vs. bundled libraries
 
@@ -477,7 +451,6 @@ make %{?_smp_mflags}
 %if %{with localizations}
 make -j1 locales
 %endif
-
 
 %install
 

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Nov 17 05:32:29 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Add BuildRequires clang19: lldb-devel pulls clang-tools, whose /usr/bin/clang is now also provided by updated clang15/clang17 (unresolvable choice)
+
+-------------------------------------------------------------------
 Fri Nov  6 15:15:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Initial package of JX IDE 7.1.5+git20260824.22f6718
