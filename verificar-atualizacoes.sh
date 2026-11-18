@@ -36,7 +36,6 @@ declare -A ORIGEM=(
 	[lagrange]=openSUSE:Factory
 	[harvid]=multimedia:proaudio
 	[texstudio]=Publishing
-	[sarasa-gothic-fonts]=M17N:fonts
 )
 
 # Nome do projeto no Repology, quando difere do pacote ("-" = não consultar).
@@ -64,7 +63,6 @@ declare -A REPOLOGY=(
 	[bluecurve-cursor-theme]=-
 	# pgmodeler2 é a série 2.x do mesmo projeto (ver RAMO)
 	[pgmodeler2]=pgmodeler
-	[sarasa-gothic-fonts]=fonts:sarasa-gothic
 )
 
 # Pacotes que não devem ser comparados com o homônimo da Factory.
