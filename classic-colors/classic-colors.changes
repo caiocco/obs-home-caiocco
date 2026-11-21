@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Sat Nov 21 03:43:36 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Set the X application class to "classic-colors" (was "Paint") and
+  StartupWMClass to match: the Xfce panel looks up <class>.desktop
+  and otherwise takes the first desktop search hit for "Paint",
+  showing another application's icon (e.g. a Flatpak with a "paint"
+  keyword) for the Classic Colors window
+
+-------------------------------------------------------------------
 Sun Nov 15 00:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Add classic-colors-save-prompt.patch: track whether the image was

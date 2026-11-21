@@ -52,10 +52,14 @@ BMP, GIF and TGA images.
 %autosetup -p1
 sed -i 's|file:///usr/local/share/classic-colors/|file://%{_datadir}/%{name}/|' ui_main.c
 sed -i 's|Classic Colors v1\.0\.1|Classic Colors v%{version}|' ui_main.c
+# Use the desktop file ID as the X class, so taskbars that look up
+# <class>.desktop (libxfce4windowing) find our icon instead of guessing
+sed -i 's|^\(            \)"Paint",$|\1"classic-colors",|' ui_main.c
 # Use distribution optimisation flags instead of -O3
 sed -i 's| -O3 | |' configure
 grep -q 'file://%{_datadir}/%{name}/help' ui_main.c
 grep -q 'v%{version}' ui_main.c
+grep -q '"classic-colors",$' ui_main.c
 
 %build
 ./configure
