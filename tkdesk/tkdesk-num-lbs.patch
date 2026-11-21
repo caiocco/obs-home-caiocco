@@ -1,0 +1,22 @@
+Read -num_lbs before the file browser creates its listboxes.
+
+With Itcl 3+ the constructor options are only applied at its end
+(eval configure $args), after the listboxes were already built from
+the default num_lbs of 3.  The saved _layout value and tkdesk(num_lbs)
+were thus ignored at start-up, although the Options menu showed them.
+
+--- tkdesk-2.0.orig/tcldesk/Viewer.tcl
++++ tkdesk-2.0/tcldesk/Viewer.tcl
+@@ -164,6 +164,12 @@
+ 	#
+ 	frame $top.fLBs
+ 	pack $top.fLBs -fill both -expand yes
++	# Itcl 3+ only applies $args at the end of the constructor, so
++	# -num_lbs (from _layout or tkdesk(num_lbs)) must be read here.
++	set i [lsearch -exact $args -num_lbs]
++	if {$i >= 0} {
++	    set num_lbs [lindex $args [expr {$i + 1}]]
++	}
+ 	set j 0
+ 	for {set i 0} {$i < $num_lbs} {incr i} {
+ 	    if {$tkdesk(tcl_version) >= 8.0} {

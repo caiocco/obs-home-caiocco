@@ -42,6 +42,8 @@ Patch8:         tkdesk-blt-tk86.patch
 Patch9:         tkdesk-server-key.patch
 # PATCH-FIX-OPENSUSE tkdesk-xdg-open.patch -- open URLs with xdg-open instead of netscape
 Patch10:        tkdesk-xdg-open.patch
+# PATCH-FIX-OPENSUSE tkdesk-num-lbs.patch -- honour the saved/configured number of listboxes when a file browser opens
+Patch11:        tkdesk-num-lbs.patch
 BuildRequires:  autoconf
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc

@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Sat Nov 21 12:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Add tkdesk-num-lbs.patch: file browsers opened with the default 3
+  listboxes, ignoring both the number saved in _layout and
+  tkdesk(num_lbs) from the System config (Itcl 3+ applies the
+  constructor options only after the listboxes are built)
+
+-------------------------------------------------------------------
 Fri Nov 13 03:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Initial package of TkDesk 2.0
