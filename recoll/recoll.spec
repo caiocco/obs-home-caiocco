@@ -31,6 +31,7 @@ BuildRequires:  aspell-devel
 BuildRequires:  bison
 BuildRequires:  chmlib-devel
 BuildRequires:  file-devel
+BuildRequires:  gpg2
 BuildRequires:  hicolor-icon-theme
 BuildRequires:  meson
 BuildRequires:  python3-devel
@@ -96,6 +97,10 @@ Recoll is a personal full text search tool based on Xapian.
 This package provides development files.
 
 %prep
+# Check the upstream signature against the recoll keyring
+export GNUPGHOME=$(mktemp -d)
+gpg --batch --quiet --import %{SOURCE2}
+gpg --batch --verify %{SOURCE1} %{SOURCE0}
 %autosetup -p1
 
 %build

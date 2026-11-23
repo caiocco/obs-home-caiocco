@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Nov 23 21:45:31 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Actually verify the upstream tarball signature: check the .asc
+  against recoll.keyring with gpg in %prep (BuildRequires gpg2)
+
+-------------------------------------------------------------------
 Mon Nov 23 18:37:58 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Update to 1.46.0
