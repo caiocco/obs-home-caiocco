@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Nov 23 22:53:46 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
+
+- Generate the reflex scanners before the parallel make: code/*Scanner.h
+  is a side effect of the %.cpp : %.ll rule, so *Styler.o could be
+  compiled before its header existed (intermittent build failure)
+
+-------------------------------------------------------------------
 Tue Nov 17 05:32:29 UTC 2026 - Caio César Ortega <caiocco@yahoo.com.br>
 
 - Add BuildRequires clang19: lldb-devel pulls clang-tools, whose /usr/bin/clang is now also provided by updated clang15/clang17 (unresolvable choice)

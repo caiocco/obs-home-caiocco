@@ -196,6 +196,10 @@ done
 for a in code_crusader code_medic code_mill; do
   pushd jx-ide/$a
   makemake
+  # code/*Scanner.h is a side effect of the %.cpp : %.ll rule and no target
+  # depends on it, so generate the scanners first (parallel make race)
+  scanners=$(ls code/*.ll 2>/dev/null | sed 's/\.ll$/.cpp/')
+  [ -n "$scanners" ] && $JXMAKE "$JXOPT" $scanners
   $JXMAKE "$JXOPT"
   popd
 done
