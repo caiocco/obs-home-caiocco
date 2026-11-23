@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Mon Nov 23 22:04:31 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Verify the upstream tarball signature with gpg in %prep
+  (BuildRequires gpg2)
+- Refresh bluefish.keyring from keyserver.ubuntu.com: same key
+  64979277BAFF2D4CB637AC3B291C63A6B78DFBA1 with its expiry extended
+  (the old copy had expired in 2021)
+
+-------------------------------------------------------------------
 Mon Nov  9 00:13:34 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Update to 2.4.2:

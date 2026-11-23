@@ -29,6 +29,7 @@ Source2:        %{name}.keyring
 Patch0:         remove-python-class-shebang.patch
 BuildRequires:  fdupes
 BuildRequires:  gettext-devel
+BuildRequires:  gpg2
 BuildRequires:  intltool
 BuildRequires:  jing
 BuildRequires:  man
@@ -63,6 +64,10 @@ Bluefish is a HTML editor designed for the experienced Web designer
 It is based on Gtk+.
 
 %prep
+# Check the upstream signature against the bluefish keyring
+export GNUPGHOME=$(mktemp -d)
+gpg --batch --quiet --import %{SOURCE2}
+gpg --batch --verify %{SOURCE1} %{SOURCE0}
 %autosetup -p1
 
 %build
