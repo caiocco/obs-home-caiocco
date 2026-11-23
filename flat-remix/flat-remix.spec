@@ -6,7 +6,7 @@
 #work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 Name:           flat-remix
-Version:        20251119
+Version:        20261116
 Release:        0
 Summary:        Flat Remix icon theme
 License:        GPL-3.0-only AND CC-BY-SA-4.0
@@ -31,6 +31,9 @@ each available in Dark, Light, and Light-darkPanel variants.
 
 %install
 make install DESTDIR=%{buildroot} PREFIX=/usr
+# 20261116 ships dangling links in the Dark variants (kali-server-mcp.svg
+# -> missing server-mcp.svg, self-referencing xplico.svg); drop them
+find %{buildroot}%{_datadir}/icons -xtype l -print -delete
 
 %files
 %license LICENSE
