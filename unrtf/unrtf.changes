@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Nov 23 18:37:58 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Update to 0.21.14
+  * Fix iconv input buffer overflow: drop the byte instead of
+    writing past the buffer when flushing fails (security)
+
+-------------------------------------------------------------------
 Sun Nov  8 08:56:56 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Update to 0.21.13

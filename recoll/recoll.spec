@@ -16,7 +16,7 @@
 #
 
 Name:           recoll
-Version:        1.44.2
+Version:        1.46.0
 Release:        0
 Summary:        Personal full text search tool
 License:        GPL-2.0-or-later

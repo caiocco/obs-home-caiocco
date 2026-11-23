@@ -1,4 +1,14 @@
 -------------------------------------------------------------------
+Mon Nov 23 18:37:58 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Update to version 4.9.10:
+  * mask API key like a password in the config dialog
+  * refocus goto panel when already open
+  * fix hang with several run-away braces in the same argument
+  * fix memory leak on macOS
+  * search missing synctex files in the pdf search path
+
+-------------------------------------------------------------------
 Tue Nov 10 23:15:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Update to version 4.9.9:

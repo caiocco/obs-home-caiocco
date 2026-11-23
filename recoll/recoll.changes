@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Mon Nov 23 18:37:58 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Update to 1.46.0
+  * Optional MeCab text analyser for Japanese text
+  * GUI: fix preview sometimes not using the original document
+    (missing UDI in Doc object)
+  * 1.45.0: portable Recoll installs, result list "copy" entry for
+    regular files, pyvirtualenv parameter, fix for temporary file
+    creation with long paths
+  * Indexes stay compatible, no reindex needed
+- Refresh patches (offsets only)
+
+-------------------------------------------------------------------
 Sun Nov  8 23:02:21 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Add recoll-respect-platform-font.patch: recoll-common.qss forced

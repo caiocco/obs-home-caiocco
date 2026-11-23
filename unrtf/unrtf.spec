@@ -18,7 +18,7 @@
 
 
 Name:           unrtf
-Version:        0.21.13
+Version:        0.21.14
 Release:        0
 Summary:        Rich Text Format (.rtf) Document Converter to Other Formats
 License:        GPL-3.0-or-later

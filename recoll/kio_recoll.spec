@@ -17,7 +17,7 @@
 
 %define rname recoll
 Name:           kio_recoll
-Version:        1.44.2
+Version:        1.46.0
 Release:        0
 Summary:        KIO worker for the Recoll full text search tool
 License:        GPL-2.0-or-later
