@@ -30,6 +30,7 @@ Source3:        xboard.keyring
 # PATCH-FIX-OPENSUSE xboard-prefer-gnuchess.patch
 Patch0:         xboard-prefer-gnuchess.patch
 BuildRequires:  cairo-devel
+BuildRequires:  gpg2
 BuildRequires:  gtk2-devel >= 2.20.0
 BuildRequires:  librsvg-devel
 BuildRequires:  pango-devel
@@ -58,6 +59,10 @@ XBoard is a graphical user interface for chess in all its major forms, including
     * Correspondence chess played by electronic mail. The CMail program automates the tasks of parsing email from your opponent, playing his moves out on your board, and mailing your reply move after you have chosen it.
 
 %prep
+# Check the upstream signature against the xboard keyring
+export GNUPGHOME=$(mktemp -d)
+gpg --batch --quiet --import %{SOURCE3}
+gpg --batch --verify %{SOURCE2} %{SOURCE0}
 %setup -q
 %patch -P 0 -p1
 
