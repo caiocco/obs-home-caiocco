@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Mon Nov 23 21:23:52 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Verify the upstream tarball signature: add the .sig and the
+  Savannah unrtf release keyring (key F8E3347256922A8AE767605B7808CE96D38B9201,
+  Jean-Francois Dockes), checked with gpg in %prep
+- Use https for Source0
+
+-------------------------------------------------------------------
 Mon Nov 23 18:37:58 UTC 2026 - caiocco <caiocco@yahoo.com.br>
 
 - Update to 0.21.14

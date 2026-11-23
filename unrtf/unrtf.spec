@@ -23,17 +23,24 @@ Release:        0
 Summary:        Rich Text Format (.rtf) Document Converter to Other Formats
 License:        GPL-3.0-or-later
 URL:            http://www.gnu.org/software/unrtf/
-Source0:        http://ftp.gnu.org/gnu/unrtf/%{name}-%{version}.tar.gz
+Source0:        https://ftp.gnu.org/gnu/unrtf/%{name}-%{version}.tar.gz
+Source1:        https://ftp.gnu.org/gnu/unrtf/%{name}-%{version}.tar.gz.sig
+Source2:        https://savannah.gnu.org/project/release-gpgkeys.php?group=unrtf&download=1#/%{name}.keyring
 # PATCH-FIX-OPENSUSE unrtf-0.21.2-fix_dirs.patch lazy.kent@opensuse.org -- Fix hardcoded paths
 Patch0:         unrtf-0.21.2-fix_dirs.patch
 BuildRequires:  autoconf
 BuildRequires:  automake
+BuildRequires:  gpg2
 
 %description
 UnRTF is a command-line program written in C which converts documents in Rich
 Text Format (.rtf) to HTML, LaTeX, troff macros, and RTF itself.
 
 %prep
+# Check the upstream signature against the Savannah unrtf release keyring
+export GNUPGHOME=$(mktemp -d)
+gpg --batch --quiet --import %{SOURCE2}
+gpg --batch --verify %{SOURCE1} %{SOURCE0}
 %autosetup -p1
 
 # Fix config dir
