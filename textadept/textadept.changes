@@ -1,0 +1,15 @@
+-------------------------------------------------------------------
+Mon Nov 23 22:30:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of Textadept 13.1: Qt 6 (textadept), GTK 3
+  (textadept-gtk) and curses (textadept-curses) front ends with a
+  shared noarch textadept-data package
+- Bundled dependencies are the exact archives pinned in upstream's
+  CMakeLists.txt; HTML manual taken from the binary release
+- Build against the wide-character ncurses headers (ncursesw)
+- textadept-install-destdir.patch: install the .desktop files under
+  DESTDIR instead of symlinking them into the live /usr/share
+- textadept-modules: official modules.zip with its prebuilt binaries
+  replaced by file_diff, spellcheck (system hunspell, myspell
+  dictionaries) and LuaSocket modules built from source;
+  update_notifier left out; shebangs stripped from LSP Lua files

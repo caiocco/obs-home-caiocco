@@ -1,0 +1,24 @@
+--- textadept-textadept_13.1.orig/CMakeLists.txt	2026-11-01 00:53:46.000000000 -0300
++++ textadept-textadept_13.1/CMakeLists.txt	2026-11-23 22:29:06.790316195 -0300
+@@ -349,10 +349,8 @@
+ if(NOT (WIN32 OR APPLE))
+ 	include(GNUInstallDirs)
+ 	set(ta_bin_dir ${CMAKE_INSTALL_FULL_BINDIR})
+-	install(CODE "file(MAKE_DIRECTORY ${ta_bin_dir})")
+ 	set(ta_data_dir ${CMAKE_INSTALL_FULL_DATADIR}/textadept)
+ 	file(RELATIVE_PATH ta_bin_to_data_dir ${CMAKE_INSTALL_FULL_BINDIR} ${ta_data_dir})
+-	install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_FULL_DATADIR}/applications)")
+ 	file(RELATIVE_PATH ta_app_to_data_dir ${CMAKE_INSTALL_FULL_DATADIR}/applications ${ta_data_dir})
+ 	function(install_links target)
+ 		if(DEFINED TEXTADEPT_HOME)
+@@ -362,9 +360,7 @@
+ 			install(CODE "file(CREATE_LINK ${ta_bin_to_data_dir}/${target}
+ 				${ta_bin_dir}/${target} SYMBOLIC)")
+ 		endif()
+-		install(FILES src/${target}.desktop DESTINATION ${ta_data_dir})
+-		install(CODE "file(CREATE_LINK ${ta_app_to_data_dir}/${target}.desktop
+-			${CMAKE_INSTALL_FULL_DATADIR}/applications/${target}.desktop SYMBOLIC)")
++		install(FILES src/${target}.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+ 	endfunction()
+ 	if(QT)
+ 		install_links(textadept)
