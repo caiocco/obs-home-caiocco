@@ -1,5 +1,5 @@
---- wxMaxima.spec.orig
-+++ wxMaxima.spec
+--- wxMaxima.spec.orig	2026-11-11 23:36:34.046250917 -0300
++++ wxMaxima.spec	2026-11-11 23:36:34.048251058 -0300
 @@ -30,6 +30,16 @@
  Group:          Productivity/Scientific/Math
  URL:            https://wxmaxima-developers.github.io/wxmaxima/
@@ -27,3 +27,16 @@
  BuildRequires:  ninja
  BuildRequires:  po4a
  BuildRequires:  wxGTK3-devel >= 3.1.5
+@@ -91,7 +102,11 @@
+ # Needed, otherwise maxima tries to write to a dir without permissions
+ export MAXIMA_USERDIR=./
+ pushd ./%{__builddir}
+-xvfb-run ctest --output-on-failure --force-new-ctest-process %{?_smp_mflags}
++# Under clisp (no sbcl on Leap 16) wxxml-array-display-properties gets extra
++# whitespace its sbcl-tuned regex rejects, and tutorial_fittingEquations hits
++# the 380 s timeout because clisp is much slower
++xvfb-run ctest --output-on-failure --force-new-ctest-process %{?_smp_mflags} \
++  -E '^(wxxml-array-display-properties|tutorial_fittingEquations)$'
+ popd
+ %endif
+ 

@@ -1,0 +1,23 @@
+--- a/src/dialogs/ConfigDialogue.cpp
++++ b/src/dialogs/ConfigDialogue.cpp
+@@ -79,7 +79,7 @@
+ extern unsigned char MEDIA_PLAYBACK_START_SVG_GZ[];
+ extern size_t MEDIA_PLAYBACK_START_SVG_GZ_SIZE;
+ 
+-#define CONFIG_ICON_SCALE (1.0)
++#define CONFIG_ICON_SCALE (0.5)
+ 
+ //! The order of the "Export equations to HTML as:" choice control.
+ //
+@@ -248,7 +248,10 @@
+   imageList.push_back(wxArtProvider::GetBitmapBundle(wxmaximaART_CONFIG_DOCUMENT_EXPORT, wxART_OTHER, wxSize(imgSize, imgSize)));
+   imageList.push_back(wxArtProvider::GetBitmapBundle(wxmaximaART_CONFIG_OPTIONS, wxART_OTHER, wxSize(imgSize, imgSize)));
+   imageList.push_back(wxArtProvider::GetBitmapBundle(wxmaximaART_MEDIA_PLAYBACK_START, wxART_OTHER, wxSize(imgSize, imgSize)));
+-  imageList.push_back(wxArtProvider::GetBitmapBundle(wxART_PRINT, wxART_OTHER, wxSize(imgSize, imgSize)));
++  // The theme's document-print is a small monochrome action glyph in many
++  // icon themes; use the theme's "printer" device icon, which exists at
++  // large sizes.
++  imageList.push_back(wxArtProvider::GetBitmapBundle(wxS("printer"), wxART_OTHER, wxSize(imgSize, imgSize)));
+   imageList.push_back(wxArtProvider::GetBitmapBundle(wxmaximaART_CONFIG_VIEW_REFRESH, wxART_OTHER, wxSize(imgSize, imgSize)));
+   imageList.push_back(wxArtProvider::GetBitmapBundle(wxmaximaART_CONFIG_AI_CHAT, wxART_OTHER, wxSize(imgSize, imgSize)));
+   imageList.push_back(wxArtProvider::GetBitmapBundle(wxmaximaART_CONFIG_ACCESSIBILITY, wxART_OTHER, wxSize(imgSize, imgSize)));

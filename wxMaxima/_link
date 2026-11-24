@@ -1,0 +1,5 @@
+<link project="openSUSE:Factory" package="wxMaxima" baserev="057cf39aab0d533110aa61f881f1b24b">
+  <patches>
+    <apply name="project.diff"/>
+  </patches>
+</link>
