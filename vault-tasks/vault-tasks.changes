@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Mon Nov 23 23:00:00 UTC 2026 - caiocco <caiocco@yahoo.com.br>
+
+- Initial package of vault-tasks 2.0.4
+  * vendor.tar.zst made with "cargo vendor" (Rust 1.98, Leap 16.0)
+  * vault-tasks-cargo-lock-version.patch: Cargo.lock still had 2.0.3
+  * .desktop file: drop the unregistered "Productivity" category
+  * bash/zsh/fish completions generated at build time
