@@ -80,7 +80,6 @@ Patch3:         seamonkey-2.53.3-lto.patch
 Patch4:         seamonkey-2.53.7.1-man-page.patch
 Patch5:         seamonkey-2.53.20-boo1237231.patch
 Patch6:         seamonkey-2.53.17.1-bmo531915.patch
-Patch8:         seamonkey-2.53.20-mach-use-python-311.patch
 Patch9:         seamonkey-2.53.21-bmo1862601.patch
 Patch10:        seamonkey-2.53.21-bmo1927380.patch
 Patch11:        seamonkey-2.53.20-system-av1.patch
@@ -90,6 +89,27 @@ Patch15:        seamonkey-2.53.24-bmo1866191.patch
 Patch16:        seamonkey-2.53.24-bmo2033279.patch
 Patch17:        seamonkey-2.53.24-rust_version.patch
 Patch18:        seamonkey-2.53.24-rust_u2fhid.patch
+
+# Python patches from Gentoo: https://github.com/BioMike/gentoo-seamonkey-patches/releases/tag/2.53.24-r1
+Patch7000:      7000_py312_1857516.patch
+Patch7001:      7001_py312_1777414.patch
+Patch7003:      7003_py312_1755530.patch
+Patch7004:      7004_py312_1858062.patch
+Patch7005:      7005_py312_1752927.patch
+Patch7006:      7006_py312_1858065.patch
+Patch7007:      7007_py312_1766085.patch
+Patch7008:      7008_py312_1787628.patch
+Patch7009:      7009_py312_misc.patch
+Patch7010:      7010_py312_virtualenv.patch
+Patch7011:      7011_py312_setuptools.patch
+Patch7012:      7012_py312_remove_python_check.patch
+Patch7013:      7013_py312_1875052.patch
+Patch7014:      7014_py312_make_dafsa_fix.patch
+Patch7015:      7015_py312_regexp_warnings.patch
+Patch7016:      7016_py313_1677422.patch
+Patch7017:      7017_py313_virtualenv_pipes.patch
+Patch7018:      7018_py312_missing_packages.patch
+Patch7019:      7019_py314_1969769.patch
 
 BuildRequires:  Mesa-devel
 BuildRequires:  alsa-devel
@@ -113,7 +133,7 @@ BuildRequires:  libicu-devel >= 67.1
 %endif
 BuildRequires:  makeinfo
 BuildRequires:  memory-constraints
-BuildRequires:  python311-base
+BuildRequires:  %{pythons} >= 3.11
 BuildRequires:  startup-notification-devel
 BuildRequires:  unzip
 BuildRequires:  translate-suse-desktop
@@ -276,7 +296,6 @@ cp %{SOURCE7} GNUmakefile
 %patch -P 4 -p1
 %patch -P 5 -p1
 %patch -P 6 -p1
-%patch -P 8 -p1
 
 %if %{with system_icu}
 %patch -P 9 -p1
@@ -293,6 +312,34 @@ cp %{SOURCE7} GNUmakefile
 %patch -P 16 -p1
 %patch -P 17 -p1
 %patch -P 18 -p1
+
+%if %python_version_nodots >= 312
+%patch -P 7000 -p1
+%patch -P 7001 -p1
+%patch -P 7003 -p1
+%patch -P 7004 -p1
+%patch -P 7005 -p1
+%patch -P 7006 -p1
+%patch -P 7007 -p1
+%patch -P 7008 -p1
+%patch -P 7009 -p1
+%patch -P 7010 -p1
+%patch -P 7011 -p1
+%patch -P 7012 -p1
+%patch -P 7013 -p1
+%patch -P 7014 -p1
+%patch -P 7015 -p1
+%endif
+%if %python_version_nodots >= 313
+%patch -P 7016 -p1
+%patch -P 7017 -p1
+%endif
+%if %python_version_nodots >= 312
+%patch -P 7018 -p1
+%endif
+%if %python_version_nodots >= 314
+%patch -P 7019 -p1
+%endif
 
 %define with_sys()   ac_add_options --with%%{!?with_system_%1:out}-system-%1
 %define endis_sys()  ac_add_options --%%{?with_system_%1:enable}%%{!?with_system_%1:disable}-system-%1
