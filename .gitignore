@@ -38,3 +38,10 @@ _service:*
 /goffice/_scmsync.obsinfo
 /goffice/_service
 /goffice/goffice.obsinfo
+/librubberband/_scmsync.obsinfo
+/nwg-look/_service
+/nwg-look/_servicedata
+/python311/_scmsync.obsinfo
+/sdl12_compat/_scmsync.obsinfo
+/spirv-headers/_scmsync.obsinfo
+/spirv-tools/_scmsync.obsinfo
