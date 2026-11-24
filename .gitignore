@@ -24,3 +24,17 @@
 *.orig
 *.rej
 _service:*
+
+# Controle do scmsync/obs_scm trazido pela expansão de links do Factory
+# (no OBS esses pacotes têm só _link/project.diff)
+/cherrytree/_scmsync.obsinfo
+/cherrytree/_service
+/cherrytree/_servicedata
+/cherrytree/cherrytree.obsinfo
+/gnumeric/_scmsync.obsinfo
+/gnumeric/_service
+/gnumeric/_servicedata
+/gnumeric/gnumeric.obsinfo
+/goffice/_scmsync.obsinfo
+/goffice/_service
+/goffice/goffice.obsinfo
