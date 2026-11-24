@@ -17,7 +17,7 @@
 
 
 Name:           cherrytree
-Version:        1.7.2
+Version:        1.7.3
 Release:        0
 Summary:        A hierarchical note taking application
 License:        GPL-3.0-or-later AND LGPL-2.1-only
@@ -27,6 +27,7 @@ Source0:        %{name}-%{version}.tar.xz
 #PATCH-FIX-OPENSUSE cherrytree-set-git-version.patch malcolmlewis@opensuse.org -- Set git version in help about.
 Patch0:         cherrytree-set-git-version.patch
 Patch1:         cherrytree-fix-metainfo-write.patch
+Patch2:         cherrytree-start-hidden.patch
 BuildRequires:  appstream-glib
 BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
@@ -34,7 +35,7 @@ BuildRequires:  fdupes
 BuildRequires:  gcc-c++
 BuildRequires:  ninja
 BuildRequires:  python3-lxml
-BuildRequires:  pkgconfig(fmt)
+BuildRequires:  pkgconfig(fmt) >= 6.0
 BuildRequires:  pkgconfig(gspell-1)
 BuildRequires:  pkgconfig(gtkmm-3.0)
 BuildRequires:  pkgconfig(gtksourceview-4)
